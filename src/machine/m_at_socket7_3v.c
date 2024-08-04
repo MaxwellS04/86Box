@@ -165,28 +165,6 @@ machine_at_p54tp4xe_mr_init(const machine_t *model)
 }
 
 int
-machine_at_industrial_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/industrial/pnthi-07.rom",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init(model);
-
-    device_add(&keyboard_ps2_ami_device);
-    device_add(&i430fx_device);
-    device_add(&piix_device);
-    device_add(&fdc37c665_device);
-    device_add(&sst_flash_29ee010_device);
-
-    return ret;
-}
-
-int
 machine_at_exp8551_init(const machine_t *model)
 {
     int ret;

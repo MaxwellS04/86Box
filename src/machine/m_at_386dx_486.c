@@ -826,23 +826,6 @@ machine_at_ami471_init(const machine_t *model)
 }
 
 int
-machine_at_xps4xxx_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/xps4xxx/shk2a03.bin",
-                           0x000f0000, 131072, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_sis_85c471_common_init(model);
-    device_add(&keyboard_at_device);
-
-    return ret;
-}
-
-int
 machine_at_vli486sv2g_init(const machine_t *model)
 {
     int ret;
@@ -2330,6 +2313,28 @@ machine_at_atc1762_init(const machine_t *model)
     machine_at_common_init(model);
     device_add(&ali1429g_device);
     device_add(&keyboard_ps2_ami_pci_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_ksi_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ksi/iqs.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&opti391_device);
+    device_add(&keyboard_at_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);

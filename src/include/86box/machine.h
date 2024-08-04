@@ -500,6 +500,7 @@ extern int machine_at_pc916sx_init(const machine_t *);
 extern int machine_at_dataexpert386wb_init(const machine_t *);
 extern int machine_at_genoa486_init(const machine_t *);
 extern int machine_at_ga486l_init(const machine_t *);
+extern int machine_at_ksi_init(const machine_t *);
 extern int machine_at_cougar_init(const machine_t *);
 
 extern int machine_at_acc386_init(const machine_t *);
@@ -549,7 +550,6 @@ extern int machine_at_valuepoint433_init(const machine_t *);
 
 extern int machine_at_vli486sv2g_init(const machine_t *);
 extern int machine_at_ami471_init(const machine_t *);
-extern int machine_at_xps4xxx_init(const machine_t *);
 extern int machine_at_dtk486_init(const machine_t *);
 extern int machine_at_px471_init(const machine_t *);
 extern int machine_at_win471_init(const machine_t *);
@@ -675,7 +675,6 @@ extern int machine_at_hot539_init(const machine_t *);
 /* m_at_socket7_3v.c */
 extern int machine_at_p54tp4xe_init(const machine_t *);
 extern int machine_at_p54tp4xe_mr_init(const machine_t *);
-extern int machine_at_industrial_init(const machine_t *);
 extern int machine_at_exp8551_init(const machine_t *);
 extern int machine_at_gw2katx_init(const machine_t *);
 extern int machine_at_thor_init(const machine_t *);
@@ -734,13 +733,16 @@ extern int machine_at_i430vx_init(const machine_t *);
 extern int machine_at_ma23c_init(const machine_t *);
 extern int machine_at_nupro592_init(const machine_t *);
 extern int machine_at_tx97_init(const machine_t *);
+extern int machine_at_txp4_init(const machine_t *);
 #if defined(DEV_BRANCH) && defined(USE_AN430TX)
 extern int machine_at_an430tx_init(const machine_t *);
 #endif
 extern int machine_at_ym430tx_init(const machine_t *);
 extern int machine_at_thunderbolt_init(const machine_t *);
+extern int machine_at_m566_init(const machine_t *);
 extern int machine_at_mb540n_init(const machine_t *);
 extern int machine_at_56a5_init(const machine_t *);
+extern int machine_at_p5ta4_init(const machine_t *);
 extern int machine_at_p5mms98_init(const machine_t *);
 extern int machine_at_richmond_init(const machine_t *);
 extern int machine_at_tomahawk_init(const machine_t *);
@@ -751,6 +753,7 @@ extern int machine_at_ficpa2012_init(const machine_t *);
 
 extern int machine_at_r534f_init(const machine_t *);
 extern int machine_at_ms5146_init(const machine_t *);
+extern int machine_at_586step_init(const machine_t *);
 extern int machine_at_cb52xsi_init(const machine_t *);
 
 extern int machine_at_m560_init(const machine_t *);

@@ -935,6 +935,43 @@ machine_at_tx97_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_txp4_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/txp4/XL5I0109.AWD",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&w83877tf_device);
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
+    device_add(&w83781d_device);    /* fans: Chassis, CPU, Power; temperatures: MB, unused, CPU */
+    hwm_values.temperatures[1] = 0; /* unused */
+    /* CPU offset */
+    if (hwm_values.temperatures[2] < 32) /* prevent underflow */
+        hwm_values.temperatures[2] = 0;
+    else
+        hwm_values.temperatures[2] -= 32;
+
+    return ret;
+}
+
 #if defined(DEV_BRANCH) && defined(USE_AN430TX)
 int
 machine_at_an430tx_init(const machine_t *model)
@@ -1008,6 +1045,36 @@ machine_at_ym430tx_init(const machine_t *model)
     device_add(&keyboard_ps2_pci_device);
     device_add(&w83977tf_device);
     device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
+
+    return ret;
+}
+
+int
+machine_at_m566_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/m566/990224S.ROM",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&pc87307_device);
+    device_add(&&intel_flash_bxt_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
 
     return ret;
@@ -1102,6 +1169,36 @@ machine_at_p5mms98_init(const machine_t *model)
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
     device_add(&lm78_device);      /* fans: Thermal, CPU, Chassis; temperature: unused */
     device_add(&lm75_1_4a_device); /* temperature: CPU */
+
+    return ret;
+}
+
+int
+machine_at_p5ta4_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/p5ta4/P5ta4107.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add(&keyboard_ps2_pci_device);
+    device_add(&um8669f_device);
+    device_add(&sst_flash_29ee010_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
 
     return ret;
 }
@@ -1238,6 +1335,35 @@ machine_at_ficpa2012_init(const machine_t *model)
     device_add(&w83877f_device);
     device_add(&sst_flash_29ee010_device);
     spd_register(SPD_TYPE_SDRAM, 0x7, 512);
+
+    return ret;
+}
+
+int
+machine_at_586step_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/586step/philips-586step.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 1, 2, 3);
+
+    device_add(&sis_5571_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&w83877f_device);
+    device_add(&sst_flash_29ee010_device);
 
     return ret;
 }
