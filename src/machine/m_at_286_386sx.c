@@ -496,6 +496,22 @@ machine_at_kmxc02_init(const machine_t *model)
 }
 
 int
+machine_at_scsxaio_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/scsxaio/386-Peacock SCsxAIO.BIN",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_scatsx_init(model);
+
+    return ret;
+}
+
+int
 machine_at_deskmaster286_init(const machine_t *model)
 {
     int ret;

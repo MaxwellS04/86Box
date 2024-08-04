@@ -455,3 +455,24 @@ machine_at_p5sp4_init(const machine_t *model)
 
     return ret;
 }
+
+int
+machine_at_hot523_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/hot523/HOT523.BIN",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_award_common_init(model);
+
+    device_add(&opti5x7_pci_device);
+    device_add(&opti822_device);
+	device_add(&ncr53c810_onboard_pci_device);
+	device_add(&ide_isa_device);
+
+    return ret;
+}

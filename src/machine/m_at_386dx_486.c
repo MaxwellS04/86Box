@@ -826,6 +826,23 @@ machine_at_ami471_init(const machine_t *model)
 }
 
 int
+machine_at_xps4xxx_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/xps4xxx/shk2a03.bin",
+                           0x000f0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_sis_85c471_common_init(model);
+    device_add(&keyboard_at_device);
+
+    return ret;
+}
+
+int
 machine_at_vli486sv2g_init(const machine_t *model)
 {
     int ret;
@@ -950,6 +967,29 @@ machine_at_greenb_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/greenb/4gpv31-ami-1993-8273517.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    device_add(&contaq_82c597_device);
+
+    device_add(&keyboard_at_ami_device);
+
+    return ret;
+}
+
+int
+machine_at_nicegreen_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/nicegreen/lion-value-vlb-plus.bin",
                            0x000f0000, 65536, 0);
 
     if (bios_only || !ret)
