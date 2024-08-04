@@ -467,12 +467,19 @@ machine_at_hot523_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_award_common_init(model);
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x10, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      3, 4, 1, 2);
 
     device_add(&opti5x7_pci_device);
-    device_add(&opti822_device);
-	device_add(&ncr53c810_onboard_pci_device);
-	device_add(&ide_isa_device);
+	device_add(&ide_opti611_vlb_device);
+    device_add(&fdc37c661_device);
+    device_add(&sst_flash_29ee010_device);
+    device_add(&keyboard_at_device);
 
     return ret;
 }
