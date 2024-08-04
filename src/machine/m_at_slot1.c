@@ -41,6 +41,35 @@
 #include <86box/snd_ac97.h>
 
 int
+machine_at_pegasus_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pegasus/S759P.ROM",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    device_add(&i440fx_device);
+    device_add(&piix3_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&fdc37c669_device);
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
 machine_at_p65up5_cpknd_init(const machine_t *model)
 {
     int ret;
@@ -85,6 +114,39 @@ machine_at_kn97_init(const machine_t *model)
     device_add(&lm78_device); /* fans: Chassis, CPU, Power; temperature: MB */
     for (uint8_t i = 0; i < 3; i++)
         hwm_values.fans[i] *= 2; /* BIOS reports fans with the wrong divisor for some reason */
+
+    return ret;
+}
+
+int
+machine_at_portland_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_combined2("roms/machines/portland/1009DT0_.BIO",
+                                     "roms/machines/portland/1009DT0_.BI1",
+                                     "roms/machines/portland/1009DT0_.BI2",
+                                     "roms/machines/portland/1009DT0_.BI3",
+                                     "roms/machines/portland/1009DT0_.RCV",
+                                     0x3a000, 128);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    device_add(&i440fx_device);
+    device_add(&piix3_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&pc87306_device);
+    device_add(&intel_flash_bxt_ami_device);
 
     return ret;
 }
