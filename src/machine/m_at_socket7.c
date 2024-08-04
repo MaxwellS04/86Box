@@ -1074,7 +1074,7 @@ machine_at_m566_init(const machine_t *model)
     device_add(&piix4_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&pc87307_device);
-    device_add(&&intel_flash_bxt_device);
+    device_add(&intel_flash_bxt_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
 
     return ret;
