@@ -961,13 +961,6 @@ machine_at_txp4_init(const machine_t *model)
     device_add(&w83877tf_device);
     device_add(&intel_flash_bxt_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
-    device_add(&w83781d_device);    /* fans: Chassis, CPU, Power; temperatures: MB, unused, CPU */
-    hwm_values.temperatures[1] = 0; /* unused */
-    /* CPU offset */
-    if (hwm_values.temperatures[2] < 32) /* prevent underflow */
-        hwm_values.temperatures[2] = 0;
-    else
-        hwm_values.temperatures[2] -= 32;
 
     return ret;
 }
