@@ -522,6 +522,8 @@ extern int machine_at_pb410a_init(const machine_t *);
 extern int machine_at_decpclpv_init(const machine_t *);
 extern int machine_at_acerv10_init(const machine_t *);
 
+extern int machine_at_8521_init(const machine_t *);
+
 extern int machine_at_acera1g_init(const machine_t *);
 extern int machine_at_ali1429_init(const machine_t *);
 extern int machine_at_winbios1429_init(const machine_t *);

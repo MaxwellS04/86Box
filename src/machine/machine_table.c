@@ -5914,6 +5914,46 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
+	{
+        .name = "[ALI M1409] ECS 8521",
+        .internal_name = "8521",
+        .type = MACHINE_TYPE_486,
+        .chipset = MACHINE_CHIPSET_ALI_M1409,
+        .init = machine_at_8521_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_SOCKET1,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 0,
+            .max_bus = 0,
+            .min_voltage = 0,
+            .max_voltage = 0,
+            .min_multi = 0,
+            .max_multi = 0,
+            
+        },
+        .bus_flags = MACHINE_AT, 
+        .flags = MACHINE_APM,
+        .ram = {
+            .min = 1024,
+            .max = 32768,
+            .step = 1024
+        },
+        .nvrmask = 127,
+        .kbc_device = NULL,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
     /* Has AMI KF KBC firmware. */
     {
         .name = "[SiS 401] ASUS ISA-486",
@@ -12440,7 +12480,7 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-    /* This has the AMIKey KBC firmware, which is an updated 'F' type (YM430TX is based on the TX97). */
+    /* This has the AMIKey KBC firmware, which is an updated 'F' type. */
     {
         .name = "[i430TX] ASUS TX97",
         .internal_name = "tx97",
@@ -12480,6 +12520,7 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
+	/* Retail (non-Intel-branded) version of TXP4. Unlike TX97, it does not have hardware monitor. */
     {
         .name = "[i430TX] ASUS TXP4",
         .internal_name = "txp4",
@@ -12601,7 +12642,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
 #endif /* defined(DEV_BRANCH) && defined(USE_AN430TX) */
-    /* This has the AMIKey KBC firmware, which is an updated 'F' type. */
+    /* This has the AMIKey KBC firmware, which is an updated 'F' type. The YM430TX is based on ASUS TXP4. */
     {
         .name = "[i430TX] Intel YM430TX",
         .internal_name = "ym430tx",

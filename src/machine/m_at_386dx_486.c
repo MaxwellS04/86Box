@@ -2410,6 +2410,28 @@ machine_at_ga486l_init(const machine_t *model)
 }
 
 int
+machine_at_8521_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/8521/486 Ali m1409a ST B88AE M27C15 EPROM.BIN",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&ali1409_device);
+    device_add(&keyboard_ps2_ami_device);
+	
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
 machine_at_cougar_init(const machine_t *model)
 {
     int ret;

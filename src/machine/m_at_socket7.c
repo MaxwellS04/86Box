@@ -957,7 +957,7 @@ machine_at_txp4_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
     device_add(&i430tx_device);
     device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&keyboard_ps2_pci_device);
     device_add(&w83877tf_device);
     device_add(&intel_flash_bxt_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 128);
