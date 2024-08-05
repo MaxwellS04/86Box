@@ -1044,36 +1044,6 @@ machine_at_ym430tx_init(const machine_t *model)
 }
 
 int
-machine_at_m566_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/m566/990224S.ROM",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init_ex(model, 2);
-
-    pci_init(PCI_CONFIG_TYPE_1);
-    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x11, PCI_CARD_NORMAL,      4, 1, 2, 3);
-    pci_register_slot(0x12, PCI_CARD_NORMAL,      3, 4, 1, 2);
-    pci_register_slot(0x13, PCI_CARD_NORMAL,      2, 3, 4, 1);
-    pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4);
-    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4); /* PIIX4 */
-    device_add(&i430tx_device);
-    device_add(&piix4_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&pc87307_device);
-    device_add(&intel_flash_bxt_device);
-    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
-
-    return ret;
-}
-
-int
 machine_at_mb540n_init(const machine_t *model)
 {
     int ret;
@@ -1466,34 +1436,6 @@ machine_at_sq578_init(const machine_t *model)
     pci_register_slot(0x0D, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x0B, PCI_CARD_NORMAL,      2, 3, 4, 1);
     pci_register_slot(0x09, PCI_CARD_NORMAL,      1, 2, 3, 4);
-    device_add(&sis_5581_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&w83877tf_device);
-    device_add(&sst_flash_29ee010_device);
-
-    return ret;
-}
-
-int
-machine_at_586stx_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/586stx/5stx_19.bin",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init_ex(model, 2);
-
-    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
-    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
-    pci_register_slot(0x0B, PCI_CARD_NORMAL,      2, 3, 4, 1);
-    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
-    pci_register_slot(0x09, PCI_CARD_NORMAL,      4, 1, 2, 3);
     device_add(&sis_5581_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&w83877tf_device);

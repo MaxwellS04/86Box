@@ -739,7 +739,6 @@ extern int machine_at_an430tx_init(const machine_t *);
 #endif
 extern int machine_at_ym430tx_init(const machine_t *);
 extern int machine_at_thunderbolt_init(const machine_t *);
-extern int machine_at_m566_init(const machine_t *);
 extern int machine_at_mb540n_init(const machine_t *);
 extern int machine_at_56a5_init(const machine_t *);
 extern int machine_at_p5mms98_init(const machine_t *);
@@ -760,7 +759,6 @@ extern int machine_at_ms5164_init(const machine_t *);
 
 extern int machine_at_sp97xv_init(const machine_t *);
 extern int machine_at_sq578_init(const machine_t *);
-extern int machine_at_586stx_init(const machine_t *);
 
 extern int machine_at_ms5172_init(const machine_t *);
 
@@ -800,10 +798,8 @@ extern int machine_at_p65up5_cp6nd_init(const machine_t *);
 /* m_at_slot1.c */
 extern int machine_at_m729_init(const machine_t *);
 
-extern int machine_at_pegasus_init(const machine_t *);
 extern int machine_at_p65up5_cpknd_init(const machine_t *);
 extern int machine_at_kn97_init(const machine_t *);
-extern int machine_at_portland_init(const machine_t *);
 
 extern int machine_at_lx6_init(const machine_t *);
 extern int machine_at_spitfire_init(const machine_t *);

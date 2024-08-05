@@ -12724,46 +12724,6 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-	/* Has cache problems. Hangs at saving CMOS or soft reset. Will be fixed soon as possible. */
-    {
-        .name = "[i430TX] PC Chips M566",
-        .internal_name = "m566",
-        .type = MACHINE_TYPE_SOCKET7,
-        .chipset = MACHINE_CHIPSET_INTEL_430TX,
-        .init = machine_at_m566_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SOCKET5_7,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 50000000,
-            .max_bus = 66666667,
-            .min_voltage = 2500,
-            .max_voltage = 3520,
-            .min_multi = 1.5,
-            .max_multi = 3.0
-        },
-        .bus_flags = MACHINE_PS2_PCI,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI,
-        .ram = {
-            .min = 8192,
-            .max = 262144,
-            .step = 8192
-        },
-        .nvrmask = 255,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
     /* The BIOS sends KBC command BB and expects it to output a byte, which is AMI KBC behavior.
        A picture shows a VIA VT82C42N KBC though, so it could be a case of that KBC with AMI firmware. */
     {
@@ -13241,45 +13201,6 @@ const machine_t machines[] = {
             .min = 8192,
             .max = 1572864,
             .step = 1024
-        },
-        .nvrmask = 255,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-    {
-        .name = "[SiS 5581] Gigabyte GA-586STX",
-        .internal_name = "586stx",
-        .type = MACHINE_TYPE_SOCKET7,
-        .chipset = MACHINE_CHIPSET_SIS_5581,
-        .init = machine_at_586stx_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SOCKET5_7,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 50000000,
-            .max_bus = 83333333,
-            .min_voltage = 2500,
-            .max_voltage = 3520,
-            .min_multi = 1.5,
-            .max_multi = 3.0
-        },
-        .bus_flags = MACHINE_PS2_PCI | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
-        .ram = {
-            .min = 8192,
-            .max = 393216,
-            .step = 8192
         },
         .nvrmask = 255,
         .kbc_device = NULL,
@@ -14404,45 +14325,6 @@ const machine_t machines[] = {
     },
 
     /* 440FX */
-    {
-        .name = "[i440FX] AMI Pegasus",
-        .internal_name = "pegasus",
-        .type = MACHINE_TYPE_SLOT1,
-        .chipset = MACHINE_CHIPSET_INTEL_440FX,
-        .init = machine_at_pegasus_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SLOT1,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 66666667,
-            .max_bus = 66666667,
-            .min_voltage = 1800,
-            .max_voltage = 3500,
-            .min_multi = 1.5,
-            .max_multi = 8.0
-        },
-        .bus_flags = MACHINE_PS2_PCI | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_USB,
-        .ram = {
-            .min = 8192,
-            .max = 786432,
-            .step = 8192
-        },
-        .nvrmask = 127,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
     /* The base board has a Holtek HT6542B KBC with AMIKey-2 (updated 'H') KBC firmware. */
     {
         .name = "[i440FX] ASUS P/I-P65UP5 (C-PKND)",
@@ -14510,45 +14392,6 @@ const machine_t machines[] = {
         .ram = {
             .min = 8192,
             .max = 786432,
-            .step = 8192
-        },
-        .nvrmask = 127,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-    {
-        .name = "[i440FX] Intel PD440FX",
-        .internal_name = "portland",
-        .type = MACHINE_TYPE_SLOT1,
-        .chipset = MACHINE_CHIPSET_INTEL_440FX,
-        .init = machine_at_portland_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SLOT1,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 66666667,
-            .max_bus = 66666667,
-            .min_voltage = 1800,
-            .max_voltage = 3500,
-            .min_multi = 1.5,
-            .max_multi = 8.0
-        },
-        .bus_flags = MACHINE_PS2_PCI | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_USB,
-        .ram = {
-            .min = 8192,
-            .max = 262144,
             .step = 8192
         },
         .nvrmask = 127,
