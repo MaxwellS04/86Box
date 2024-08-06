@@ -182,7 +182,7 @@ machine_at_abfp2_init(const machine_t *model)
 
     machine_at_init(model);
 
-    device_add(&keyboard_at_ami_device)
+    device_add(&keyboard_at_ami_device);
     device_add(&neat_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
