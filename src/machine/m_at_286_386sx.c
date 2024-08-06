@@ -169,6 +169,29 @@ machine_at_quadt386sx_init(const machine_t *model)
 }
 
 int
+machine_at_abfp2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/abfp2/386 Abit LO.BIN",
+                                "roms/machines/abfp2/386 Abit HI.BIN",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_init(model);
+
+    device_add(&keyboard_at_ami_device)
+    device_add(&neat_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
 machine_at_neat_init(const machine_t *model)
 {
     int ret;

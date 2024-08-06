@@ -180,6 +180,22 @@ machine_xt_clone_init(const machine_t *model, int fixed_floppy)
 }
 
 int
+machine_xt_xturbo_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/xturbo/ARC_Turbo_x.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
 machine_xt_americxt_init(const machine_t *model)
 {
     int ret;
@@ -217,6 +233,22 @@ machine_xt_znic_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/znic/ibmzen.rom",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_bc88_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/bc88/bc88v104.rom",
                            0x000fe000, 8192, 0);
 
     if (bios_only || !ret)

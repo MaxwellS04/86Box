@@ -800,6 +800,35 @@ machine_at_ap5s_init(const machine_t *model)
 }
 
 int
+machine_at_pip55sp4_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pip55sp4/0312-1.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1 | FLAG_TRC_CONTROLS_CPURST);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      4, 1, 2, 3);
+
+    device_add(&sis_5511_device);
+    device_add(&keyboard_at_ami_device);
+    device_add(&fdc37c665_device);
+    device_add(&sst_flash_29ee010_device);
+
+    return ret;
+}
+
+int
 machine_at_ms5124_init(const machine_t *model)
 {
     int ret;
