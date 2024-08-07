@@ -244,6 +244,22 @@ machine_xt_znic_init(const machine_t *model)
 }
 
 int
+machine_xt_b182_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/b182/B-182_180817_01.BIN",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
 machine_xt_bc88_init(const machine_t *model)
 {
     int ret;
@@ -265,6 +281,22 @@ machine_xt_dtk_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/dtk/dtk_erso_2.42_2764.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_je1000_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/je1000/JE1000.BIN",
                            0x000fe000, 8192, 0);
 
     if (bios_only || !ret)
@@ -341,6 +373,22 @@ machine_xt_pxxt_init(const machine_t *model)
     device_add(&keyboard_xt_device);
 
     machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_xt_rkvi_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/rkvi/rakoark6-12-9.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
 
     return ret;
 }

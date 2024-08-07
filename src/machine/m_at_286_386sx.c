@@ -65,6 +65,28 @@ machine_at_mr286_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_ft286_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/ft286/286-Access methods-ROM2.BIN",
+                                "roms/machines/ft286/286-Access methods-ROM4.BIN",
+                                0x000f0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+	
+    device_add(&keyboard_at_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
 static void
 machine_at_headland_common_init(int type)
 {
@@ -118,6 +140,24 @@ machine_at_ama932j_init(const machine_t *model)
     machine_at_headland_common_init(2);
 
     device_add(&ali5105_device);
+
+    return ret;
+}
+
+int
+machine_at_pm286_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pm286/amibios_M27C512DIP28.BIN",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_ide_init(model);
+
+    machine_at_headland_common_init(2);
 
     return ret;
 }
