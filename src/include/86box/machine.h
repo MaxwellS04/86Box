@@ -444,6 +444,7 @@ extern int machine_at_openat_init(const machine_t *);
 /* m_at_286_386sx.c */
 extern int machine_at_tg286m_init(const machine_t *);
 extern int machine_at_ama932j_init(const machine_t *);
+extern int machine_at_hm386sx_init(const machine_t *);
 extern int machine_at_pm286_init(const machine_t *);
 extern int machine_at_px286_init(const machine_t *);
 extern int machine_at_quadt286_init(const machine_t *);
@@ -486,6 +487,7 @@ extern int machine_at_arb1374_init(const machine_t *);
 extern int machine_at_sbc350a_init(const machine_t *);
 extern int machine_at_flytech386_init(const machine_t *);
 extern int machine_at_325ax_init(const machine_t *);
+extern int machine_at_386slc2_init(const machine_t *);
 extern int machine_at_mr1217_init(const machine_t *);
 extern int machine_at_pja511m_init(const machine_t *);
 extern int machine_at_prox1332_init(const machine_t *);
