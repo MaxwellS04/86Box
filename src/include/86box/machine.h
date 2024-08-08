@@ -645,6 +645,7 @@ extern int machine_at_p5mp3_init(const machine_t *);
 extern int machine_at_dellxp60_init(const machine_t *);
 extern int machine_at_opti560l_init(const machine_t *);
 extern int machine_at_ambradp60_init(const machine_t *);
+extern int machine_at_liberty_init(const machine_t *);
 extern int machine_at_valuepointp60_init(const machine_t *);
 extern int machine_at_revenge_init(const machine_t *);
 extern int machine_at_586is_init(const machine_t *);
