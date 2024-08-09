@@ -98,35 +98,6 @@ machine_at_ambradp90_init(const machine_t *model)
 }
 
 int
-machine_at_p54np4_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/p54np4/asus.bin",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
-        return ret;
-    
-    machine_at_common_init(model);
-
-    pci_init(PCI_CONFIG_TYPE_2 | PCI_CAN_SWITCH_TYPE);
-    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x0F, PCI_CARD_NORMAL,      2, 3, 4, 1);
-    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 1, 2);
-    pci_register_slot(0x0D, PCI_CARD_NORMAL,      4, 1, 2, 3);
-    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 3, 2, 4);
-    device_add(&keyboard_ps2_ami_device);
-    device_add(&i430nx_device);
-    device_add(&ide_pci_2ch_device);
-    device_add(&fdc37c665_device);
-    device_add(&intel_flash_bxt_device);
-
-    return ret;
-}
-
-int
 machine_at_586ip_init(const machine_t *model)
 {
     int ret;

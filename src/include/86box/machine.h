@@ -660,7 +660,6 @@ extern int machine_at_excaliburpci2_init(const machine_t *);
 extern int machine_at_p5sp4_init(const machine_t *);
 
 /* m_at_socket5.c */
-extern int machine_at_p54np4_init(const machine_t *);
 extern int machine_at_plato_init(const machine_t *);
 extern int machine_at_dellplato_init(const machine_t *);
 extern int machine_at_ambradp90_init(const machine_t *);

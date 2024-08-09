@@ -10316,45 +10316,6 @@ const machine_t machines[] = {
     },
     /* Socket 5 machines */
     /* 430NX */
-    {
-        .name = "[i430NX] ASUS PCI/I-P54NP4",
-        .internal_name = "p54np4",
-        .type = MACHINE_TYPE_SOCKET5,
-        .chipset = MACHINE_CHIPSET_INTEL_430NX,
-        .init = machine_at_p54np4_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SOCKET5_7,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 50000000,
-            .max_bus = 66666667,
-            .min_voltage = 3520,
-            .max_voltage = 3520,
-            .min_multi = 1.5,
-            .max_multi = 1.5
-        },
-        .bus_flags = MACHINE_BUS_PS2_LATCH | MACHINE_AT,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM,
-        .ram = {
-            .min = 2048,
-            .max = 524288,
-            .step = 2048
-        },
-        .nvrmask = 127,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
     /* This has the Phoenix MultiKey KBC firmware. */
     {
         .name = "[i430NX] Intel Premiere/PCI II",
