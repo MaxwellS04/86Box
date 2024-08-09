@@ -936,6 +936,7 @@ machine_at_tx97_init(const machine_t *model)
 }
 
 #ifdef USE_AN430TX
+int
 machine_at_an430tx_init(const machine_t *model)
 {
     int ret;
