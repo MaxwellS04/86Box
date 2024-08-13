@@ -940,6 +940,7 @@ extern int machine_xt_americxt_init(const machine_t *);
 extern int machine_xt_amixt_init(const machine_t *);
 extern int machine_xt_b182_init(const machine_t *);
 extern int machine_xt_bc88_init(const machine_t *);
+extern int machine_xt_cp1000_init(const machine_t *);
 extern int machine_xt_dtk_init(const machine_t *);
 extern int machine_xt_je1000_init(const machine_t *);
 extern int machine_xt_jukopc_init(const machine_t *);
@@ -962,7 +963,6 @@ extern int machine_xt_kaypropc_init(const machine_t *);
 extern int machine_xt_sansx16_init(const machine_t *);
 extern int machine_xt_bw230_init(const machine_t *);
 extern int machine_xt_pb8810_init(const machine_t *);
-extern int machine_xt_rimos_init(const machine_t *);
 
 extern int machine_xt_v20xt_init(const machine_t *);
 

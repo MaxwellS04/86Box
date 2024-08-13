@@ -276,6 +276,24 @@ machine_xt_bc88_init(const machine_t *model)
 }
 
 int
+machine_xt_cp1000_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/cp1000/M2764A_00A3.BIN",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xt_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
+
+int
 machine_xt_dtk_init(const machine_t *model)
 {
     int ret;
@@ -738,24 +756,6 @@ machine_xt_glabios_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/glabios/GLABIOS_0.2.6_8X_012324.ROM",
-                           0x000fe000, 8192, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    device_add(&keyboard_xt_device);
-
-    machine_xt_common_init(model, 0);
-
-    return ret;
-}
-
-int
-machine_xt_rimos_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/rimos/RIMOS XT BIOS.bin",
                            0x000fe000, 8192, 0);
 
     if (bios_only || !ret)
