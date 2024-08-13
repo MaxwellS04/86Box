@@ -724,6 +724,7 @@ extern int machine_at_5sbm2_init(const machine_t *);
 /* m_at_socket7.c */
 extern int machine_at_acerv35n_init(const machine_t *);
 extern int machine_at_p55t2p4_init(const machine_t *);
+extern int machine_at_ga586hx_init(const machine_t *);
 extern int machine_at_m7shi_init(const machine_t *);
 extern int machine_at_tc430hx_init(const machine_t *);
 extern int machine_at_infinia7200_init(const machine_t *);
@@ -961,6 +962,7 @@ extern int machine_xt_kaypropc_init(const machine_t *);
 extern int machine_xt_sansx16_init(const machine_t *);
 extern int machine_xt_bw230_init(const machine_t *);
 extern int machine_xt_pb8810_init(const machine_t *);
+extern int machine_xt_rimos_init(const machine_t *);
 
 extern int machine_xt_v20xt_init(const machine_t *);
 

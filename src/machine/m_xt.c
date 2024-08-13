@@ -749,3 +749,21 @@ machine_xt_glabios_init(const machine_t *model)
 
     return ret;
 }
+
+int
+machine_xt_rimos_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/rimos/RIMOS XT BIOS.bin",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    device_add(&keyboard_xt_device);
+
+    machine_xt_common_init(model, 0);
+
+    return ret;
+}
