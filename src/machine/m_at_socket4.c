@@ -477,7 +477,7 @@ machine_at_hot523_init(const machine_t *model)
     pci_register_slot(0x13, PCI_CARD_NORMAL,      3, 4, 1, 2);
 
     device_add(&opti5x7_pci_device);
-	device_add(&ide_opti611_vlb_device);
+    device_add(&ide_opti611_vlb_device);
     device_add(&fdc37c661_device);
     device_add(&sst_flash_29ee010_device);
     device_add(&keyboard_at_device);

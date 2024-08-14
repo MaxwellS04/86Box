@@ -524,7 +524,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[8088] Beltron CP-1000",
+        .name = "[8088] Beltron/Novotec CP-1000",
         .internal_name = "cp1000",
         .type = MACHINE_TYPE_8088,
         .chipset = MACHINE_CHIPSET_DISCRETE,
