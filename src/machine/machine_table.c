@@ -10192,7 +10192,6 @@ const machine_t machines[] = {
     },
 
     /* OPTi 596/597/822 */
-    /* This has AMIKey 'F' KBC firmware. */
     {
         .name = "[OPTi 597] Shuttle HOT-523",
         .internal_name = "hot523",
@@ -10232,7 +10231,8 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-	{
+    /* This has AMIKey 'F' KBC firmware. */
+    {
         .name = "[OPTi 597] Supermicro P5VL-PCI",
         .internal_name = "p5vl",
         .type = MACHINE_TYPE_SOCKET4,
