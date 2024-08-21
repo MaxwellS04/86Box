@@ -3965,6 +3965,17 @@ s3_recalctimings(svga_t *svga)
                         svga->dots_per_clock = (svga->dots_per_clock << 1) / 3;
                         break;
 
+                    case S3_VISION968:
+                        switch (s3->card_type) {
+                            case S3_MIROVIDEO40SV_ERGO_968:
+                                svga->hdisp = (svga->hdisp / 3) << 2;
+                                svga->dots_per_clock = (svga->hdisp / 3) << 2;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+
                     case S3_TRIO64:
                     case S3_TRIO32:
                         svga->hdisp /= 3;
@@ -9919,8 +9930,14 @@ s3_init(const device_t *info)
             s3->width         = 1024;
 
             svga->ramdac    = device_add(&sc11483_ramdac_device);
-            svga->clock_gen = device_add(&av9194_device);
-            svga->getclock  = av9194_getclock;
+            if (s3->card_type == S3_ORCHID_86C911) {
+                svga->clock_gen = device_add(&av9194_device);
+                svga->getclock  = av9194_getclock;
+            } else {
+                /* DCS2824-0 = Diamond ICD2061A-compatible. */
+                svga->clock_gen   = device_add(&icd2061_device);
+                svga->getclock    = icd2061_getclock;
+            }
             break;
 
         case S3_AMI_86C924:
