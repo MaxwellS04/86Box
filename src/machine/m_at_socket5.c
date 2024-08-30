@@ -39,6 +39,7 @@
 #include <86box/sio.h>
 #include <86box/video.h>
 #include <86box/machine.h>
+#include <86box/sound.h>
 
 int
 machine_at_plato_init(const machine_t *model)
