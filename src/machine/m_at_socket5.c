@@ -297,6 +297,41 @@ machine_at_zappa_init(const machine_t *model)
 }
 
 int
+machine_at_videozone_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/videozone/zappa-1-00-01.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+    machine_at_zappa_gpio_init();
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    device_add(&keyboard_ps2_intel_ami_pci_device);
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add(&pc87306_device);
+    device_add(&intel_flash_bxt_ami_device);
+
+    if ((gfxcard[0] == VID_INTERNAL) && machine_get_vid_device(machine))
+        device_add(machine_get_vid_device(machine));
+
+    if ((sound_card_current[0] == SOUND_INTERNAL) && machine_get_snd_device(machine))
+        device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
+
+int
 machine_at_powermatev_init(const machine_t *model)
 {
     int ret;
