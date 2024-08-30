@@ -39,7 +39,6 @@
 #include <86box/sio.h>
 #include <86box/video.h>
 #include <86box/machine.h>
-#include <86box/sound.h>
 
 int
 machine_at_plato_init(const machine_t *model)
@@ -298,11 +297,11 @@ machine_at_zappa_init(const machine_t *model)
 }
 
 int
-machine_at_videozone_init(const machine_t *model)
+machine_at_zappa_old_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/videozone/zappa-1-00-01.bin",
+    ret = bios_load_linear("roms/machines/zappa/zappa-1-00-01.bin",
                            0x000e0000, 131072, 0);
 
     if (bios_only || !ret)
@@ -322,12 +321,6 @@ machine_at_videozone_init(const machine_t *model)
     device_add(&piix_device);
     device_add(&pc87306_device);
     device_add(&intel_flash_bxt_ami_device);
-
-    if ((gfxcard[0] == VID_INTERNAL) && machine_get_vid_device(machine))
-        device_add(machine_get_vid_device(machine));
-
-    if ((sound_card_current[0] == SOUND_INTERNAL) && machine_get_snd_device(machine))
-        device_add(machine_get_snd_device(machine));
 
     return ret;
 }
