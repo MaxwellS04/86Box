@@ -400,6 +400,39 @@ machine_at_marl_init(const machine_t *model)
 }
 
 int
+machine_at_atx8661_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/atx8661/430aa11-63e401486073e123334060.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x06, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x10, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0F, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
+
+    if (has_video && (gfxcard[0] == VID_INTERNAL))
+        device_add(machine_get_vid_device(machine));
+
+    device_add(&i430vx_device);
+    device_add(&piix3_device);
+    device_add(&keyboard_ps2_holtek_device);
+    device_add(&w83787f_device);
+    device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
 machine_at_mailman_init(const machine_t *model)
 {
     int ret;
@@ -821,7 +854,7 @@ machine_at_pip55sp4_init(const machine_t *model)
     pci_register_slot(0x13, PCI_CARD_NORMAL,      4, 1, 2, 3);
 
     device_add(&sis_5511_device);
-    device_add(&keyboard_at_ami_device);
+    device_add(&keyboard_ps2_ami_device);
     device_add(&fdc37c665_device);
     device_add(&sst_flash_29ee010_device);
 

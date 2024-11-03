@@ -260,6 +260,29 @@ machine_at_ecs386_init(const machine_t *model)
 }
 
 int
+machine_at_gs386_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/gs386/386-Goldstar-O.BIN",
+                                "roms/machines/gs386/386-Goldstar-E.BIN",
+                                0x000f0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&cs8230_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    device_add(&keyboard_at_ami_device);
+
+    return ret;
+}
+
+int
 machine_at_spc6000a_init(const machine_t *model)
 {
     int ret;
