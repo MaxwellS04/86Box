@@ -420,9 +420,6 @@ machine_at_atx8661_init(const machine_t *model)
     pci_register_slot(0x10, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
 
-    if (gfxcard[0] == VID_INTERNAL)
-        device_add(machine_get_vid_device(machine));
-
     device_add(&i430vx_device);
     device_add(&piix3_device);
     device_add(&keyboard_ps2_holtek_device);
