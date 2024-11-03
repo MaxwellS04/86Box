@@ -414,13 +414,13 @@ machine_at_atx8661_init(const machine_t *model)
 
     pci_init(PCI_CONFIG_TYPE_1);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0F, PCI_CARD_VIDEO,       4, 0, 0, 0);
     pci_register_slot(0x06, PCI_CARD_NORMAL,      1, 2, 3, 4);
     pci_register_slot(0x08, PCI_CARD_NORMAL,      2, 3, 4, 1);
     pci_register_slot(0x10, PCI_CARD_NORMAL,      3, 4, 1, 2);
-    pci_register_slot(0x0F, PCI_CARD_VIDEO,       4, 0, 0, 0);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
 
-    if (has_video && (gfxcard[0] == VID_INTERNAL))
+    if (gfxcard[0] == VID_INTERNAL)
         device_add(machine_get_vid_device(machine));
 
     device_add(&i430vx_device);
