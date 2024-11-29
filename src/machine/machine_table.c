@@ -16495,7 +16495,6 @@ const machine_t machines[] = {
 
     /* Slot 1/Socket 370 machines */
     /* 440BX */
-    /* Possible OEM version of ECS P6BXT-A+ but without 66MHz FSB */
     {
         .name = "[i440BX] ECS P6BXT-A+",
         .internal_name = "p6bxt",
@@ -16517,7 +16516,7 @@ const machine_t machines[] = {
             .max_multi = 8.0
         },
         .bus_flags = MACHINE_PS2_AGP | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_AG | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
+        .flags = MACHINE_IDE_DUAL | MACHINE_SOUND | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
         .ram = {
             .min = 8192,
             .max = 786432,
@@ -16532,7 +16531,7 @@ const machine_t machines[] = {
         .fdc_device = NULL,
         .sio_device = NULL,
         .vid_device = NULL,
-        .snd_device = &cmi8738_onboard_device,
+        .snd_device = NULL,
         .net_device = NULL
     },
     /* Has a Winbond W83977EF Super I/O chip with on-chip KBC with AMIKey-2 KBC
@@ -16598,7 +16597,7 @@ const machine_t machines[] = {
             .max_multi = 8.0
         },
         .bus_flags = MACHINE_PS2_AGP | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_SOUND | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
         .ram = {
             .min = 8192,
             .max = 524288,
@@ -16613,7 +16612,7 @@ const machine_t machines[] = {
         .fdc_device = NULL,
         .sio_device = NULL,
         .vid_device = NULL,
-        .snd_device = &cmi8738_onboard_device,
+        .snd_device = NULL,
         .net_device = NULL
     },
     /* VIA Apollo Pro */

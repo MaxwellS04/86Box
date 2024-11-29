@@ -141,7 +141,7 @@ machine_at_p6bxt_init(const machine_t *model)
     spd_register(SPD_TYPE_SDRAM, 0x7, 256);
 
     if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&cmi8738_onboard_device);
+        device_add(&cmi8738_device);
 
     return ret;
 }
@@ -172,9 +172,6 @@ machine_at_p6zxt_init(const machine_t *model)
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&sst_flash_39sf020_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 256);
-
-    if (sound_card_current[0] == SOUND_INTERNAL)
-        device_add(&cmi8738_onboard_device);
 
     return ret;
 }
