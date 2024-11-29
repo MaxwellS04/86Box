@@ -847,8 +847,10 @@ extern int machine_at_gt694va_init(const machine_t *);
 
 extern int machine_at_vei8_init(const machine_t *);
 
+extern int machine_at_p299_init(const machine_t *);
 extern int machine_at_borapro_init(const machine_t *);
 extern int machine_at_ms6168_init(const machine_t *);
+extern int machine_at_zxbs1_init(const machine_t *);
 
 extern int machine_at_p6f99_init(const machine_t *);
 extern int machine_at_m747_init(const machine_t *);
@@ -872,7 +874,7 @@ extern int machine_at_apas3_init(const machine_t *);
 extern int machine_at_cuv4xls_init(const machine_t *);
 extern int machine_at_6via90ap_init(const machine_t *);
 extern int machine_at_s1857_init(const machine_t *);
-extern int machine_at_prosignia31x_init(const machine_t *);
+extern int machine_at_p6bxt_init(const machine_t *);
 extern int machine_at_p6zxt_init(const machine_t *);
 extern int machine_at_p6bap_init(const machine_t *);
 extern int machine_at_p6bat_init(const machine_t *);

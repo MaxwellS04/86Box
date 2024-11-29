@@ -113,11 +113,11 @@ machine_at_s1857_init(const machine_t *model)
 }
 
 int
-machine_at_prosignia31x_init(const machine_t *model)
+machine_at_p6bxt_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/prosignia31x/ecs-6747568bed52d353666254.bin",
+    ret = bios_load_linear("roms/machines/p6bxt/bxt53s.BIN",
                            0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
@@ -171,7 +171,7 @@ machine_at_p6zxt_init(const machine_t *model)
     device_add(&w83977ef_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&sst_flash_39sf020_device);
-    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 256);
 
     if (sound_card_current[0] == SOUND_INTERNAL)
         device_add(&cmi8738_onboard_device);
