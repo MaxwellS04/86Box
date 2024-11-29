@@ -15885,7 +15885,7 @@ const machine_t machines[] = {
         .available_flag = MACHINE_AVAILABLE,
         .gpio_acpi_handler = NULL,
         .cpu = {
-            .package = 0,
+            .package = CPU_PKG_SLOT1,
             .block = CPU_BLOCK_NONE,
             .min_bus = 66666667,
             .max_bus = 100000000,
@@ -15912,7 +15912,7 @@ const machine_t machines[] = {
         .vid_device = NULL,
         .snd_device = &es1371_onboard_device,
         .net_device = NULL
-    }
+    },
     /* Has a National Semiconductors PC87309 Super I/O chip with on-chip KBC
        with most likely AMIKey-2 KBC firmware. */
     {
