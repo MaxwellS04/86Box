@@ -136,6 +136,9 @@ machine_at_hm386sx_init(const machine_t *model)
     machine_at_common_ide_init(model);
 
     machine_at_headland_common_init(2);
+	
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
     return ret;
 }
@@ -154,6 +157,9 @@ machine_at_pm286_init(const machine_t *model)
     machine_at_common_ide_init(model);
 
     machine_at_headland_common_init(2);
+	
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
     return ret;
 }
