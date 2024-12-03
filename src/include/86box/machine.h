@@ -561,6 +561,7 @@ extern int machine_at_abax4_init(const machine_t *);
 extern int machine_at_isa486_init(const machine_t *);
 
 extern int machine_at_386siq_init(const machine_t *);
+extern int machine_at_486sv2_init(const machine_t *);
 extern int machine_at_av4_init(const machine_t *);
 extern int machine_at_auvacam_init(const machine_t *);
 extern int machine_at_valuepoint433_init(const machine_t *);
@@ -627,7 +628,7 @@ extern int machine_at_dvent4xx_init(const machine_t *);
 extern int machine_at_ecsal486_init(const machine_t *);
 extern int machine_at_ap4100aa_init(const machine_t *);
 extern int machine_at_atc1762_init(const machine_t *);
-extern int  machine_at_b1474_init(const machine_t *);
+extern int machine_at_b1474_init(const machine_t *);
 
 /* m_at_commodore.c */
 extern int machine_at_cmdpc_init(const machine_t *);
