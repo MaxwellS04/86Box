@@ -5773,10 +5773,10 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi M1429] Seritech SER-386-AD III",
+        .name = "[ALi M1429G] Seritech SER-386-AD III",
         .internal_name = "ser386ad",
         .type = MACHINE_TYPE_386DX,
-        .chipset = MACHINE_CHIPSET_ALI_M1429,
+        .chipset = MACHINE_CHIPSET_ALI_M1429g,
         .init = machine_at_ser386ad_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
