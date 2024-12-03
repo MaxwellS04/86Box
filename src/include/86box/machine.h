@@ -484,7 +484,9 @@ extern int machine_at_dataexpert386sx_init(const machine_t *);
 extern int machine_at_spc6033p_init(const machine_t *);
 extern int machine_at_wd76c10_init(const machine_t *);
 extern int machine_at_arb1374_init(const machine_t *);
+extern int machine_at_pmi386sx_init(const machine_t *);
 extern int machine_at_sbc350a_init(const machine_t *);
+extern int machine_at_auvanpa_init(const machine_t *);
 extern int machine_at_flytech386_init(const machine_t *);
 extern int machine_at_325ax_init(const machine_t *);
 extern int machine_at_mr1217_init(const machine_t *);
@@ -515,6 +517,7 @@ extern int machine_at_ecs386_init(const machine_t *);
 extern int machine_at_spc6000a_init(const machine_t *);
 extern int machine_at_micronics386_init(const machine_t *);
 extern int machine_at_ecs386v_init(const machine_t *);
+extern int machine_at_ser386ad_init(const machine_t *);
 extern int machine_at_tandy4000_init(const machine_t *);
 
 extern int machine_at_rycleopardlx_init(const machine_t *);
@@ -530,6 +533,7 @@ extern int machine_at_acerv10_init(const machine_t *);
 
 extern int machine_at_8521_init(const machine_t *);
 
+extern int machine_at_abad4_init(const machine_t *);
 extern int machine_at_acera1g_init(const machine_t *);
 extern int machine_at_hot412_init(const machine_t *);
 extern int machine_at_ali1429_init(const machine_t *);
@@ -623,6 +627,7 @@ extern int machine_at_dvent4xx_init(const machine_t *);
 extern int machine_at_ecsal486_init(const machine_t *);
 extern int machine_at_ap4100aa_init(const machine_t *);
 extern int machine_at_atc1762_init(const machine_t *);
+extern int  machine_at_b1474_init(const machine_t *);
 
 /* m_at_commodore.c */
 extern int machine_at_cmdpc_init(const machine_t *);

@@ -213,6 +213,27 @@ machine_at_386siq_init(const machine_t *model)
 }
 
 int
+machine_at_486sv2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/486sv2/486-asus isa-486sv2.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&sis_85c460_device);
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
 machine_at_valuepoint433_init(const machine_t *model) // hangs without the PS/2 mouse
 {
     int ret;
@@ -299,6 +320,38 @@ machine_at_ecs386v_init(const machine_t *model)
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_ser386ad_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ser386ad/386dx-award-1995-m27c512-at-dip28-636d7d386ac53716223032.bin",
+               0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+    return ret;
+
+    machine_at_ali1429_common_init(model, 0);
+
+    return ret;
+}
+
+int
+machine_at_abad4_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/abad4/ABIT_AB-AD4.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ali1429_common_init(model, 0);
 
     return ret;
 }
@@ -2395,6 +2448,27 @@ machine_at_ecsal486_init(const machine_t *model)
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_b1474_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/b1474/1474v33.u26",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    device_add(&ali1429g_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&ide_vlb_device);
+    device_add(&fdc37c669_device);
 
     return ret;
 }

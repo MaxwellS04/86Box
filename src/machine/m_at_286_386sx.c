@@ -815,6 +815,28 @@ machine_at_acer100t_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_pmi386sx_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pmi386sx/i386vx5-5fb9231f5a485982461702.rom",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&ali1217_device);
+    device_add(&ide_isa_device);
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
 
 int
 machine_at_arb1374_init(const machine_t *model)
@@ -853,6 +875,28 @@ machine_at_sbc350a_init(const machine_t *model)
     device_add(&ide_isa_device);
     device_add(&fdc37c665_ide_pri_device);
     device_add(&keyboard_ps2_ami_device);
+
+    return ret;
+}
+
+int
+machine_at_auvanpa_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/auvanpa/npm16-a0-628b8dfda3c5e693882114.bio",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&ali1217_device);
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
     return ret;
 }
