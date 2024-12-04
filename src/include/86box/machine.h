@@ -628,7 +628,6 @@ extern int machine_at_dvent4xx_init(const machine_t *);
 extern int machine_at_ecsal486_init(const machine_t *);
 extern int machine_at_ap4100aa_init(const machine_t *);
 extern int machine_at_atc1762_init(const machine_t *);
-extern int machine_at_b1474_init(const machine_t *);
 
 /* m_at_commodore.c */
 extern int machine_at_cmdpc_init(const machine_t *);
@@ -704,6 +703,7 @@ extern int machine_at_thor_init(const machine_t *);
 extern int machine_at_mrthor_init(const machine_t *);
 extern uint32_t machine_at_endeavor_gpio_handler(uint8_t write, uint32_t val);
 extern int machine_at_endeavor_init(const machine_t *);
+extern int machine_at_s1468_init(const machine_t *);
 extern int machine_at_marl_init(const machine_t *);
 extern int machine_at_mailman_init(const machine_t *);
 extern int machine_at_ms5119_init(const machine_t *);
@@ -775,6 +775,7 @@ extern int machine_at_tomahawk_init(const machine_t *);
 extern int machine_at_ficva502_init(const machine_t *);
 
 extern int machine_at_ficpa2012_init(const machine_t *);
+extern int machine_at_hot595_init(const machine_t *);
 
 extern int machine_at_r534f_init(const machine_t *);
 extern int machine_at_ms5146_init(const machine_t *);
@@ -871,6 +872,7 @@ extern int machine_at_s370slm_init(const machine_t *);
 
 extern int machine_at_cubx_init(const machine_t *);
 extern int machine_at_atc7020bxii_init(const machine_t *);
+extern int machine_at_3isat_init(const machine_t *);
 extern int machine_at_m773_init(const machine_t *);
 extern int machine_at_ambx133_init(const machine_t *);
 extern int machine_at_awo671r_init(const machine_t *);

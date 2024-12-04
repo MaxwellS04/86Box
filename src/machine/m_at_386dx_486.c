@@ -2463,27 +2463,6 @@ machine_at_ecsal486_init(const machine_t *model)
 }
 
 int
-machine_at_b1474_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/b1474/1474v33.u26",
-                           0x000f0000, 65536, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init_ex(model, 2);
-
-    device_add(&ali1429g_device);
-    device_add(&keyboard_ps2_ami_pci_device);
-    device_add(&ide_vlb_device);
-    device_add(&fdc37c669_device);
-
-    return ret;
-}
-
-int
 machine_at_ap4100aa_init(const machine_t *model)
 {
     int ret;

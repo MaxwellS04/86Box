@@ -1331,6 +1331,38 @@ machine_at_ficpa2012_init(const machine_t *model)
 }
 
 int
+machine_at_hot595_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/hot595/595wiq03.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
+
+    device_add(&via_vp3_device);
+    device_add(&via_vt82c586b_device);
+    device_add(&keyboard_ps2_pci_device);
+    device_add(&it8671f_device);
+    device_add(&sst_flash_29ee010_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 512);
+
+    return ret;
+}
+
+int
 machine_at_586step_init(const machine_t *model)
 {
     int ret;
