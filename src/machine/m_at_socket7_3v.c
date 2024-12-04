@@ -386,7 +386,7 @@ machine_at_s1468_init(const machine_t *model)
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
     pci_register_slot(0x0c, PCI_CARD_NORMAL,      1, 2, 3, 4);
     pci_register_slot(0x0d, PCI_CARD_NORMAL,      2, 3, 4, 1);
-    pci_register_slot(0x0e, PCI_CARD_NORMAL,      3, 4, 1, 2)
+    pci_register_slot(0x0e, PCI_CARD_NORMAL,      3, 4, 1, 2);
     pci_register_slot(0x0f, PCI_CARD_NORMAL,      4, 1, 2, 3);
 
     device_add(&i430fx_device);
