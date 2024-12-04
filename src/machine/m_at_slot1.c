@@ -488,11 +488,6 @@ machine_at_hot679_init(const machine_t *model)
     device_add(&sst_flash_39sf020_device);
     spd_register(SPD_TYPE_SDRAM, 0x7, 256);
 
-    if (sound_card_current[0] == SOUND_INTERNAL) {
-        device_add(machine_get_snd_device(machine));
-        device_add(&ct1297_device); /* no good pictures, but the marking looks like CT1297 from a distance */
-    }
-
     return ret;
 }
 

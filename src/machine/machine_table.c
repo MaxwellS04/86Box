@@ -16244,7 +16244,7 @@ const machine_t machines[] = {
             .max_multi = 8.0
         },
         .bus_flags = MACHINE_PS2_PCI | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_SOUND | MACHINE_APM | MACHINE_ACPI | MACHINE_USB, /* Machine has internal video: Intel i740 */
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_USB, /* Machine has internal video: Intel i740 */
         .ram = {
             .min = 8192,
             .max = 786432,
@@ -16259,7 +16259,7 @@ const machine_t machines[] = {
         .fdc_device = NULL,
         .sio_device = NULL,
         .vid_device = NULL,
-        .snd_device = &es1371_onboard_device,
+        .snd_device = NULL,
         .net_device = NULL
     },
     /* Has a National Semiconductors PC87309 Super I/O chip with on-chip KBC
