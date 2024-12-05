@@ -16429,7 +16429,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[i440ZX] PCPartner ZXBS1-933",
+        .name = "[i440ZX] PC Partner ZXBS1-933",
         .internal_name = "zxbs1",
         .type = MACHINE_TYPE_SLOT1,
         .chipset = MACHINE_CHIPSET_INTEL_440ZX,
@@ -16449,7 +16449,7 @@ const machine_t machines[] = {
             .max_multi = 8.0
         },
         .bus_flags = MACHINE_PS2_AGP | MACHINE_BUS_USB,
-        .flags = MACHINE_IDE_DUAL | MACHINE_SOUND | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
         .ram = {
             .min = 8192,
             .max = 524288,
@@ -16464,7 +16464,7 @@ const machine_t machines[] = {
         .fdc_device = NULL,
         .sio_device = NULL,
         .vid_device = NULL,
-        .snd_device = &es1373_onboard_device,
+        .snd_device = NULL,
         .net_device = NULL
     },
 
