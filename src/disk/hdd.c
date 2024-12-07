@@ -418,6 +418,8 @@ static hdd_preset_t hdd_speed_presets[] = {
     { .name = "Conner CP3024",         .internal_name = "CP3024", .model = "Conner Peripherals 20MB - CP3024", .zones =  1,  .avg_spt = 33, .heads = 2, .rpm = 3500, .full_stroke_ms = 50, .track_seek_ms = 8,   .rcache_num_seg =  1, .rcache_seg_size =  8, .max_multiple =  8 },
     { .name = "Conner CP3044",         .internal_name = "CP3044", .model = "Conner Peripherals 40MB - CP3044", .zones =  1,  .avg_spt = 40, .heads = 2, .rpm = 3500, .full_stroke_ms = 50, .track_seek_ms = 8,   .rcache_num_seg =  1, .rcache_seg_size =  8, .max_multiple =  8 },
     { .name = "Conner CP3104",         .internal_name = "CP3104", .model = "Conner Peripherals 104MB - CP3104", .zones =  1,  .avg_spt = 33, .heads = 8, .rpm = 3500, .full_stroke_ms = 45, .track_seek_ms = 8,   .rcache_num_seg =  4, .rcache_seg_size =  8, .max_multiple =  8 },
+    { .name = "Atlus AT3127",          .internal_name = "AT3127", .model = "The twins at st. clares", .zones =  1,  .avg_spt = 33, .heads = 8, .rpm = 3550, .full_stroke_ms = 45, .track_seek_ms = 8,   .rcache_num_seg =  2, .rcache_seg_size =  16, .max_multiple =  8 },
+    { .name = "Atlus AT3127D",         .internal_name = "AT3127D", .model = "ATLUS     AT3127 D", .zones =  1,  .avg_spt = 33, .heads = 8, .rpm = 3600, .full_stroke_ms = 40, .track_seek_ms = 6,   .rcache_num_seg =  4, .rcache_seg_size =  16, .max_multiple =  8 },
     // clang-format on
 };
 
