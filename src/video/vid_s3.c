@@ -3096,7 +3096,7 @@ s3_in(uint16_t addr, void *priv)
                    get stuck in an infinite loop. */
                 if (((s3->card_type == S3_STB_POWERGRAPH_64_VIDEO) ||
                     (s3->card_type == S3_PHOENIX_TRIO64VPLUS_ONBOARD) ||
-                    (s3->card_type == S3_CARDEX_TRIO64VPLUS) && (svga->seqaddr == 0x17))
+                    (s3->card_type == S3_CARDEX_TRIO64VPLUS)) && (svga->seqaddr == 0x17))
                     svga->seqregs[svga->seqaddr] ^= 0x01;
                 return temp;
             } if ((svga->seqaddr >= 0x10) && (s3->chip >= S3_TRIO64V2)) {
