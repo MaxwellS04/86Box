@@ -10522,20 +10522,19 @@ s3_trio64v2_dx_available(void)
 static int
 s3_winner1000_928_available(void)
 {
-    return rom_present(S3_WINNER1000_928);
+    return rom_present(ROM_WINNER1000_928);
 }
 
 static int
 s3_winner2000_928_available(void)
 {
-    return rom_present(S3_WINNER2000_928);
+    return rom_present(ROM_WINNER2000_928);
 }
 
 static int
 s3_winner1000_805_available(void)
 {
     return rom_present(ROM_WINNER1000_805);
-
 
 static int
 s3_winner1000_trio_available(void)
