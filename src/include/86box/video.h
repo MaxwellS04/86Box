@@ -528,8 +528,6 @@ extern const device_t s3_trio64v2_dx_onboard_pci_device;
 extern const device_t s3_winner1000_928_isa_device;
 extern const device_t s3_winner2000_928_isa_device;
 extern const device_t s3_winner1000_805_isa_device;
-extern const device_t s3_winner1000_trio_pci_device;
-extern const device_t s3_winner1000_triov_pci_device;
 extern const device_t s3_winner2000_pro_pci_device;
 
 /* S3 ViRGE */

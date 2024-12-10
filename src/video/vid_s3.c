@@ -79,8 +79,6 @@
 #define ROM_WINNER1000_928             "roms/video/s3/ELSA Winner 1000 (86c928).bin"
 #define ROM_WINNER2000_928             "roms/video/s3/ELSA Winner 2000 (86c928).bin"
 #define ROM_WINNER1000_805             "roms/video/s3/ELSA Winner 1000 (86c805).bin"
-#define ROM_WINNER1000_TRIO            "roms/video/s3/ELSA Winner 1000 Trio (Trio64).bin"
-#define ROM_WINNER1000_TRIOV           "roms/video/s3/ELSA Winner 1000 TrioV (Trio64VP).bin"
 #define ROM_WINNER2000_PRO             "roms/video/s3/ELSA Winner 2000Pro Standard (86c964).bin"
 
 enum {
@@ -127,8 +125,6 @@ enum {
     S3_WINNER1000_928,
     S3_WINNER2000_928,
     S3_WINNER1000_805,
-    S3_WINNER1000_TRIO,
-    S3_WINNER1000_TRIOV,
     S3_WINNER2000_PRO,
 };
 
@@ -3100,8 +3096,7 @@ s3_in(uint16_t addr, void *priv)
                    get stuck in an infinite loop. */
                 if (((s3->card_type == S3_STB_POWERGRAPH_64_VIDEO) ||
                     (s3->card_type == S3_PHOENIX_TRIO64VPLUS_ONBOARD) ||
-                    (s3->card_type == S3_CARDEX_TRIO64VPLUS) ||
-                    (s3->card_type == S3_WINNER1000_TRIOV)) && (svga->seqaddr == 0x17))
+                    (s3->card_type == S3_CARDEX_TRIO64VPLUS) && (svga->seqaddr == 0x17))
                     svga->seqregs[svga->seqaddr] ^= 0x01;
                 return temp;
             } if ((svga->seqaddr >= 0x10) && (s3->chip >= S3_TRIO64V2)) {
@@ -9728,11 +9723,6 @@ s3_init(const device_t *info)
             else
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_vlb);
             break;
-        case S3_WINNER1000_TRIO:
-            bios_fn = ROM_WINNER1000_TRIO;
-            chip    = S3_TRIO64;
-            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
-            break;
         case S3_SPEA_MIRAGE_P64:
             bios_fn = ROM_SPEA_MIRAGE_P64;
             chip    = S3_TRIO64;
@@ -9772,11 +9762,6 @@ s3_init(const device_t *info)
             break;
         case S3_CARDEX_TRIO64VPLUS:
             bios_fn = ROM_CARDEX_TRIO64VPLUS;
-            chip    = S3_TRIO64V;
-            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64vp_cardex_pci);
-            break;
-        case S3_WINNER1000_TRIOV:
-            bios_fn = ROM_WINNER1000_TRIOV;
             chip    = S3_TRIO64V;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64vp_cardex_pci);
             break;
@@ -10247,11 +10232,9 @@ s3_init(const device_t *info)
         case S3_PHOENIX_TRIO64VPLUS:
         case S3_PHOENIX_TRIO64VPLUS_ONBOARD:
         case S3_CARDEX_TRIO64VPLUS:
-        case S3_WINNER1000_TRIOV:
         case S3_DIAMOND_STEALTH64_764:
         case S3_SPEA_MIRAGE_P64:
         case S3_NUMBER9_9FX:
-        case S3_WINNER1000_TRIO:
             svga->decode_mask = (4 << 20) - 1;
             s3->id            = 0xe1; /*Trio64*/
             s3->id_ext = s3->id_ext_pci = 0x11;
@@ -10535,18 +10518,6 @@ static int
 s3_winner1000_805_available(void)
 {
     return rom_present(ROM_WINNER1000_805);
-}
-
-static int
-s3_winner1000_trio_available(void)
-{
-    return rom_present(ROM_WINNER1000_TRIO);
-}
-
-static int
-s3_winner1000_triov_available(void)
-{
-    return rom_present(ROM_WINNER1000_TRIOV);
 }
 
 static int
@@ -11452,34 +11423,6 @@ const device_t s3_winner1000_805_isa_device = {
     .close         = s3_close,
     .reset         = s3_reset,
     { .available = s3_winner1000_805_available },
-    .speed_changed = s3_speed_changed,
-    .force_redraw  = s3_force_redraw,
-    .config        = s3_9fx_config
-};
-
-const device_t s3_winner1000_trio_pci_device = {
-    .name          = "S3 Trio64 PCI (ELSA Winner 1000 Trio)",
-    .internal_name = "winner1000_trio_pci",
-    .flags         = DEVICE_PCI,
-    .local         = S3_WINNER1000_TRIO,
-    .init          = s3_init,
-    .close         = s3_close,
-    .reset         = s3_reset,
-    { .available = s3_winner1000_trio_available },
-    .speed_changed = s3_speed_changed,
-    .force_redraw  = s3_force_redraw,
-    .config        = s3_9fx_config
-};
-
-const device_t s3_winner1000_triov_pci_device = {
-    .name          = "S3 Trio64V+ PCI (ELSA Winner 1000 Trio/V)",
-    .internal_name = "winner1000_triov_pci",
-    .flags         = DEVICE_PCI,
-    .local         = S3_WINNER1000_TRIOV,
-    .init          = s3_init,
-    .close         = s3_close,
-    .reset         = s3_reset,
-    { .available = s3_winner1000_triov_available },
     .speed_changed = s3_speed_changed,
     .force_redraw  = s3_force_redraw,
     .config        = s3_9fx_config
