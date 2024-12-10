@@ -176,7 +176,7 @@ video_cards[] = {
     { &s3_9fx_531_pci_device                           },
     { &s3_phoenix_vision868_pci_device                 },
     { &s3_cardex_trio64vplus_pci_device                },
-    { &s3_ws3_winner1000_triov_pci_device              },
+    { &s3_winner1000_triov_pci_device                  },
     { &s3_phoenix_trio64vplus_pci_device               },
     { &s3_trio64v2_dx_pci_device                       },
     { &s3_virge_325_pci_device                         },
