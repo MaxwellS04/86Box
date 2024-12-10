@@ -10535,6 +10535,7 @@ static int
 s3_winner1000_805_available(void)
 {
     return rom_present(ROM_WINNER1000_805);
+}
 
 static int
 s3_winner1000_trio_available(void)
