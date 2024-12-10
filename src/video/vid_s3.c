@@ -76,6 +76,12 @@
 #define ROM_NUMBER9_9FX_771            "roms/video/s3/no9motionfx771.BIN"
 #define ROM_PHOENIX_VISION968          "roms/video/s3/1-DSV3968P.BIN"
 #define ROM_DIAMOND_STEALTH64_968      "roms/video/s3/vv_303.rom"
+#define ROM_WINNER1000_928             "roms/video/s3/ELSA Winner 1000 (86c928).bin"
+#define ROM_WINNER2000_928             "roms/video/s3/ELSA Winner 2000 (86c928).bin"
+#define ROM_WINNER1000_805             "roms/video/s3/ELSA Winner 1000 (86c805).bin"
+#define ROM_WINNER1000_TRIO            "roms/video/s3/ELSA Winner 1000 Trio (Trio64).bin"
+#define ROM_WINNER1000_TRIOV           "roms/video/s3/ELSA Winner 1000 TrioV (Trio64VP).bin"
+#define ROM_WINNER2000_PRO             "roms/video/s3/ELSA Winner 2000Pro Standard (86c964).bin"
 
 enum {
     S3_NUMBER9_9FX,
@@ -118,6 +124,12 @@ enum {
     S3_SPEA_MERCURY_LITE_PCI,
     S3_86C805_ONBOARD,
     S3_DIAMOND_STEALTH64_968
+    S3_WINNER1000_928,
+    S3_WINNER2000_928,
+    S3_WINNER1000_805,
+    S3_WINNER1000_TRIO,
+    S3_WINNER1000_TRIOV,
+    S3_WINNER2000_PRO,
 };
 
 enum {
@@ -3088,7 +3100,8 @@ s3_in(uint16_t addr, void *priv)
                    get stuck in an infinite loop. */
                 if (((s3->card_type == S3_STB_POWERGRAPH_64_VIDEO) ||
                     (s3->card_type == S3_PHOENIX_TRIO64VPLUS_ONBOARD) ||
-                    (s3->card_type == S3_CARDEX_TRIO64VPLUS)) && (svga->seqaddr == 0x17))
+                    (s3->card_type == S3_CARDEX_TRIO64VPLUS) ||
+                    (s3->card_type == S3_WINNER1000_TRIOV)) && (svga->seqaddr == 0x17))
                     svga->seqregs[svga->seqaddr] ^= 0x01;
                 return temp;
             } if ((svga->seqaddr >= 0x10) && (s3->chip >= S3_TRIO64V2)) {
@@ -3117,7 +3130,7 @@ s3_in(uint16_t addr, void *priv)
                 return temp;
             } else if ((s3->chip == S3_VISION964 && s3->card_type == S3_ELSAWIN2KPROX_964) || (s3->chip == S3_VISION968 && (s3->card_type == S3_DIAMOND_STEALTH64_968 || s3->card_type == S3_ELSAWIN2KPROX || s3->card_type == S3_PHOENIX_VISION968 || s3->card_type == S3_NUMBER9_9FX_771)))
                 return ibm_rgb528_ramdac_in(addr, rs2, svga->ramdac, svga);
-            else if (s3->chip == S3_VISION968 && (s3->card_type == S3_SPEA_MERCURY_P64V || s3->card_type == S3_MIROVIDEO40SV_ERGO_968)) {
+            else if ((s3->chip == S3_VISION964 && s3->card_type == S3_WINNER2000_PRO) || (s3->chip == S3_VISION968 && (s3->card_type == S3_SPEA_MERCURY_P64V || s3->card_type == S3_MIROVIDEO40SV_ERGO_968))) {
                 rs3 = !!(svga->crtc[0x55] & 0x02);
                 return tvp3026_ramdac_in(addr, rs2, rs3, svga->ramdac, svga);
             } else if (((s3->chip == S3_86C801) || (s3->chip == S3_86C805) || (s3->chip == S3_86C924)) &&
@@ -3127,7 +3140,7 @@ s3_in(uint16_t addr, void *priv)
                 return sc1148x_ramdac_in(addr, rs2, svga->ramdac, svga);
             else if (s3->card_type == S3_NUMBER9_9FX_531)
                 return att498_ramdac_in(addr, rs2, svga->ramdac, svga);
-            else if ((s3->chip == S3_86C928PCI) && (s3->card_type == S3_SPEA_MERCURY_LITE_PCI))
+            else if ((s3->chip == S3_86C928 && (s3->card_type == S3_WINNER1000_928 || s3->card_type == S3_WINNER2000_928)) || (s3->chip == S3_86C928PCI) && (s3->card_type == S3_SPEA_MERCURY_LITE_PCI)))
                 return sc1502x_ramdac_in(addr, svga->ramdac, svga);
             else
                 return sdac_ramdac_in(addr, rs2, svga->ramdac, svga);
@@ -3407,8 +3420,8 @@ s3_recalctimings(svga_t *svga)
             bt48x_recalctimings(svga->ramdac, svga);
             svga->interlace |= (!!(svga->crtc[0x42] & 0x20));
         }
-    } else if (s3->chip == S3_VISION968) {
-        if ((s3->card_type == S3_SPEA_MERCURY_P64V) || (s3->card_type == S3_MIROVIDEO40SV_ERGO_968))
+    } else if ((s3->chip == S3_VISION964) || (s3->chip == S3_VISION968)) {
+        if ((s3->card_type == S3_WINNER2000_PRO) || (s3->card_type == S3_SPEA_MERCURY_P64V) || (s3->card_type == S3_MIROVIDEO40SV_ERGO_968))
             tvp3026_recalctimings(svga->ramdac, svga);
         else
             ibm_rgb528_recalctimings(svga->ramdac, svga);
@@ -3543,6 +3556,8 @@ s3_recalctimings(svga_t *svga)
                     case S3_86C928:
                         switch (s3->card_type) {
                             case S3_METHEUS_86C928:
+                            case S3_WINNER1000_928:
+                            case S3_WINNER2000_928:
                                 switch (s3->width) {
                                     case 1280: /*Account for the 1280x1024 resolution*/
                                         switch (svga->hdisp) {
@@ -3697,6 +3712,7 @@ s3_recalctimings(svga_t *svga)
                         switch (s3->card_type) {
                             case S3_MIROCRYSTAL8S_805:
                             case S3_MIROCRYSTAL10SD_805:
+                            case S3_WINNER1000_805:
                             case S3_PHOENIX_86C805:
                             case S3_86C805_ONBOARD:
                                 svga->hdisp >>= 1;
@@ -3727,6 +3743,8 @@ s3_recalctimings(svga_t *svga)
                     case S3_86C928:
                         switch (s3->card_type) {
                             case S3_METHEUS_86C928:
+                            case S3_WINNER1000_928:
+                            case S3_WINNER2000_928:
                                 if (!s3->color_16bit) {
                                     svga->hdisp <<= 1;
                                     svga->dots_per_clock <<= 1;
@@ -3888,6 +3906,7 @@ s3_recalctimings(svga_t *svga)
                         switch (s3->card_type) {
                             case S3_MIROCRYSTAL8S_805:
                             case S3_MIROCRYSTAL10SD_805:
+                            case S3_WINNER1000_805:
                             case S3_PHOENIX_86C805:
                             case S3_86C805_ONBOARD:
                                 svga->hdisp >>= 1;
@@ -3917,6 +3936,8 @@ s3_recalctimings(svga_t *svga)
                     case S3_86C928:
                         switch (s3->card_type) {
                             case S3_METHEUS_86C928:
+                            case S3_WINNER1000_928:
+                            case S3_WINNER2000_928:						
                                 svga->hdisp <<= 1;
                                 svga->dots_per_clock <<= 1;
                                 switch (svga->hdisp) { /*This might be a driver issue*/
@@ -4089,6 +4110,7 @@ s3_recalctimings(svga_t *svga)
                         switch (s3->card_type) {
                             case S3_MIROCRYSTAL8S_805:
                             case S3_MIROCRYSTAL10SD_805:
+                            case S3_WINNER1000_805:
                             case S3_PHOENIX_86C805:
                             case S3_SPEA_MIRAGE_86C805:
                             case S3_86C805_ONBOARD:
@@ -4185,6 +4207,7 @@ s3_recalctimings(svga_t *svga)
                     case S3_VISION964:
                         switch (s3->card_type) {
                             case S3_MIROCRYSTAL20SV_964:
+                            case S3_WINNER2000_PRO:
                                 switch (s3->width) {
                                     case 800:
                                     case 1024:
@@ -9543,6 +9566,11 @@ s3_init(const device_t *info)
             chip    = S3_86C805;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
             break;
+        case S3_WINNER1000_805:
+            bios_fn = ROM_WINNER1000_805;
+            chip    = S3_86C805;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
+            break;
         case S3_PHOENIX_86C801:
             bios_fn = ROM_PHOENIX_86C80X;
             chip    = S3_86C801;
@@ -9560,6 +9588,16 @@ s3_init(const device_t *info)
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c805);
             else
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c801);
+            break;
+        case S3_WINNER1000_928:
+            bios_fn = ROM_WINNER1000_928;
+            chip    = S3_86C928;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c801);
+            break;
+        case S3_WINNER2000_928:
+            bios_fn = ROM_WINNER2000_928;
+            chip    = S3_86C928;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_86c801);
             break;
         case S3_SPEA_MERCURY_LITE_PCI:
             bios_fn = ROM_SPEA_MERCURY_LITE_PCI;
@@ -9604,6 +9642,11 @@ s3_init(const device_t *info)
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision964_pci);
             else
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision964_vlb);
+            break;
+        case S3_WINNER2000_PRO:
+            bios_fn = ROM_WINNER2000_PRO;
+            chip    = S3_VISION964;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_vision964_pci);
             break;
         case S3_MIROCRYSTAL20SV_964:
             chip = S3_VISION964;
@@ -9685,6 +9728,11 @@ s3_init(const device_t *info)
             else
                 video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_vlb);
             break;
+        case S3_WINNER1000_TRIO:
+            bios_fn = ROM_WINNER1000_TRIO;
+            chip    = S3_TRIO64;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64_pci);
+            break;
         case S3_SPEA_MIRAGE_P64:
             bios_fn = ROM_SPEA_MIRAGE_P64;
             chip    = S3_TRIO64;
@@ -9724,6 +9772,11 @@ s3_init(const device_t *info)
             break;
         case S3_CARDEX_TRIO64VPLUS:
             bios_fn = ROM_CARDEX_TRIO64VPLUS;
+            chip    = S3_TRIO64V;
+            video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64vp_cardex_pci);
+            break;
+        case S3_WINNER1000_TRIOV:
+            bios_fn = ROM_WINNER1000_TRIOV;
             chip    = S3_TRIO64V;
             video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_s3_trio64vp_cardex_pci);
             break;
@@ -10004,6 +10057,7 @@ s3_init(const device_t *info)
 
         case S3_PHOENIX_86C801:
         case S3_PHOENIX_86C805:
+        case S3_WINNER1000_805:
             svga->decode_mask = (2 << 20) - 1;
             stepping          = 0xa0; /*86C801/86C805*/
             s3->id            = stepping;
@@ -10018,6 +10072,8 @@ s3_init(const device_t *info)
             break;
 
         case S3_METHEUS_86C928:
+        case S3_WINNER1000_928:
+        case S3_WINNER2000_928:
             svga->decode_mask = (4 << 20) - 1;
             stepping          = 0x91; /*86C928D*/
             s3->id            = stepping;
@@ -10025,9 +10081,19 @@ s3_init(const device_t *info)
             s3->id_ext_pci    = 0;
             s3->packed_mmio   = 0;
             svga->crtc[0x5a]  = 0x0a;
-            svga->ramdac      = device_add(&bt485_ramdac_device);
-            svga->clock_gen   = device_add(&icd2061_device);
-            svga->getclock    = icd2061_getclock;
+            switch (info->local) {
+                case S3_WINNER1000_928:
+                case S3_WINNER2000_928:
+                    svga->ramdac      = device_add(&sc1502x_ramdac_device);
+                    svga->clock_gen   = device_add(&icd2061_device);
+                    svga->getclock    = icd2061_getclock;
+                    break;
+                default:
+                    svga->ramdac      = device_add(&bt485_ramdac_device);
+                    svga->clock_gen   = device_add(&icd2061_device);
+                    svga->getclock    = icd2061_getclock;
+                    break;
+            }
             break;
 
         case S3_SPEA_MERCURY_LITE_PCI:
@@ -10063,6 +10129,7 @@ s3_init(const device_t *info)
 
         case S3_DIAMOND_STEALTH64_964:
         case S3_ELSAWIN2KPROX_964:
+        case S3_WINNER2000_PRO:
         case S3_MIROCRYSTAL20SV_964:
             svga->decode_mask = (8 << 20) - 1;
             stepping          = 0xd0; /*Vision964*/
@@ -10074,6 +10141,11 @@ s3_init(const device_t *info)
             switch (info->local) {
                 case S3_ELSAWIN2KPROX_964:
                     svga->ramdac = device_add(&ibm_rgb528_ramdac_device);
+                    svga->clock_gen = device_add(&icd2061_device);
+                    svga->getclock  = icd2061_getclock;
+                    break;
+                case S3_WINNER2000_PRO:
+                    svga->ramdac = device_add(&tvp3026_ramdac_device);
                     svga->clock_gen = device_add(&icd2061_device);
                     svga->getclock  = icd2061_getclock;
                     break;
@@ -10175,9 +10247,11 @@ s3_init(const device_t *info)
         case S3_PHOENIX_TRIO64VPLUS:
         case S3_PHOENIX_TRIO64VPLUS_ONBOARD:
         case S3_CARDEX_TRIO64VPLUS:
+        case S3_WINNER1000_TRIOV:
         case S3_DIAMOND_STEALTH64_764:
         case S3_SPEA_MIRAGE_P64:
         case S3_NUMBER9_9FX:
+        case S3_WINNER1000_TRIO:
             svga->decode_mask = (4 << 20) - 1;
             s3->id            = 0xe1; /*Trio64*/
             s3->id_ext = s3->id_ext_pci = 0x11;
@@ -10443,6 +10517,42 @@ static int
 s3_trio64v2_dx_available(void)
 {
     return rom_present(ROM_TRIO64V2_DX_VBE20);
+}
+
+static int
+s3_winner1000_928_available(void)
+{
+    return rom_present(S3_WINNER1000_928);
+}
+
+static int
+s3_winner2000_928_available(void)
+{
+    return rom_present(S3_WINNER2000_928);
+}
+
+static int
+s3_winner1000_805_available(void)
+{
+    return rom_present(ROM_WINNER1000_805);
+
+
+static int
+s3_winner1000_trio_available(void)
+{
+    return rom_present(ROM_WINNER1000_TRIO);
+}
+
+static int
+s3_winner1000_triov_available(void)
+{
+    return rom_present(ROM_WINNER1000_TRIOV);
+}
+
+static int
+s3_winner2000_pro_available(void)
+{
+    return rom_present(ROM_WINNER2000_PRO);
 }
 
 static void
@@ -11303,4 +11413,88 @@ const device_t s3_trio64v2_dx_onboard_pci_device = {
     .speed_changed = s3_speed_changed,
     .force_redraw  = s3_force_redraw,
     .config        = s3_standard_config
+};
+
+const device_t s3_winner1000_928_isa_device = {
+    .name          = "S3 86c928 ISA (ELSA Winner 1000)",
+    .internal_name = "winner1000_928_isa",
+    .flags         = DEVICE_AT | DEVICE_ISA,
+    .local         = S3_WINNER1000_928,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    { .available = s3_winner1000_928_available },
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_standard_config
+};
+
+const device_t s3_winner2000_928_isa_device = {
+    .name          = "S3 86c928 ISA (ELSA Winner 2000)",
+    .internal_name = "winner2000_928_isa",
+    .flags         = DEVICE_AT | DEVICE_ISA,
+    .local         = S3_WINNER2000_928,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    { .available = s3_winner2000_928_available },
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_standard_config
+};
+
+const device_t s3_winner1000_805_isa_device = {
+    .name          = "S3 86c805 ISA (ELSA Winner 1000)",
+    .internal_name = "winner1000_805_isa",
+    .flags         = DEVICE_AT | DEVICE_ISA,
+    .local         = S3_WINNER1000_805,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    { .available = s3_winner1000_805_available },
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_9fx_config
+};
+
+const device_t s3_winner1000_trio_pci_device = {
+    .name          = "S3 Trio64 PCI (ELSA Winner 1000 Trio)",
+    .internal_name = "winner1000_trio_pci",
+    .flags         = DEVICE_PCI,
+    .local         = S3_WINNER1000_TRIO,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    { .available = s3_winner1000_trio_available },
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_9fx_config
+};
+
+const device_t s3_winner1000_triov_pci_device = {
+    .name          = "S3 Trio64V+ PCI (ELSA Winner 1000 Trio/V)",
+    .internal_name = "winner1000_triov_pci",
+    .flags         = DEVICE_PCI,
+    .local         = S3_WINNER1000_TRIOV,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    { .available = s3_winner1000_triov_available },
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_9fx_config
+};
+
+const device_t s3_winner2000_pro_pci_device = {
+    .name          = "S3 Vision964 PCI (ELSA Winner 2000 Pro/2mb)",
+    .internal_name = "winner2000_pro_pci",
+    .flags         = DEVICE_PCI,
+    .local         = S3_WINNER2000_PRO,
+    .init          = s3_init,
+    .close         = s3_close,
+    .reset         = s3_reset,
+    { .available = s3_winner2000_pro_available },
+    .speed_changed = s3_speed_changed,
+    .force_redraw  = s3_force_redraw,
+    .config        = s3_9fx_config
 };
