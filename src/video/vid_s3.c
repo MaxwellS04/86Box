@@ -123,7 +123,7 @@ enum {
     S3_NUMBER9_9FX_771,
     S3_SPEA_MERCURY_LITE_PCI,
     S3_86C805_ONBOARD,
-    S3_DIAMOND_STEALTH64_968
+    S3_DIAMOND_STEALTH64_968,
     S3_WINNER1000_928,
     S3_WINNER2000_928,
     S3_WINNER1000_805,
@@ -3140,7 +3140,7 @@ s3_in(uint16_t addr, void *priv)
                 return sc1148x_ramdac_in(addr, rs2, svga->ramdac, svga);
             else if (s3->card_type == S3_NUMBER9_9FX_531)
                 return att498_ramdac_in(addr, rs2, svga->ramdac, svga);
-            else if ((s3->chip == S3_86C928 && (s3->card_type == S3_WINNER1000_928 || s3->card_type == S3_WINNER2000_928)) || (s3->chip == S3_86C928PCI) && (s3->card_type == S3_SPEA_MERCURY_LITE_PCI)))
+            else if ((s3->chip == S3_86C928 && (s3->card_type == S3_WINNER1000_928 || s3->card_type == S3_WINNER2000_928)) || (s3->chip == S3_86C928PCI) && (s3->card_type == S3_SPEA_MERCURY_LITE_PCI))
                 return sc1502x_ramdac_in(addr, svga->ramdac, svga);
             else
                 return sdac_ramdac_in(addr, rs2, svga->ramdac, svga);
