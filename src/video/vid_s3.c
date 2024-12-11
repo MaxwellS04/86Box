@@ -11429,7 +11429,7 @@ const device_t s3_winner1000_805_isa_device = {
 };
 
 const device_t s3_winner2000_pro_pci_device = {
-    .name          = "S3 Vision964 PCI (ELSA Winner 2000 Pro/2mb)",
+    .name          = "S3 Vision964 PCI (ELSA Winner 2000 Pro)",
     .internal_name = "winner2000_pro_pci",
     .flags         = DEVICE_PCI,
     .local         = S3_WINNER2000_PRO,
