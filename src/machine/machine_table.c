@@ -3940,8 +3940,8 @@ const machine_t machines[] = {
             .min_multi = 0,
             .max_multi = 0
         },
-        .bus_flags = MACHINE_PS2,
-        .flags = MACHINE_IDE | MACHINE_VIDEO,
+        .bus_flags = MACHINE_AT,
+        .flags = MACHINE_IDE,
         .ram = {
             .min = 1024,
             .max = 5120,

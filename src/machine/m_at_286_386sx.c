@@ -489,14 +489,10 @@ machine_at_drsm35_init(const machine_t *model)
         return ret;
 
     machine_at_scat_init(model, 0, 1);
-
-    if (gfxcard[0] == VID_INTERNAL)
-        device_add(&gd5401_isa_device);
 	
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
 
-    device_add(&f82c710_device);
     device_add(&ide_isa_device);
 
     return ret;
