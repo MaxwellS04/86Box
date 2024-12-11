@@ -488,7 +488,7 @@ machine_at_drsm35_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_scat_init(model, 0, 1);
+    machine_at_scat_init(model, 1, 1);
 	
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
