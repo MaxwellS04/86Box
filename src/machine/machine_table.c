@@ -13433,45 +13433,6 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
-    {
-        .name = "[i430VX] Gigabyte GA-586SVX",
-        .internal_name = "ga586svx",
-        .type = MACHINE_TYPE_SOCKET7,
-        .chipset = MACHINE_CHIPSET_INTEL_430VX,
-        .init = machine_at_ga586svx_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SOCKET5_7,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 50000000,
-            .max_bus = 66666667,
-            .min_voltage = 2500,
-            .max_voltage = 3520,
-            .min_multi = 1.5,
-            .max_multi = 3.0
-        },
-        .bus_flags = MACHINE_PS2_PCI,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_AG,
-        .ram = {
-            .min = 8192,
-            .max = 131072,
-            .step = 8192
-        },
-        .nvrmask = 127,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = &sb_vibra16c_onboard_device,
-        .net_device = NULL
-    },
 
 /* 430VX */
     /* Has a SM(S)C FDC37C932FR Super I/O chip with on-chip KBC with AMI
@@ -13517,6 +13478,45 @@ const machine_t machines[] = {
     },
 
 
+    {
+        .name = "[i430VX] Gigabyte GA-586SVX",
+        .internal_name = "ga586svx",
+        .type = MACHINE_TYPE_SOCKET7,
+        .chipset = MACHINE_CHIPSET_INTEL_430VX,
+        .init = machine_at_ga586svx_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_SOCKET5_7,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 50000000,
+            .max_bus = 66666667,
+            .min_voltage = 2500,
+            .max_voltage = 3520,
+            .min_multi = 1.5,
+            .max_multi = 3.0
+        },
+        .bus_flags = MACHINE_PS2_PCI,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_AG,
+        .ram = {
+            .min = 8192,
+            .max = 131072,
+            .step = 8192
+        },
+        .nvrmask = 127,
+        .kbc_device = NULL,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = &sb_vibra16c_onboard_device,
+        .net_device = NULL
+    },
     /* Has a SM(S)C FDC37C935 Super I/O chip with on-chip KBC with Phoenix
        MultiKey/42 (version 1.38) KBC firmware. */
     {
