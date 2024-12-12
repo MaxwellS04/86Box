@@ -376,6 +376,25 @@ machine_at_award286_init(const machine_t *model)
 }
 
 int
+machine_at_mb1212c_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/mb1212c/m1212c-ver1-2-sipp.bin-5f07368929229168481872.bin",
+                           0x000f0000, 65336, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_scat_init(model, 0, 1);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
 machine_at_gdc212m_init(const machine_t *model)
 {
     int ret;
@@ -473,27 +492,6 @@ machine_at_super286tr_init(const machine_t *model)
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
-
-    return ret;
-}
-
-int
-machine_at_drsm35_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/drsm35/syab04-665821fb81363428830424.bin",
-                           0x000f0000, 65536, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_scat_init(model, 1, 1);
-	
-    if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
-
-    device_add(&ide_isa_device);
 
     return ret;
 }
