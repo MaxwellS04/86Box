@@ -334,7 +334,7 @@ machine_at_ft28612_init(const machine_t *model)
 
     ret = bios_load_interleaved("roms/machines/ft28612/IPC_FT-286-12_EVEN.bin",
                                 "roms/machines/ft28612/IPC_FT-286-12_ODD.bin",
-                                0x000f0000, 65536, 0);
+                                0x000f8000, 32768, 0);
 
     if (bios_only || !ret)
         return ret;
