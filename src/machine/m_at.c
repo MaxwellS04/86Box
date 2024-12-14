@@ -293,7 +293,6 @@ machine_at_openat_init(const machine_t *model)
 }
 #endif /* USE_OPEN_AT */
 
-}
 int
 machine_at_ft286_init(const machine_t *model)
 {
