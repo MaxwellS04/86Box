@@ -12292,46 +12292,6 @@ const machine_t machines[] = {
     },
 	/* Has a PC87306 SIO */
     {
-        .name = "[i430HX] Compaq Deskpro 2000",
-        .internal_name = "deskpro2000",
-        .type = MACHINE_TYPE_SOCKET7_3V,
-        .chipset = MACHINE_CHIPSET_INTEL_430HX,
-        .init = machine_at_deskpro2000_init,
-        .p1_handler = NULL,
-        .gpio_handler = NULL,
-        .available_flag = MACHINE_AVAILABLE,
-        .gpio_acpi_handler = NULL,
-        .cpu = {
-            .package = CPU_PKG_SOCKET5_7,
-            .block = CPU_BLOCK_NONE,
-            .min_bus = 50000000,
-            .max_bus = 66666667,
-            .min_voltage = 3380,
-            .max_voltage = 3520,
-            .min_multi = 1.5,
-            .max_multi = 3.0
-        },
-        .bus_flags = MACHINE_PS2_PCI,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM,
-        .ram = {
-            .min = 8192,
-            .max = 131072,
-            .step = 8192
-        },
-        .nvrmask = 511,
-        .kbc_device = NULL,
-        .kbc_p1 = 0xff,
-        .gpio = 0xffffffff,
-        .gpio_acpi = 0xffffffff,
-        .device = NULL,
-        .fdc_device = NULL,
-        .sio_device = NULL,
-        .vid_device = NULL,
-        .snd_device = NULL,
-        .net_device = NULL
-    },
-	/* Has a PC87306 SIO */
-    {
         .name = "[i430HX] Intel Advanced/ML",
         .internal_name = "marl",
         .type = MACHINE_TYPE_SOCKET7_3V,
