@@ -11121,7 +11121,7 @@ const machine_t machines[] = {
             .max_multi = 2.0
         },
         .bus_flags = MACHINE_PS2_PCI,
-        .flags = MACHINE_IDE_DUAL | MACHINE_VIDEO | MACHINE_APM,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM,
         .ram = {
             .min = 2048,
             .max = 262144,
@@ -11135,7 +11135,7 @@ const machine_t machines[] = {
         .device = NULL,
         .fdc_device = NULL,
         .sio_device = NULL,
-        .vid_device = &s3_phoenix_vision864_pci_device,
+        .vid_device = NULL,
         .snd_device = NULL,
         .net_device = NULL
     },
@@ -12588,7 +12588,7 @@ const machine_t machines[] = {
             .max_multi = 3.0
         },
         .bus_flags = MACHINE_PS2_PCI,
-        .flags = MACHINE_IDE_DUAL | MACHINE_VIDEO | MACHINE_APM,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM,
         .ram = {
             .min = 8192,
             .max = 131072,
@@ -12602,7 +12602,7 @@ const machine_t machines[] = {
         .device = NULL,
         .fdc_device = NULL,
         .sio_device = NULL,
-        .vid_device = &gd5436_onboard_pci_device,
+        .vid_device = NULL,
         .snd_device = NULL,
         .net_device = NULL
     },
