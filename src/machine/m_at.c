@@ -292,3 +292,19 @@ machine_at_openat_init(const machine_t *model)
     return ret;
 }
 #endif /* USE_OPEN_AT */
+
+}
+int
+machine_at_ft286_init(const machine_t *model)
+{
+    int ret;
+    ret = bios_load_interleaved("roms/machines/ft286/286-Access methods-ROM2.BIN",
+                                "roms/machines/ft286/286-Access methods-ROM4.BIN",
+                                0x000f0000, 131072, 0x8000);
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ibm_common_init(model);
+
+    return ret;
+}
