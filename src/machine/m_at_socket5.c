@@ -146,37 +146,6 @@ machine_at_tek932_init(const machine_t *model)
 }
 
 int
-machine_at_optiplex_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/optiplex/xt-a15-6303846fe6aa5463892988.rom",
-                           0x000c0000, 262144, 0);
-
-    if (bios_only || !ret)
-        return ret;
-    
-    machine_at_common_init(model);
-
-    pci_init(PCI_CONFIG_TYPE_1);
-    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x0F, PCI_CARD_VIDEO,       4, 0, 0, 0);
-    /* Doesn't know if there are three PCI slots on riser */
-    pci_register_slot(0x11, PCI_CARD_NORMAL,      2, 3, 4, 1);
-    pci_register_slot(0x13, PCI_CARD_NORMAL,      3, 4, 1, 2);
-    pci_register_slot(0x15, PCI_CARD_NORMAL,      4, 1, 2, 3);
-
-    device_add(&keyboard_ps2_pci_device);
-    device_add(&i430nx_device);
-    device_add(&pc87306_device);
-    device_add(&ide_cmd640_pci_device);
-    device_add(&intel_flash_bxt_ami_device);
-
-    return ret;
-}
-
-int
 machine_at_acerv30_init(const machine_t *model)
 {
     int ret;

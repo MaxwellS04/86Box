@@ -434,18 +434,14 @@ extern int machine_at_ibmatquadtel_init(const machine_t *); // IBM AT with Quadt
 
 extern int machine_at_ibmxt286_init(const machine_t *);
 
+extern int machine_at_ft286_init(const machine_t *); // Flying Triumph FT-286 with Access Methods (early American Megatrends) BIOS
+
 extern int machine_at_siemens_init(const machine_t *); // Siemens PCD-2L. N82330 discrete machine. It segfaults in some places
 
 extern int machine_at_wellamerastar_init(const machine_t *); // Wells American A*Star with custom award BIOS 
 #ifdef USE_OPEN_AT
 extern int machine_at_openat_init(const machine_t *);
 #endif /* USE_OPEN_AT */
-
-extern int machine_at_dell200_init(const machine_t *);
-extern int machine_at_ft286_init(const machine_t *);
-extern int machine_at_ft28612_init(const machine_t *);
-extern int machine_at_powermate2_init(const machine_t *);
-extern int machine_at_pb286b_init(const machine_t *);
 
 /* m_at_286_386sx.c */
 extern int machine_at_tg286m_init(const machine_t *);
@@ -514,7 +510,6 @@ extern int machine_at_j386wb_init(const machine_t *);
 extern int machine_at_multipro_init(const machine_t *);
 extern int machine_at_genoa486_init(const machine_t *);
 extern int machine_at_ga486l_init(const machine_t *);
-extern int machine_at_ksi_init(const machine_t *);
 extern int machine_at_486ocv_init(const machine_t *);
 extern int machine_at_cougar_init(const machine_t *);
 
@@ -555,7 +550,6 @@ extern int machine_at_exp4349_init(const machine_t *);
 
 extern int machine_at_vect486vl_init(const machine_t *);
 extern int machine_at_d824_init(const machine_t *);
-extern int machine_at_prolinea_init(const machine_t *);
 
 extern int machine_at_403tg_init(const machine_t *);
 extern int machine_at_403tg_d_init(const machine_t *);
@@ -681,7 +675,6 @@ extern int machine_at_dellplato_init(const machine_t *);
 extern int machine_at_ambradp90_init(const machine_t *);
 extern int machine_at_586ip_init(const machine_t *);
 extern int machine_at_tek932_init(const machine_t *);
-extern int machine_at_optiplex_init(const machine_t *);
 
 extern int machine_at_acerv30_init(const machine_t *);
 extern int machine_at_apollo_init(const machine_t *);

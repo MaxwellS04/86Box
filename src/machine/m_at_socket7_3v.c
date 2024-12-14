@@ -453,7 +453,7 @@ machine_at_deskpro2000_init(const machine_t *model)
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&i430hx_device);
     device_add(&piix3_device);
-    device_add(&pc87307_device);
+    device_add(&pc87307_15c_device);
     device_add(&intel_flash_bxt_device);
 
     return ret;
