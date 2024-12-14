@@ -191,6 +191,7 @@ machine_at_av4_init(const machine_t *model)
     return ret;
 }
 
+int
 machine_at_netplex_init(const machine_t *model)
 {
     int ret;
@@ -552,6 +553,7 @@ machine_at_d824_init(const machine_t *model)
     return ret;
 }
 
+int
 machine_at_prolinea_init(const machine_t *model)
 {
     int ret;
