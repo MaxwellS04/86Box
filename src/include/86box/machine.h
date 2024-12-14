@@ -441,6 +441,12 @@ extern int machine_at_wellamerastar_init(const machine_t *); // Wells American A
 extern int machine_at_openat_init(const machine_t *);
 #endif /* USE_OPEN_AT */
 
+extern int machine_at_dell200_init(const machine_t *);
+extern int machine_at_ft286_init(const machine_t *);
+extern int machine_at_ft28612_init(const machine_t *);
+extern int machine_at_powermate2_init(const machine_t *);
+extern int machine_at_pb286b_init(const machine_t *);
+
 /* m_at_286_386sx.c */
 extern int machine_at_tg286m_init(const machine_t *);
 extern int machine_at_ama932j_init(const machine_t *);

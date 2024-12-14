@@ -292,3 +292,88 @@ machine_at_openat_init(const machine_t *model)
     return ret;
 }
 #endif /* USE_OPEN_AT */
+
+int
+machine_at_dell200_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/dell200/dellL200256_LO_@DIP28.BIN",
+                                "roms/machines/dell200/Dell200256_HI_@DIP28.BIN",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ibm_common_init(model);
+
+    return ret;
+}
+
+int
+machine_at_ft286_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/ft286/286-Access methods-ROM2.BIN",
+                                "roms/machines/ft286/286-Access methods-ROM4.BIN",
+                                0x000f0000, 131072, 0x8000);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ibm_common_init(model);
+
+    return ret;
+}
+
+int
+machine_at_ft28612_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/ft28612/IPC_FT-286-12_F2-003935_EVEN.bin",
+                                "roms/machines/ft28612/IPC_FT-286-12_F2-003935_ODD.bin",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ibm_common_init(model);
+
+    return ret;
+}
+
+int
+machine_at_powermate2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/powermate2/M5M27C256K-NORTH.BIN",
+                                "roms/machines/powermate2/M5M27C256K-SOUTH.BIN",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ibm_common_init(model);
+
+    return ret;
+}
+
+int
+machine_at_pb286b_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/pb286b/EVEN256.bin",
+                                "roms/machines/pb286b/ODD256.bin",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_ibm_common_init(model);
+
+    return ret;
+}
