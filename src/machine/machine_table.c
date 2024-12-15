@@ -16966,11 +16966,11 @@ const machine_t machines[] = {
     /* Slot 1/Socket 370 machines */
     /* 440BX */
     {
-        .name = "[i440BX] Compaq ProSignia S31x",
-        .internal_name = "prosignia31x",
+        .name = "[i440BX] ECS P6BXT-A+",
+        .internal_name = "p6bxt",
         .type = MACHINE_TYPE_SLOT1_370,
         .chipset = MACHINE_CHIPSET_INTEL_440BX,
-        .init = machine_at_prosignia31x_init,
+        .init = machine_at_p6bxt_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
         .available_flag = MACHINE_AVAILABLE,
