@@ -148,11 +148,11 @@ machine_at_s1857_init(const machine_t *model)
 }
 
 int
-machine_at_p6bxt_init(const machine_t *model)
+machine_at_prosignia31x_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/p6bxt/bxt53s.BIN",
+    ret = bios_load_linear("roms/machines/prosignia31x/ecs-6747568bed52d353666254.bi",
                            0x000c0000, 262144, 0);
 
     if (bios_only || !ret)

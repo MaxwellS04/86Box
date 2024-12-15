@@ -7417,7 +7417,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[SiS 461] Auva Computer CAM/33/40/50/SG-0",
+        .name = "[SiS 461] Auva Computer CAM/SG-0",
         .internal_name = "auvacam",
         .type = MACHINE_TYPE_486_S2,
         .chipset = MACHINE_CHIPSET_SIS_461,
@@ -10600,7 +10600,7 @@ const machine_t machines[] = {
             .max_multi = MACHINE_MULTIPLIER_FIXED
         },
         .bus_flags = MACHINE_PCIV,
-        .flags = MACHINE_APM | MACHINE_IDE,
+        .flags = MACHINE_APM | MACHINE_SCSI,
         .ram = {
             .min = 8192,
             .max = 131072,
@@ -12371,7 +12371,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[i430VX] DataExpert Aristo 5000",
+        .name = "[i430VX] DataExpert ATX8661",
         .internal_name = "atx8661",
         .type = MACHINE_TYPE_SOCKET7_3V,
         .chipset = MACHINE_CHIPSET_INTEL_430VX,
@@ -16966,11 +16966,11 @@ const machine_t machines[] = {
     /* Slot 1/Socket 370 machines */
     /* 440BX */
     {
-        .name = "[i440BX] ECS P6BXT-A+",
-        .internal_name = "p6bxt",
+        .name = "[i440BX] Compaq ProSignia S31x",
+        .internal_name = "prosignia31x",
         .type = MACHINE_TYPE_SLOT1_370,
         .chipset = MACHINE_CHIPSET_INTEL_440BX,
-        .init = machine_at_p6bxt_init,
+        .init = machine_at_prosignia31x_init,
         .p1_handler = NULL,
         .gpio_handler = NULL,
         .available_flag = MACHINE_AVAILABLE,
