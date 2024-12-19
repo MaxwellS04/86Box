@@ -9189,7 +9189,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[i420TX] Freetech 486F33",
+        .name = "[i420TX] Genoa TurboExpress 486PCI-4",
         .internal_name = "486f33",
         .type = MACHINE_TYPE_486_S3,
         .chipset = MACHINE_CHIPSET_INTEL_420TX,
