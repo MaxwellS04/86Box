@@ -524,7 +524,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[8088] Beltron/Novotec CP-1000",
+        .name = "[8088] Beltron CP-1000",
         .internal_name = "cp1000",
         .type = MACHINE_TYPE_8088,
         .chipset = MACHINE_CHIPSET_DISCRETE,
@@ -4600,7 +4600,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi M1217] Auva Computer NPA16/25/33/40-A0",
+        .name = "[ALi M1217] Auva Computer NPA/A0",
         .internal_name = "auvanpa",
         .type = MACHINE_TYPE_386SX,
         .chipset = MACHINE_CHIPSET_ALI_M1217,
@@ -14977,7 +14977,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi ALADDiN V] BCM VP1543",
+        .name = "[ALi ALADDiN V] BCM VP154x",
         .internal_name = "vp1543",
         .type = MACHINE_TYPE_SOCKETS7,
         .chipset = MACHINE_CHIPSET_ALI_ALADDIN_V,
@@ -17699,7 +17699,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[SMSC VictoryBX-66] Fastframe 3ISAT",
+        .name = "[SMSC VictoryBX-66] Fastfame 3ISAT",
         .internal_name = "3isat",
         .type = MACHINE_TYPE_SOCKET370,
         .chipset = MACHINE_CHIPSET_SMSC_VICTORYBX_66,
