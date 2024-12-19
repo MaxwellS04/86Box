@@ -592,7 +592,6 @@ extern int machine_at_4saw2_init(const machine_t *);
 extern int machine_at_m4li_init(const machine_t *);
 extern int machine_at_alfredo_init(const machine_t *);
 extern int machine_at_amis76_init(const machine_t *);
-extern int machine_at_486f33_init(const machine_t *);
 extern int machine_at_ninja_init(const machine_t *);
 extern int machine_at_bat4ip3e_init(const machine_t *);
 extern int machine_at_486pi_init(const machine_t *);
@@ -684,7 +683,6 @@ extern int machine_at_ga586at_init(const machine_t *);
 extern int machine_at_zappa_init(const machine_t *);
 extern int machine_at_zappa_old_init(const machine_t *);
 extern int machine_at_powermatev_init(const machine_t *);
-extern int machine_at_hot541_init(const machine_t *);
 extern int machine_at_hawk_init(const machine_t *);
 extern int machine_at_pt2000_init(const machine_t *);
 

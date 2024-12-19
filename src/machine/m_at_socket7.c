@@ -1084,7 +1084,7 @@ machine_at_p5txla_init(const machine_t *model)
     device_add(&piix4_device);
     device_add(&keyboard_ps2_ami_pci_device);
     device_add(&w83877f_device);
-    device_add(&intel_flash_bxt_device);
+    device_add(&sst_flash_29ee020_device);
     spd_register(SPD_TYPE_SDRAM, 0x7, 256);
 
     return ret;
