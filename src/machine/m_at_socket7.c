@@ -1056,6 +1056,40 @@ machine_at_txp4_init(const machine_t *model)
     return ret;
 }
 
+int
+machine_at_p5txla_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/p5txla/TXLA11.BIN",
+                           0x000c0000, 262144, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x0B, PCI_CARD_VIDEO,       3, 4, 1, 2);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(&cs4237b_device);
+
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&w83877f_device);
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
+
+    return ret;
+}
+
 #ifdef USE_AN430TX
 int
 machine_at_an430tx_init(const machine_t *model)

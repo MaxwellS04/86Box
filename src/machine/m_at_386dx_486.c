@@ -579,6 +579,31 @@ machine_at_acera1g_init(const machine_t *model)
 }
 
 int
+machine_at_xenpc_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/xenpc/a1-r26-649899719899b635096390.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&ali1429g_device);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(&gd5428_onboard_device);
+
+    device_add(&keyboard_ps2_acer_pci_device);
+
+    device_add(&ali5105_device);
+    device_add(&ide_ali5213_device);
+
+    return ret;
+}
+
+int
 machine_at_acerv10_init(const machine_t *model)
 {
     int ret;
@@ -1634,6 +1659,35 @@ machine_at_amis76_init(const machine_t *model)
     device_add(&i420tx_device);
     // device_add(&ide_cmd640_pci_device); /* is this actually cmd640? is it single channel? */
     device_add(&ide_pci_device);
+
+    return ret;
+}
+
+int
+machine_at_486f33_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear_inverted("roms/machines/486f33/M27C1001DIP32.BIN", 
+                                    0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init_ex(model, 2);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      4, 3, 2, 1);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0C, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&i420tx_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
 
     return ret;
 }

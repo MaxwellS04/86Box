@@ -377,6 +377,25 @@ machine_at_excalibur_init(const machine_t *model)
 }
 
 int
+machine_at_6a6b2_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/6a6b2/pentium-vl-1993-08-08-636948c6bafb8584460015.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&opti5x7_device);
+    device_add(&keyboard_ps2_ami_pci_device);
+
+    return ret;
+}
+
+int
 machine_at_p5vl_init(const machine_t *model)
 {
     int ret;

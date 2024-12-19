@@ -310,6 +310,22 @@ machine_xt_dtk_init(const machine_t *model)
 }
 
 int
+machine_xt_speed22_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/speed22/bios xt speed 22.BIN",
+                           0x000fe000, 8192, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_xt_clone_init(model, 0);
+
+    return ret;
+}
+
+int
 machine_xt_je1000_init(const machine_t *model)
 {
     int ret;
