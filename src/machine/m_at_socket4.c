@@ -390,7 +390,7 @@ machine_at_6a6b2_init(const machine_t *model)
     machine_at_common_init(model);
 
     device_add(&opti5x7_device);
-    device_add(&keyboard_ps2_ami_pci_device);
+    device_add(&keyboard_at_ami_device);
 
     return ret;
 }
