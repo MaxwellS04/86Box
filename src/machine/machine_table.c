@@ -5161,6 +5161,45 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
+    {
+        .name = "[NEAT] FTK FRIEND 386SX",
+        .internal_name = "friend386",
+        .type = MACHINE_TYPE_386SX,
+        .chipset = MACHINE_CHIPSET_NEAT,
+        .init = machine_at_friend386_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_386SX,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 0,
+            .max_bus = 0,
+            .min_voltage = 0,
+            .max_voltage = 0,
+            .min_multi = 0,
+            .max_multi = 0
+        },
+        .bus_flags = MACHINE_AT,
+        .flags = MACHINE_FLAGS_NONE,
+        .ram = {
+            .min = 512,
+            .max = 8192,
+            .step = 128
+        },
+        .nvrmask = 127,
+        .kbc_device = NULL,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
     /* Has IBM AT KBC firmware. */
     {
         .name = "[OPTi 291] DTK PPM-3333P",
@@ -11874,6 +11913,45 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
+    {
+        .name = "[i430FX] DTK PAM-0054I",
+        .internal_name = "pam0054i",
+        .type = MACHINE_TYPE_SOCKET7_3V,
+        .chipset = MACHINE_CHIPSET_INTEL_430FX,
+        .init = machine_at_pam0054i_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_SOCKET5_7,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 50000000,
+            .max_bus = 66666667,
+            .min_voltage = 3380,
+            .max_voltage = 3520,
+            .min_multi = 1.5,
+            .max_multi = 3.0
+        },
+        .bus_flags = MACHINE_PS2_PCI,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM,
+        .ram = {
+            .min = 8192,
+            .max = 131072,
+            .step = 8192
+        },
+        .nvrmask = 127,
+        .kbc_device = NULL,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
     /* According to tests from real hardware: This has AMI MegaKey KBC firmware on the
        PC87306 Super I/O chip, command 0xA1 returns '5'.
        Command 0xA0 copyright string: (C)1994 AMI . */
@@ -16599,6 +16677,45 @@ const machine_t machines[] = {
         .ram = {
             .min = 8192,
             .max = 786432,
+            .step = 8192
+        },
+        .nvrmask = 255,
+        .kbc_device = NULL,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
+    {
+        .name = "[i440BX] Soltek SL-67B",
+        .internal_name = "sl67b",
+        .type = MACHINE_TYPE_SLOT1,
+        .chipset = MACHINE_CHIPSET_INTEL_440BX,
+        .init = machine_at_sl67b_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_SLOT1,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 66666667,
+            .max_bus = 112121212,
+            .min_voltage = 1800,
+            .max_voltage = 3500,
+            .min_multi = 1.5,
+            .max_multi = 8.0
+        },
+        .bus_flags = MACHINE_PS2_AGP | MACHINE_BUS_USB,
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
+        .ram = {
+            .min = 8192,
+            .max = 1048576,
             .step = 8192
         },
         .nvrmask = 255,

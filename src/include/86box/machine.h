@@ -454,6 +454,7 @@ extern int machine_at_mr286_init(const machine_t *);
 
 extern int machine_at_neat_init(const machine_t *);
 extern int machine_at_abfp2_init(const machine_t *);
+extern int machine_at_friend386_init(const machine_t *);
 extern int machine_at_neat_ami_init(const machine_t *);
 
 extern int machine_at_quadt386sx_init(const machine_t *);
@@ -704,6 +705,7 @@ extern int machine_at_hot539_init(const machine_t *);
 extern int machine_at_p54tp4xe_init(const machine_t *);
 extern int machine_at_p54tp4xe_mr_init(const machine_t *);
 extern int machine_at_exp8551_init(const machine_t *);
+extern int machine_at_pam0054i_init(const machine_t *);
 extern int machine_at_gw2katx_init(const machine_t *);
 extern int machine_at_thor_init(const machine_t *);
 extern int machine_at_mrthor_init(const machine_t *);
@@ -851,6 +853,7 @@ extern int machine_at_lgibmx7g_init(const machine_t *);
 extern int machine_at_p3bf_init(const machine_t *);
 extern int machine_at_bf6_init(const machine_t *);
 extern int machine_at_ax6bc_init(const machine_t *);
+extern int machine_at_sl67b_init(const machine_t *);
 extern int machine_at_atc6310bxii_init(const machine_t *);
 extern int machine_at_686bx_init(const machine_t *);
 extern int machine_at_hot679_init(const machine_t *);
