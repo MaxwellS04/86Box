@@ -211,28 +211,6 @@ machine_at_quadt386sx_init(const machine_t *model)
 }
 
 int
-machine_at_abfp2_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_interleaved("roms/machines/abfp2/386 Abit LO.BIN",
-                                "roms/machines/abfp2/386 Abit HI.BIN",
-                                0x000f0000, 65536, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init(model);
-
-    device_add(&neat_device);
-
-    if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
-
-    return ret;
-}
-
-int
 machine_at_neat_init(const machine_t *model)
 {
     int ret;
@@ -249,29 +227,6 @@ machine_at_neat_init(const machine_t *model)
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
-
-    return ret;
-}
-
-int
-machine_at_friend386_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_interleaved("roms/machines/friend386/FTK_FRIEND_386SX_ENSX-1220-121589-K8_low.bin",
-                                "roms/machines/friend386/FTK_FRIEND_386SX_ENSX-1220-121589-K8_high.bin",
-                                0x000f0000, 65536, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init(model);
-    device_add(&keyboard_at_device);
-
-    if (fdc_current[0] == FDC_INTERNAL)
-        device_add(&fdc_at_device);
-
-    device_add(&neat_device);
 
     return ret;
 }
