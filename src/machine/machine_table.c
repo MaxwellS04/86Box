@@ -7177,7 +7177,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi M1429G] Apricot XEN-PC A1",
+        .name = "[ALi M1429G] Apricot XEN-PC A1", // The XEN-PC is based on A1 (NOT a A1G one).
         .internal_name = "xenpc",
         .type = MACHINE_TYPE_486_S2,
         .chipset = MACHINE_CHIPSET_ALI_M1429G,
