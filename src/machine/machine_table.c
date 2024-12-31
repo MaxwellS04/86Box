@@ -7216,7 +7216,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi M1429G] Apricot XEN-PC A1", // The XEN-PC is based on A1 (NOT a A1G one).
+        .name = "[ALi M1429G] Apricot XEN-PC", // The XEN-PC is based on A1 (NOT a A1G one).
         .internal_name = "xenpc",
         .type = MACHINE_TYPE_486_S2,
         .chipset = MACHINE_CHIPSET_ALI_M1429G,
@@ -14977,7 +14977,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi ALADDiN V] BCM VP154x",
+        .name = "[ALi ALADDiN V] BCM VP1543",
         .internal_name = "vp1543",
         .type = MACHINE_TYPE_SOCKETS7,
         .chipset = MACHINE_CHIPSET_ALI_ALADDIN_V,
@@ -15030,7 +15030,7 @@ const machine_t machines[] = {
             .block = CPU_BLOCK_NONE,
             .min_bus = 60000000,
             .max_bus = 100000000,
-            .min_voltage = 2000,
+            .min_voltage = 1300,
             .max_voltage = 3520,
             .min_multi = 1.5,
             .max_multi = 5.5
@@ -17738,7 +17738,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[SMSC VictoryBX-66] Fastfame 3ISAT",
+        .name = "[SMSC VictoryBX-66] Fastfame Computer 3ISAT",
         .internal_name = "3isat",
         .type = MACHINE_TYPE_SOCKET370,
         .chipset = MACHINE_CHIPSET_SMSC_VICTORYBX_66,

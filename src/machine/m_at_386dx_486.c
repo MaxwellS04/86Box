@@ -2719,7 +2719,7 @@ machine_at_8521_init(const machine_t *model)
     machine_at_common_init(model);
 
     device_add(&ali1409_device);
-    device_add(&keyboard_ps2_ami_device);
+    device_add(&keyboard_at_ami_device);
 	
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
