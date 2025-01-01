@@ -192,31 +192,6 @@ machine_at_av4_init(const machine_t *model)
 }
 
 int
-machine_at_netplex_init(const machine_t *model)
-{
-    int ret;
-
-    ret = bios_load_linear("roms/machines/netplex/dell-425s-np-a02-m27c1001-637f3b93d6775867435062.bin",
-                           0x000e0000, 131072, 0);
-
-    if (bios_only || !ret)
-        return ret;
-
-    machine_at_common_init(model);
-
-    device_add(&sis_85c460_device);
-    device_add(&keyboard_ps2_device);
-
-    if (gfxcard[0] == VID_INTERNAL)
-        device_add(&gd5428_onboard_device);
-
-    device_add(&fdc37c651_device);
-    device_add(&ide_isa_device);
-
-    return ret;
-}
-
-int
 machine_at_386siq_init(const machine_t *model)
 {
     int ret;

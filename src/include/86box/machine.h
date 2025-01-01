@@ -567,7 +567,6 @@ extern int machine_at_isa486_init(const machine_t *);
 extern int machine_at_386siq_init(const machine_t *);
 extern int machine_at_486sv2_init(const machine_t *);
 extern int machine_at_av4_init(const machine_t *);
-extern int machine_at_netplex_init(const machine_t *);
 extern int machine_at_auvacam_init(const machine_t *);
 extern int machine_at_valuepoint433_init(const machine_t *);
 
