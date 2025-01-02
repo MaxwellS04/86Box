@@ -143,15 +143,10 @@ keyboard_getkeymap()
     }
 }
 
-static LRESULT CALLBACK
-emu_LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+static void
+kbd_handle(uint16_t scancode, uint16_t flags)
 {
-    LPKBDLLHOOKSTRUCT lpKdhs    = (LPKBDLLHOOKSTRUCT) lParam;
-    /* Checks if CTRL was pressed. */
-    BOOL              bCtrlDown = GetAsyncKeyState (VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1);
-    uint16_t          scancode  = lpKdhs->scanCode & 0x00ff;
-
-    if (lpKdhs->flags & LLKHF_EXTENDED)
+    if (flags & LLKHF_EXTENDED)
         scancode |= 0x100;
 
     /* Translate the scan code to 9-bit */
@@ -177,33 +172,66 @@ emu_LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
     /* Normal scan code pass through, pass it through as is if
        it's not an invalid scan code. */
     if (scancode != 0xFFFF)
-        keyboard_input(!(lpKdhs->flags & LLKHF_UP), scancode);
+        keyboard_input(!(flags & LLKHF_UP), scancode);
+}
+
+static LRESULT CALLBACK
+input_LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    LPKBDLLHOOKSTRUCT lpKdhs    = (LPKBDLLHOOKSTRUCT) lParam;
+
+    kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
 
     main_window->checkFullscreenHotkey();
 
-    if ((lpKdhs->scanCode == 0x01) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
-        !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED)))
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+static LRESULT CALLBACK
+emu_LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    LPKBDLLHOOKSTRUCT lpKdhs    = (LPKBDLLHOOKSTRUCT) lParam;
+    /* Checks if CTRL was pressed. */
+    BOOL              bCtrlDown = GetAsyncKeyState (VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1);
+
+    if ((nCode < 0) || (nCode != HC_ACTION) || (!mouse_capture && !video_fullscreen))
+        return CallNextHookEx(NULL, nCode, wParam, lParam);
+    else if ((lpKdhs->scanCode == 0x01) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
+        !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED))) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode == 0x01) && bCtrlDown && !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED)))
+    } else if ((lpKdhs->scanCode == 0x01) && bCtrlDown && !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED))) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode == 0x0f) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
-             !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED)))
+    } else if ((lpKdhs->scanCode == 0x0f) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
+             !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED))) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode == 0x0f) && bCtrlDown && !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED)))
+    } else if ((lpKdhs->scanCode == 0x0f) && bCtrlDown && !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED))) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode == 0x39) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
-             !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED)))
+    } else if ((lpKdhs->scanCode == 0x39) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
+             !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED))) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode == 0x3e) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
-             !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED)))
+    } else if ((lpKdhs->scanCode == 0x3e) && (lpKdhs->flags & LLKHF_ALTDOWN) &&
+             !(lpKdhs->flags & (LLKHF_UP | LLKHF_EXTENDED))) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode == 0x51) && bCtrlDown && !(lpKdhs->flags & LLKHF_UP))
+    } else if ((lpKdhs->scanCode == 0x49) && bCtrlDown && !(lpKdhs->flags & LLKHF_UP)) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else if ((lpKdhs->scanCode >= 0x5b) && (lpKdhs->scanCode <= 0x5d) && (lpKdhs->flags & LLKHF_EXTENDED))
+    } else if ((lpKdhs->scanCode >= 0x5b) && (lpKdhs->scanCode <= 0x5d) && (lpKdhs->flags & LLKHF_EXTENDED)) {
+        kbd_handle(lpKdhs->scanCode & 0x00ff, lpKdhs->flags);
         return TRUE;
-    else
+    } else
         return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
+#endif
+
+#ifdef Q_OS_WINDOWS
+static HHOOK llhook  = NULL;
+static HHOOK llihook = NULL;
 #endif
 
 void
@@ -282,10 +310,6 @@ main_thread_fn()
 }
 
 static std::thread *main_thread;
-
-#ifdef Q_OS_WINDOWS
-static HHOOK llhook = NULL;
-#endif
 
 int
 main(int argc, char *argv[])
@@ -470,18 +494,12 @@ main(int argc, char *argv[])
         });
     }
 
-#ifdef Q_OS_WINDOWS
-    if (!raw_input) {
-        llhook = SetWindowsHookEx(WH_KEYBOARD_LL, emu_LowLevelKeyboardProc, NULL, 0);
-        atexit([] () -> void { if (llhook) UnhookWindowsHookEx(llhook); });
-    }
-#endif
-
     /* Setup raw input */
     auto rawInputFilter = WindowsRawInputFilter::Register(main_window);
     if (rawInputFilter) {
         app.installNativeEventFilter(rawInputFilter.get());
-        main_window->setSendKeyboardInput(false);
+        if (raw_input)
+            main_window->setSendKeyboardInput(false);
     }
 #endif
 
@@ -539,6 +557,19 @@ main(int argc, char *argv[])
 #endif
             plat_pause(0);
     });
+
+#ifdef Q_OS_WINDOWS
+    if (!raw_input) {
+        llhook = SetWindowsHookEx(WH_KEYBOARD_LL, emu_LowLevelKeyboardProc, NULL, 0);
+        llihook = SetWindowsHookEx(WH_KEYBOARD_LL, input_LowLevelKeyboardProc, NULL, GetCurrentThreadId());
+        atexit([] () -> void {
+            if (llihook)
+                UnhookWindowsHookEx(llihook);
+            if (llhook)
+                UnhookWindowsHookEx(llhook);
+        });
+    }
+#endif
 
     const auto ret       = app.exec();
     cpu_thread_run = 0;
