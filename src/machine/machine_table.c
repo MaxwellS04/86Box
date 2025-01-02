@@ -14938,8 +14938,8 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[ALi ALADDiN V] BCM VP1543",
-        .internal_name = "vp1543",
+        .name = "[ALi ALADDiN V] BCM VP154x",
+        .internal_name = "vp154x",
         .type = MACHINE_TYPE_SOCKETS7,
         .chipset = MACHINE_CHIPSET_ALI_ALADDIN_V,
         .init = machine_at_vp1543_init,
