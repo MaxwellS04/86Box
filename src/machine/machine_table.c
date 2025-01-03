@@ -7417,7 +7417,7 @@ const machine_t machines[] = {
         .net_device = NULL
     },
     {
-        .name = "[OPTi 499] DFI 486-OCV+",
+        .name = "[OPTi 499] Diamond Flower 486-OCV+",
         .internal_name = "486ocv",
         .type = MACHINE_TYPE_486_S2,
         .chipset = MACHINE_CHIPSET_OPTI_499,
@@ -16245,6 +16245,7 @@ const machine_t machines[] = {
         .snd_device = NULL,
         .net_device = NULL
     },
+    /* PCI slot issues (possibly); needs to be fixed later. */
     {
         .name = "[i440LX] Shuttle HOT-637A",
         .internal_name = "hot637a",
