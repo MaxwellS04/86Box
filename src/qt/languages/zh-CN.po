@@ -687,8 +687,11 @@ msgstr "由于 roms/machines 文件夹中缺少合适的 ROM，机型 \"%hs\" �
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
 msgstr "由于 roms/video 文件夹中缺少合适的 ROM，显卡 \"%hs\" 不可用。将切换到其他可用显卡。"
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "由于 roms/video 文件夹中缺少合适的 ROM，显卡 2 \"%hs\" 不可用。将切换到其他可用显卡。"
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr "由于 roms/video 文件夹中缺少合适的 ROM，显卡 2 \"%hs\" 不可用。禁用第二块显卡。"
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
+msgstr "由于缺少合适的 ROM，设备 \"%hs\" 不可用。忽略设备。"
 
 msgid "Machine"
 msgstr "机型"
@@ -2120,3 +2123,15 @@ msgstr "IBM 8514/A 克隆 (ISA)"
 
 msgid "Vendor"
 msgstr "制造商"
+
+msgid "Generic PC/XT Memory Expansion"
+msgstr "通用 PC/XT 内存扩展"
+
+msgid "Generic PC/AT Memory Expansion"
+msgstr "通用 PC/AT 内存扩展"
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr "无法找到点阵字体"
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
+msgstr "仿真通用 ESC/P 点阵打印机需要使用 \"roms/printer/fonts\" 目录中的 TrueType 字体。"

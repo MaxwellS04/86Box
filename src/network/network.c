@@ -54,7 +54,9 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <time.h>
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 #include <stdbool.h>
 #define HAVE_STDARG_H
 #include <86box/86box.h>
@@ -94,7 +96,7 @@ static const NETWORK_CARD net_cards[] = {
     { &ne1000_device              },
     { &ne2000_device              },
     { &pcnet_am79c960_eb_device   },
-    { &rtl8019as_device           },
+    { &rtl8019as_pnp_device       },
     { &wd8003e_device             },
     { &wd8003eb_device            },
     { &wd8013ebt_device           },

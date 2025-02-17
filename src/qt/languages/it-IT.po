@@ -655,7 +655,7 @@ msgid "ZIP images"
 msgstr "Immagini ZIP"
 
 msgid "86Box could not find any usable ROM images.\n\nPlease <a href=\"https://github.com/86Box/roms/releases/latest\">download</a> a ROM set and extract it into the \"roms\" directory."
-msgstr "86Box non può trovare immagini ROM utilizzabili.\n\nPlease <a href=\"https://github.com/86Box/roms/releases/latest\">download</a> a ROM set and extract it into the \"roms\" directory."
+msgstr "86Box non può trovare immagini ROM utilizzabili.\n\nSi prega di <a href=\"https://github.com/86Box/roms/releases/latest\">scaricare</a> un set di ROM ed estrarlo nella directory \"roms\"."
 
 msgid "(empty)"
 msgstr "(empty)"
@@ -686,6 +686,12 @@ msgstr "La macchina \"%hs\" non è disponibile a causa di immagini ROM mancanti 
 
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
 msgstr "La scheda video \"%hs\" non è disponibile a causa di immagini ROM mancanti nella directory roms/video. Cambiando ad una scheda video disponibile."
+
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr "La scheda video 2 \"%hs\" non è disponibile a causa di immagini ROM mancanti nella directory roms/video. Disabilitando la seconda scheda video."
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
+msgstr "Il dispositivo \"%hs\" non è disponibile a causa di immagini ROM mancanti. Ignorando il dispositivo."
 
 msgid "Machine"
 msgstr "Piastra madre"
@@ -2117,3 +2123,15 @@ msgstr "Clone IBM 8514/A（ISA）"
 
 msgid "Vendor"
 msgstr "Fabricante"
+
+msgid "Generic PC/XT Memory Expansion"
+msgstr "Espansione di memoria generica PC/XT"
+
+msgid "Generic PC/AT Memory Expansion"
+msgstr "Espansione di memoria generica PC/AT"
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr "Impossibile trovare i font a matrice di punti"
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
+msgstr "I font TrueType presenti nella directory \"roms/printer/fonts\" sono necessari per l'emulazione della stampante a matrice di punti ESC/P generica."

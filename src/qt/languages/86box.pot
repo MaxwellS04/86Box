@@ -687,7 +687,10 @@ msgstr ""
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
 msgstr ""
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr ""
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
 msgstr ""
 
 msgid "Machine"
@@ -2131,4 +2134,10 @@ msgid "Generic PC/XT Memory Expansion"
 msgstr ""
 
 msgid "Generic PC/AT Memory Expansion"
+msgstr ""
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr ""
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
 msgstr ""

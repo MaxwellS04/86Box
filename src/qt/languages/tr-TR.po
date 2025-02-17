@@ -687,8 +687,11 @@ msgstr "\"%hs\" makinesi roms/machines klasöründe gerekli ROM imajlarının me
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
 msgstr "\"%hs\" ekran kartı roms/video klasöründe gerekli ROM imajlarının mevcut olmaması nedeniyle kullanılamıyor. Bundan dolayı kullanılabilen bir ekran kartına geçiş yapılacaktır."
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "\"%hs\" ikinci ekran kartı roms/video klasöründe gerekli ROM imajlarının mevcut olmaması nedeniyle kullanılamıyor. Bundan dolayı kullanılabilen bir ekran kartına geçiş yapılacaktır."
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr "\"%hs\" ikinci ekran kartı roms/video klasöründe gerekli ROM imajlarının mevcut olmaması nedeniyle kullanılamıyor. İkinci ekran kartı devre dışı bırakılır."
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
+msgstr "\"%hs\" cihazı gerekli ROM imajlarının mevcut olmaması nedeniyle kullanılamıyor. Cihaz yok sayılıyor."
 
 msgid "Machine"
 msgstr "Makine"
@@ -2120,3 +2123,15 @@ msgstr "IBM 8514/A klonu (ISA)"
 
 msgid "Vendor"
 msgstr "Üretici"
+
+msgid "Generic PC/XT Memory Expansion"
+msgstr "Sıradan PC/XT bellek artırma"
+
+msgid "Generic PC/AT Memory Expansion"
+msgstr "Sıradan PC/AT bellek artırma"
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr "Dot Matrix yazı tipleri bulunamıyor"
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
+msgstr "Sıradan ESC/P Dot Matrix Yazıcının emülasyonu için \"roms/printer/fonts\" dizinindeki TrueType yazı tipleri gereklidir."

@@ -685,10 +685,13 @@ msgid "Machine \"%hs\" is not available due to missing ROMs in the roms/machines
 msgstr "Sistem \"%hs\" ni na voljo zaradi manjkajočih ROM-ov v mapi roms/machines. Preklapljam na drug sistem, ki je na voljo."
 
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "Grafična kartica \"%hs\" ni na voljo zaradi manjkajočih ROM-ov v mapi roms/video. Preklapljam na drugo grafično kartico, ki je na voljo.."
+msgstr "Grafična kartica \"%hs\" ni na voljo zaradi manjkajočih ROM-ov v mapi roms/video. Preklapljam na drugo grafično kartico, ki je na voljo."
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "Grafična kartica 2 \"%hs\" ni na voljo zaradi manjkajočih ROM-ov v mapi roms/video. Preklapljam na drugo grafično kartico, ki je na voljo.."
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr "Grafična kartica 2 \"%hs\" ni na voljo zaradi manjkajočih ROM-ov v mapi roms/video. Onemogočam drugo grafično kartico."
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
+msgstr "Naprava \"%hs\" ni na voljo zaradi manjkajočih ROM-ov. Preziram napravo."
 
 msgid "Machine"
 msgstr "Sistem"
@@ -820,10 +823,10 @@ msgid "Are you sure you want to exit 86Box?"
 msgstr "Ste prepričani, da želite zapreti 86Box?"
 
 msgid "Unable to initialize Ghostscript"
-msgstr "Ne morem inicializirati Ghostscript"
+msgstr "Ghostscript-a ni bilo mogoče inicializirati"
 
 msgid "Unable to initialize GhostPCL"
-msgstr "Ne morem inicializirati GhostPCL"
+msgstr "GhostPCL-ja ni bilo mogoče inicializirati"
 
 msgid "MO %i (%ls): %ls"
 msgstr "MO %i (%ls): %ls"
@@ -2120,3 +2123,15 @@ msgstr "Klon IBM 8514/A (ISA)"
 
 msgid "Vendor"
 msgstr "Proizvajalec"
+
+msgid "Generic PC/XT Memory Expansion"
+msgstr "Generična razširitev pomnilnika PC/XT"
+
+msgid "Generic PC/AT Memory Expansion"
+msgstr "Generična razširitev pomnilnika PC/AT"
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr "Matričnih pisav ni bilo mogoče najti"
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
+msgstr "Matrične pisave v imeniku \"roms/printer/fonts\" so potrebne za emulacijo generičnega matričnega tiskalnika ESC/P."

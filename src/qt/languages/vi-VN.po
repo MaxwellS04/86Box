@@ -687,8 +687,11 @@ msgstr "Mẫu máy \"%hs\" không giả lập được do thiếu file ROM tươ
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
 msgstr "Card đồ họa \"%hs\" không giả lập được do thiếu file ROM tương ứng trong mục roms/video. Hãy chọn card đồ họa khác."
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "Card đồ họa 2 \"%hs\" không giả lập được do thiếu file ROM tương ứng trong mục roms/video. Hãy chọn card đồ họa khác."
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr "Card đồ họa 2 \"%hs\" không giả lập được do thiếu file ROM tương ứng trong mục roms/video. Vô hiệu hóa card đồ họa thứ hai."
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
+msgstr "Thiết bị \"%hs\" không giả lập được do thiếu file ROM. Bỏ qua thiết bị."
 
 msgid "Machine"
 msgstr "Mẫu máy"
@@ -2120,3 +2123,15 @@ msgstr "IBM 8514/A dòng vô tính (ISA)"
 
 msgid "Vendor"
 msgstr "Nhà sản xuất"
+
+msgid "Generic PC/XT Memory Expansion"
+msgstr "Chung mở rộng bộ nhớ qua PC/XT"
+
+msgid "Generic PC/AT Memory Expansion"
+msgstr "Chung mở rộng bộ nhớ qua PC/AT"
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr "Không tìm thấy phông chữ ma trận chấm"
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
+msgstr "Cần có phông chữ TrueType trong thư mục \"roms/printer/fonts\" để mô phỏng máy in generic ESC/P ma trận chấm."

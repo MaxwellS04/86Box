@@ -687,8 +687,11 @@ msgstr "A máquina \"%hs\" não está disponível devido à falta de ROMs na pas
 msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
 msgstr "A placa vídeo \"%hs\" não está disponível devido à falta de ROMs na pasta roms/video. A mudar para uma placa vídeo disponível."
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "A placa vídeo 2 \"%hs\" não está disponível devido à falta de ROMs na pasta roms/video. A mudar para uma placa vídeo disponível."
+msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
+msgstr "A placa vídeo 2 \"%hs\" não está disponível devido à falta de ROMs na pasta roms/video. A desativar a segunda placa vídeo."
+
+msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
+msgstr "O dispositivo \"%hs\" não está disponível devido à falta de ROMs A ignorar o dispositivo."
 
 msgid "Machine"
 msgstr "Máquina"
@@ -2120,3 +2123,15 @@ msgstr "Clone IBM 8514/A (ISA)"
 
 msgid "Vendor"
 msgstr "Fabricante"
+
+msgid "Generic PC/XT Memory Expansion"
+msgstr "Expansão de memória genérica PC/XT"
+
+msgid "Generic PC/AT Memory Expansion"
+msgstr "Expansão de memória genérica PC/AT"
+
+msgid "Unable to find Dot-Matrix fonts"
+msgstr "Não foi possível encontrar os fontes matriciais de pontos"
+
+msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P Dot-Matrix Printer."
+msgstr "As fontes TrueType no diretório \"roms/printer/fonts\" são necessárias para a emulação da impressora matricial de pontos ESC/P genérica"
