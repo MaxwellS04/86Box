@@ -177,6 +177,8 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CD-ROM DRIVE:289", "1.00", "nec_289",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "NEC",      "CDR-1300A",        "1.05", "nec_1300a",      BUS_TYPE_IDE,  0,  6, 36, 0, {  4,  2,  2, -1 } },
     { "NEC",      "CDR-1900A",        "1.00", "nec_1900a",      BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
+    /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
+    { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     /* TODO: Find an IDENTIFY and/or INQUIRY dump for Pioneer ATAPI CD-ROM drives (except for DR-U24X). */
     { "PIONEER",  "CD-ROM DR-A12X",   "????", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
