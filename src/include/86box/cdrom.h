@@ -122,8 +122,7 @@ static const struct cdrom_drive_types_s {
     { EMU_NAME,   "86B_CD",           "1.00", "86cd100",        BUS_TYPE_BOTH, 1, -1, 36, 1, {  0, -1, -1, -1 } },
     /* No difference from 86BOX CD-ROM, other than name - but enough people have requested such a name to warrant it. */
     { EMU_NAME,   "86B_DVD",          "4.30", "86dvd",          BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump for real CD-948E. */
-    { "AOpen",    "CD-948E",          "1.00", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
+    { "AOpen",    "CD-948E",          "1.06", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "AOpen",    "DVD-9632",         "1.15", "aopen_9632",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S500/A",        "1.41", "asus_500",       BUS_TYPE_IDE,  0, 50, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
@@ -149,14 +148,12 @@ static const struct cdrom_drive_types_s {
     { "LG",       "CD-ROM CRD-8482B", "1.00", "lg_8482b",       BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8521B", "1.01", "lg_8521b",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "DVD-ROM DRD-820B", "1.04", "lg_820b",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump for real LTN242 and LTN403L. */
     { "LITE-ON",  "LTN242",           "1S04", "liteon_242",     BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "LITE-ON",  "LTN403L",          "YS03", "liteon_403l",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "MATSHITA", "CD-ROM CR-584",    "1.00", "matshita_584",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } },
     { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2,  0 } },
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
@@ -185,7 +182,6 @@ static const struct cdrom_drive_types_s {
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "CD-ROM DR-504S",   "????", "pioneer_504s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "PIONEER",  "CD-ROM DR-944",    "????", "pioneer_944",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump for some of real Samsung CD-ROM drives. */
     { "SAMSUNG",  "CD-ROM SCR-830",   "AS06", "samsung_830",    BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-1231",  "JS09", "samsung_1231",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-2030",  "KS05", "samsung_2030",   BUS_TYPE_IDE,  0, 20, 36, 0, {  4,  2,  2,  2 } },
@@ -198,7 +194,6 @@ static const struct cdrom_drive_types_s {
     { "SAMSUNG",  "DVD-ROM SH-D162C", "TS05", "samsung_d162c",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
     { "SONY",     "CD-ROM CDU76",     "1.0i", "sony_76",        BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } },
     { "SONY",     "CD-ROM CDU311",    "3.0h", "sony_311",       BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  1, -1 } },
-    /* Current firmware versions from 571 to 701 are not 100% confirmed yet. */
     { "SONY",     "CD-ROM CDU571",    "1.0a", "sony_571",       BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU611",    "1.0r", "sony_611",       BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU701",    "1.1n", "sony_701",       BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  1,  2 } },
