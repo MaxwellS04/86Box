@@ -119,26 +119,23 @@ static const struct cdrom_drive_types_s {
     /* NOTE: New hard disk and CD-ROM drives are for v4.4 or v5.0 only. */
 } cdrom_drive_types[] = {
     { EMU_NAME,   "86B_CD",           CDV,    "86cd",           BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } },
-    /* SCSI-1 / early ATAPI generic - second on purpose so the later variant is the default. */
-    { EMU_NAME,   "86B_CD",           "1.00", "86cd100",        BUS_TYPE_BOTH, 1, -1, 36, 1, {  0, -1, -1, -1 } },
-    /* No difference from 86BOX CD-ROM, other than name - but enough people have requested such a name to warrant it. */
-    { EMU_NAME,   "86B_DVD",          "4.30", "86dvd",          BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } },
+    { EMU_NAME,   "86B_CD",           "1.00", "86cd100",        BUS_TYPE_BOTH, 1, -1, 36, 1, {  0, -1, -1, -1 } }, /* SCSI-1 / early ATAPI generic - second on purpose so the later variant is the default. */
+    { EMU_NAME,   "86B_DVD",          "4.30", "86dvd",          BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } }, /* No difference from 86BOX CD-ROM, other than name - but enough people have requested such a name to warrant it. */
     { "AOpen",    "CD-948E",          "1.06", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "AOpen",    "DVD-9632",         "1.15", "aopen_9632",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S500/A",        "1.41", "asus_500",       BUS_TYPE_IDE,  0, 50, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "AZT",      "CDA46802I",        "1.15", "azt_cda",        BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  0,  0,  0 } },
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
+    /* Firmware versions on Creative CD-ROM drives not 100% confirmed. */
     { "CREATIVE", "CD2423E",          "SB04", "creative_2423",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "CREATIVE", "CD3621E",          "SB03", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } }, /* Creative Infra 5400 */
-    { "CREATIVE", "CD4831E",          "SB01", "creative_4831",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
-    { "CREATIVE", "CD5233E",          "SB00", "creative_5233",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
+    { "CREATIVE", "CD4831E",          "SB01", "creative_4831",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
+    { "CREATIVE", "CD5233E",          "SB00", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R520B",        "1.06", "goldstar_520",   BUS_TYPE_IDE,  0,  2, 36, 0, {  3,  2,  2, -1 } },
-    /* Little known about this CD-ROM drive. */
-    { "GOLDSTAR", "GCD-R540B",        "1.03", "goldstar_540",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  2, -1 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
-    { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } },
+    { "GOLDSTAR", "GCD-R542B",        "1.03", "goldstar_540",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  2, -1 } }, /* Little known about this CD-ROM drive. */
+    { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "HITACHI",  "CDR-8330",         "0016", "hitachi_r8330",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
@@ -161,8 +158,7 @@ static const struct cdrom_drive_types_s {
     { "LITE-ON",  "LTN242",           "1S04", "liteon_242",     BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "LITE-ON",  "LTN403L",          "YS03", "liteon_403l",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
-    /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
-    { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
+    { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "MATSHITA", "CD-ROM CR-584",    "1.03", "matshita_584",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } },
     { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2,  0 } },
@@ -172,9 +168,14 @@ static const struct cdrom_drive_types_s {
     { "MATSHITA", "CD-ROM CR-594",    "3S1R", "matshita_594",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
     { "MATSHITA", "CR-572",           "1.0j", "matshita_572",   BUS_TYPE_IDE,  0,  4, 36, 0, {  0, -1, -1, -1 } },
-    { "MITSUMI",  "CRMC-FX4820T",     "D02A", "mitsumi_4820t",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
+    /* TODO: Find an IDENTIFY and/or INQUIRY dump for Mitsumi CD-ROM drives (except FX4820T). */
+    { "MITSUMI",  "CRMC-FX410A",      "????", "mitsumi_410a",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  2, -1 } },
+    { "MITSUMI",  "CRMC-FX600S",      "????", "mitsumi_600s",   BUS_TYPE_IDE,  0,  6, 36, 0, {  4,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX810T4",     "????", "mitsumi_810t4",  BUS_TYPE_IDE,  0,  8, 36, 0, {  4,  2,  2, -1 } },
+    { "MITSUMI",  "CRMC-FX2400",      "????", "mitsumi_2400",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
+    { "MITSUMI",  "CRMC-FX320S",      "????", "mitsumi_320s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
+    { "MITSUMI",  "CRMC-FX400",       "????", "mitsumi_400",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
+    { "MITSUMI",  "CRMC-FX4820T",     "D02A", "mitsumi_4820t",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "NEC",      "CD-ROM DRIVE:260", "1.00", "nec_260_early",  BUS_TYPE_IDE,  1,  2, 36, 1, {  0, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:260", "1.01", "nec_260",        BUS_TYPE_IDE,  1,  4, 36, 1, {  0, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:273", "4.20", "nec_273",        BUS_TYPE_IDE,  0,  4, 36, 0, {  0, -1, -1, -1 } },
@@ -183,15 +184,16 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CD-ROM DRIVE:289", "1.00", "nec_289",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "NEC",      "CDR-1300A",        "1.05", "nec_1300a",      BUS_TYPE_IDE,  0,  6, 36, 0, {  4,  2,  2, -1 } },
     { "NEC",      "CDR-1900A",        "1.00", "nec_1900a",      BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
-    { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
+    { "NEC",      "CDR-3001A",        "1.01", "nec_3001a",      BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
+    { "NEC",      "DV-5700A",         "1.06", "nec_5700a",      BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
+    { "NEC",      "DV-5800A",         "1.04", "nec_5800a",      BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
+    { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     { "PIONEER",  "CD-ROM DR-A12X",   "1.03", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "CD-ROM DR-504S",   "1.10", "pioneer_504s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "PIONEER",  "CD-ROM DR-744",    "1.06", "pioneer_744",    BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
     { "PIONEER",  "CD-ROM DR-944",    "1.01", "pioneer_944",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
-    /* Firmware versions on some of Samsung CD-ROM drives not 100% confirmed. */
     { "SAMSUNG",  "CD-ROM SCR-830",   "AS06", "samsung_830",    BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-1231",  "JS09", "samsung_1231",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-2030",  "KS05", "samsung_2030",   BUS_TYPE_IDE,  0, 20, 36, 0, {  4,  2,  2,  2 } },
@@ -210,8 +212,7 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU4811",   "RKS3", "sony_4811",      BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "SONY",     "CD-ROM CDU5225",   "NYS4", "sony_5225",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "SONY",     "DVD-ROM DDU1621",  "NKS3", "sony_1621",      BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } },
-    /* Firmware version confirmed in its manual, but it's not %100 confirmed yet. */
-    { "TEAC",     "CD-55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } },
+    { "TEAC",     "CD-55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } }, /* Firmware version confirmed in its manual, but it's not %100 confirmed yet. */
     { "TEAC",     "CD-SN250",         "N.0A", "teac_520",       BUS_TYPE_IDE,  0, 10, 36, 0, {  3,  2,  2,  0 } },
     { "TEAC",     "CD-516E",          "1.0G", "teac_516e",      BUS_TYPE_IDE,  0, 16, 36, 0, {  3,  2,  2, -1 } },
     { "TEAC",     "CD-524EA",         "3.0D", "teac_524ea",     BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2, -1 } },
@@ -219,11 +220,15 @@ static const struct cdrom_drive_types_s {
     { "TEAC",     "CD-P520E",         "2.0R", "teac_520e",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "TOSHIBA",  "CD-ROM XM-5302TA", "0305", "toshiba_5302ta", BUS_TYPE_IDE,  0,  4, 96, 0, {  0, -1, -1, -1 } },
     { "TOSHIBA",  "CD-ROM XM-5702B",  "TA70", "toshiba_5702b",  BUS_TYPE_IDE,  0, 12, 96, 0, {  3,  2,  1, -1 } },
+    { "TOSHIBA",  "CD-ROM XM-6002B",  "1004", "toshiba_6002b",  BUS_TYPE_IDE,  0, 16, 96, 0, {  4,  2,  2, -1 } },
+    { "TOSHIBA",  "CD-ROM XM-6102B",  "1008", "toshiba_6102b",  BUS_TYPE_IDE,  0, 24, 96, 0, {  4,  2,  2, -1 } },
     { "TOSHIBA",  "CD-ROM XM-6202B",  "1512", "toshiba_6202b",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2, -1 } },
     { "TOSHIBA",  "CD-ROM XM-6402B",  "1008", "toshiba_6402b",  BUS_TYPE_IDE,  0, 36, 96, 0, {  4,  2,  2,  2 } },
     { "TOSHIBA",  "CD-ROM XM-6702B",  "1007", "toshiba_6720b",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  2 } },
+    { "TOSHIBA",  "DVD-ROM SD-C2502", "1050", "toshiba_c2502",  BUS_TYPE_IDE,  0, 24, 96, 0, {  4,  2,  2,  4 } },
     { "TOSHIBA",  "DVD-ROM SD-M1202", "2757", "toshiba_m1202",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  4 } },
     { "TOSHIBA",  "DVD-ROM SD-M1802", "1051", "toshiba_m1802",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } },
+    { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDX-435",   "M62 ", "chinon_435",     BUS_TYPE_SCSI, 1,  2, 36, 1, { -1, -1, -1, -1 } },
     { "DEC",      "RRD45   (C) DEC",  "0436", "dec_45",         BUS_TYPE_SCSI, 1,  4, 36, 0, { -1, -1, -1, -1 } },
