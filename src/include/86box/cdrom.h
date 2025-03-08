@@ -128,8 +128,10 @@ static const struct cdrom_drive_types_s {
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "AZT",      "CDA46802I",        "1.15", "azt_cda",        BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  0,  0,  0 } },
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
-    { "CREATIVE", "CD3621E",          "????", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
+    { "CREATIVE", "CD2423E",          "SB04", "creative_2423",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
+    { "CREATIVE", "CD3621E",          "SB03", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } }, /* Creative Infra 5400 */
+    { "CREATIVE", "CD4831E",          "SB01", "creative_4831",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
+    { "CREATIVE", "CD5233E",          "SB00", "creative_5233",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R520B",        "1.06", "goldstar_520",   BUS_TYPE_IDE,  0,  2, 36, 0, {  3,  2,  2, -1 } },
     /* Little known about this CD-ROM drive. */
@@ -138,7 +140,9 @@ static const struct cdrom_drive_types_s {
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
-    { "HITACHI",  "CDR-8435",         "0020", "hitachi_r8435",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
+    { "HITACHI",  "CDR-8330",         "0016", "hitachi_r8330",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
+    { "HITACHI",  "CDR-8435",         "0010", "hitachi_r8435",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
+    { "HITACHI",  "GD-2000",          "A2  ", "hitachi_2000",   BUS_TYPE_IDE,  0, 20, 36, 0, {  4,  2,  2,  2 } },
     { "HITACHI",  "GD-2500",          "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HITACHI",  "GD-7000",          "B1  ", "hitachi_7000",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
@@ -163,9 +167,8 @@ static const struct cdrom_drive_types_s {
     { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2,  0 } },
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump for real CR-593 and CR-594. */
-    { "MATSHITA", "CD-ROM CR-593",    "????", "matshita_593",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
-    { "MATSHITA", "CD-ROM CR-594",    "????", "matshita_594",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
+    { "MATSHITA", "CD-ROM CR-593",    "ZS1N", "matshita_593",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
+    { "MATSHITA", "CD-ROM CR-594",    "3S1R", "matshita_594",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
     { "MATSHITA", "CR-572",           "1.0j", "matshita_572",   BUS_TYPE_IDE,  0,  4, 36, 0, {  0, -1, -1, -1 } },
     { "MITSUMI",  "CRMC-FX4820T",     "D02A", "mitsumi_4820t",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
@@ -182,12 +185,12 @@ static const struct cdrom_drive_types_s {
     /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump for Pioneer ATAPI CD-ROM drives (except for DR-U24X). */
-    { "PIONEER",  "CD-ROM DR-A12X",   "????", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
+    { "PIONEER",  "CD-ROM DR-A12X",   "1.03", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
-    { "PIONEER",  "CD-ROM DR-504S",   "????", "pioneer_504s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
-    { "PIONEER",  "CD-ROM DR-744",    "????", "pioneer_944",    BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
-    { "PIONEER",  "CD-ROM DR-944",    "????", "pioneer_944",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
+    { "PIONEER",  "CD-ROM DR-504S",   "1.10", "pioneer_504s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
+    { "PIONEER",  "CD-ROM DR-744",    "1.06", "pioneer_944",    BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
+    { "PIONEER",  "CD-ROM DR-944",    "1.01", "pioneer_944",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
+    /* Firmware versions on some of Samsung CD-ROM drives not 100% confirmed. */
     { "SAMSUNG",  "CD-ROM SCR-830",   "AS06", "samsung_830",    BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-1231",  "JS09", "samsung_1231",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-2030",  "KS05", "samsung_2030",   BUS_TYPE_IDE,  0, 20, 36, 0, {  4,  2,  2,  2 } },
