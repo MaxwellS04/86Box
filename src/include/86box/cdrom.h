@@ -125,7 +125,7 @@ static const struct cdrom_drive_types_s {
     { "AOpen",    "CD-948E",          "1.06", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "AOpen",    "DVD-9632",         "1.15", "aopen_9632",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S500/A",        "1.41", "asus_500",       BUS_TYPE_IDE,  0, 50, 36, 0, {  4,  2,  2,  2 } },
-    { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
+    { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "AZT",      "CDA46802I",        "1.15", "azt_cda",        BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  0,  0,  0 } },
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
     /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
@@ -138,14 +138,16 @@ static const struct cdrom_drive_types_s {
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
+    { "HITACHI",  "CDR-8435",         "0020", "hitachi_r8435",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
     { "HITACHI",  "GD-2500",          "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
+    { "HITACHI",  "GD-7000",          "B1  ", "hitachi_7000",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HL-DT-ST", "CD-ROM GCR-8526B", "1.01", "hldtst_8526b",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "HL-DT-ST", "DVDRAM GSA-4160",  "A302", "hldtst_4160",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
     { "KENWOOD",  "CD-ROM UCR-421",   "208E", "kenwood_421",    BUS_TYPE_IDE,  0, 72, 36, 0, {  4,  2,  2,  4 } },
-    { "LG",       "CD-ROM CRD-8160B", "1.15", "lg_8160b",       BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Later version of the already-emulated GoldStar CRD-8160B */
-    { "LG",       "CD-ROM CRD-8240B", "1.19", "lg_8240b",       BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
+    { "LG",       "CD-ROM CRD-8160B", "1.15", "lg_8160b",       BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  2 } }, /* Later version of the already-emulated GoldStar CRD-8160B */
+    { "LG",       "CD-ROM CRD-8240B", "1.19", "lg_8240b",       BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8322B", "1.06", "lg_8322b",       BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8400C", "1.02", "lg_8400c",       BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8482B", "1.00", "lg_8482b",       BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
@@ -157,7 +159,7 @@ static const struct cdrom_drive_types_s {
     /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
-    { "MATSHITA", "CD-ROM CR-584",    "1.00", "matshita_584",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } },
+    { "MATSHITA", "CD-ROM CR-584",    "1.03", "matshita_584",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } },
     { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2,  0 } },
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
@@ -184,6 +186,7 @@ static const struct cdrom_drive_types_s {
     { "PIONEER",  "CD-ROM DR-A12X",   "????", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "CD-ROM DR-504S",   "????", "pioneer_504s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
+    { "PIONEER",  "CD-ROM DR-744",    "????", "pioneer_944",    BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
     { "PIONEER",  "CD-ROM DR-944",    "????", "pioneer_944",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-830",   "AS06", "samsung_830",    BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-1231",  "JS09", "samsung_1231",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2,  2 } },
@@ -199,7 +202,7 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU311",    "3.0h", "sony_311",       BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU571",    "1.0a", "sony_571",       BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU611",    "1.0r", "sony_611",       BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  1, -1 } },
-    { "SONY",     "CD-ROM CDU701",    "1.1n", "sony_701",       BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  1,  2 } },
+    { "SONY",     "CD-ROM CDU701",    "1.1n", "sony_701",       BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "SONY",     "CD-ROM CDU5225",   "NYS4", "sony_5225",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     /* Firmware version confirmed in its manual, but it's not %100 confirmed yet. */
     { "TEAC",     "CD-55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } },
