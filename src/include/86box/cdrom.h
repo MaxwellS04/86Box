@@ -131,6 +131,9 @@ static const struct cdrom_drive_types_s {
     /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "CREATIVE", "CD3621E",          "????", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
+    { "GOLDSTAR", "GCD-R520B",        "1.06", "goldstar_520",   BUS_TYPE_IDE,  0,  2, 36, 0, {  3,  2,  2, -1 } },
+    /* Little known about this CD-ROM drive. */
+    { "GOLDSTAR", "GCD-R540B",        "1.03", "goldstar_540",   BUS_TYPE_IDE,  0,  2, 36, 0, {  3,  2,  2, -1 } },
     /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
@@ -175,7 +178,7 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CDR-1300A",        "1.05", "nec_1300a",      BUS_TYPE_IDE,  0,  6, 36, 0, {  4,  2,  2, -1 } },
     { "NEC",      "CDR-1900A",        "1.00", "nec_1900a",      BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
     /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
-    { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
+    { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     /* TODO: Find an IDENTIFY and/or INQUIRY dump for Pioneer ATAPI CD-ROM drives (except for DR-U24X). */
     { "PIONEER",  "CD-ROM DR-A12X",   "????", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
