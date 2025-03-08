@@ -116,6 +116,7 @@ static const struct cdrom_drive_types_s {
     const int     inquiry_len;
     const int     caddy;
     const int     transfer_max[4];
+    /* NOTE: New hard disk and CD-ROM drives are for v4.4 or v5.0 only. */
 } cdrom_drive_types[] = {
     { EMU_NAME,   "86B_CD",           CDV,    "86cd",           BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } },
     /* SCSI-1 / early ATAPI generic - second on purpose so the later variant is the default. */
@@ -206,7 +207,9 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU571",    "1.0a", "sony_571",       BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU611",    "1.0r", "sony_611",       BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU701",    "1.1n", "sony_701",       BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
+    { "SONY",     "CD-ROM CDU4811",   "RKS3", "sony_4811",      BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "SONY",     "CD-ROM CDU5225",   "NYS4", "sony_5225",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
+    { "SONY",     "DVD-ROM DDU1621",  "NKS3", "sony_1621",      BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } },
     /* Firmware version confirmed in its manual, but it's not %100 confirmed yet. */
     { "TEAC",     "CD-55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } },
     { "TEAC",     "CD-SN250",         "N.0A", "teac_520",       BUS_TYPE_IDE,  0, 10, 36, 0, {  3,  2,  2,  0 } },
