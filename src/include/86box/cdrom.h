@@ -154,8 +154,6 @@ static const struct cdrom_drive_types_s {
     { "LG",       "CD-ROM CRD-8482B", "1.00", "lg_8482b",       BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8521B", "1.01", "lg_8521b",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "DVD-ROM DRD-820B", "1.04", "lg_820b",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } },
-    { "LG",       "DVD-ROM DRD-8080B","1.31", "lg_8080b",       BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } },
-    { "LG",       "DVD-ROM DRD-8160B","1.24", "lg_8160b_dvd",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
     { "LITE-ON",  "LTN242",           "1S04", "liteon_242",     BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "LITE-ON",  "LTN403L",          "YS03", "liteon_403l",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
