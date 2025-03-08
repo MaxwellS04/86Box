@@ -188,7 +188,7 @@ static const struct cdrom_drive_types_s {
     { "PIONEER",  "CD-ROM DR-A12X",   "1.03", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  3, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "CD-ROM DR-504S",   "1.10", "pioneer_504s",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
-    { "PIONEER",  "CD-ROM DR-744",    "1.06", "pioneer_944",    BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
+    { "PIONEER",  "CD-ROM DR-744",    "1.06", "pioneer_744",    BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } },
     { "PIONEER",  "CD-ROM DR-944",    "1.01", "pioneer_944",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     /* Firmware versions on some of Samsung CD-ROM drives not 100% confirmed. */
     { "SAMSUNG",  "CD-ROM SCR-830",   "AS06", "samsung_830",    BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2,  2 } },
