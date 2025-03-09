@@ -223,7 +223,7 @@ static const struct cdrom_drive_types_s {
     { "TOSHIBA",  "CD-ROM XM-6002B",  "1004", "toshiba_6002b",  BUS_TYPE_IDE,  0, 16, 96, 0, {  4,  2,  2, -1 } },
     { "TOSHIBA",  "CD-ROM XM-6102B",  "1008", "toshiba_6102b",  BUS_TYPE_IDE,  0, 24, 96, 0, {  4,  2,  2, -1 } },
     { "TOSHIBA",  "CD-ROM XM-6202B",  "1512", "toshiba_6202b",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2, -1 } },
-    { "TOSHIBA",  "CD-ROM XM-6402B",  "1008", "toshiba_6402b",  BUS_TYPE_IDE,  0, 36, 96, 0, {  4,  2,  2,  2 } },
+    { "TOSHIBA",  "CD-ROM XM-6402B",  "1008", "toshiba_6402b",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  2 } }, /* Updated version of XM-6202B(?) */
     { "TOSHIBA",  "CD-ROM XM-6702B",  "1007", "toshiba_6720b",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  2 } },
     { "TOSHIBA",  "DVD-ROM SD-C2502", "1050", "toshiba_c2502",  BUS_TYPE_IDE,  0, 24, 96, 0, {  4,  2,  2,  4 } },
     { "TOSHIBA",  "DVD-ROM SD-M1202", "2757", "toshiba_m1202",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  4 } },
