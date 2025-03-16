@@ -181,6 +181,7 @@ MainWindow::MainWindow(QWidget *parent)
     main_window = this;
     ui->setupUi(this);
     status->setSoundGainAction(ui->actionSound_gain);
+    ui->menuEGA_S_VGA_settings->menuAction()->setMenuRole(QAction::NoRole);
     ui->stackedWidget->setMouseTracking(true);
     statusBar()->setVisible(!hide_status_bar);
 #ifdef Q_OS_WINDOWS
@@ -454,9 +455,6 @@ MainWindow::MainWindow(QWidget *parent)
                     endblit();
                 }
 #endif
-            case 6:
-                newVidApi = RendererStack::Renderer::OpenGL3PCem;
-                break;
         }
         ui->stackedWidget->switchRenderer(newVidApi);
         if (!show_second_monitors)
@@ -468,7 +466,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(ui->stackedWidget, &RendererStack::rendererChanged, [this]() {
-        ui->actionRenderer_options->setVisible(ui->stackedWidget->hasOptions());
+        ui->actionRenderer_options->setEnabled(ui->stackedWidget->hasOptions());
     });
 
     /* Trigger initial renderer switch */
@@ -2028,8 +2026,8 @@ MainWindow::on_actionRenderer_options_triggered()
             ui->stackedWidget->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
             if (show_second_monitors) {
                 for (int i = 1; i < MONITORS_NUM; i++) {
-                    if (renderers[i] && renderers[i]->reloadRendererOption() && renderers[i]->hasOptions()) {
-                        ui->stackedWidget->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
+                    if (renderers[i]) {
+                        renderers[i]->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
                     }
                 }
             }
