@@ -148,7 +148,7 @@ static const struct cdrom_drive_types_s {
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
-    { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2,  0 } },
+    { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  0 } },
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
