@@ -137,10 +137,10 @@ static const struct cdrom_drive_types_s {
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HL-DT-ST", "CD-ROM GCR-8526B", "1.01", "hldtst_8526b",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
-    { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* DVD version of GCR-8526B(?) */
+    { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "HL-DT-ST", "DVDRAM GSA-4160B", "A306", "hldtst_4160",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
     { "KENWOOD",  "CD-ROM UCR-421",   "208E", "kenwood_421",    BUS_TYPE_IDE,  0, 72, 36, 0, {  4,  2,  2,  4 } },
-    { "LG",       "CD-ROM CRD-8240B", "1.19", "lg_8240",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
+    { "LG",       "CD-ROM CRD-8240B", "1.19", "lg_8240",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "LG",       "CD-ROM CRD-8322B", "1.06", "lg_8322",        BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8400C", "1.02", "lg_8400",        BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8482B", "1.00", "lg_8482",        BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
@@ -166,7 +166,7 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CDR-1900A",        "1.00", "nec_1900a",      BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "NEC",      "CD-3002A",         "N   ", "nec_3002a",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "NEC",      "ND-1300A",         "1.0B", "nec_d1300a",     BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
-    { "NEC",      "ND-3530A",         "1.04", "nec_d3530a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x version of ND-1300A */
+    { "NEC",      "ND-3530A",         "1.04", "nec_d3530a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x/16x version of ND-1300A */
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     { "PIONEER",  "CD-ROM DR-A12X",   "1.00", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2, -1 } },
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } }, /* Firmware revision confirmed somewhere but not really yet. */
@@ -183,14 +183,14 @@ static const struct cdrom_drive_types_s {
     { "TEAC",     "CD-516E",          "1.0G", "teac_516e",      BUS_TYPE_IDE,  0, 16, 36, 0, {  3,  2,  2, -1 } },
     { "TEAC",     "CD-524EA",         "3.0D", "teac_524ea",     BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "TEAC",     "CD-532EA",         "3.0A", "teac_532ea",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
-    { "TEAC",     "CD-540E",          "2.0U", "teac_540e",      BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
+    { "TEAC",     "CD-540E",          "2.0U", "teac_540e",      BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
     { "TEAC",     "CD-P520E",         "2.0R", "teac_520e",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "TOSHIBA",  "CD-ROM XM-5302TA", "0305", "toshiba_5302ta", BUS_TYPE_IDE,  0,  4, 96, 0, {  0, -1, -1, -1 } },
     { "TOSHIBA",  "CD-ROM XM-5702B",  "TA70", "toshiba_5702b",  BUS_TYPE_IDE,  0, 12, 96, 0, {  3,  2,  1, -1 } },
     { "TOSHIBA",  "CD-ROM XM-6202B",  "1512", "toshiba_6202b",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2, -1 } },
-    { "TOSHIBA",  "CD-ROM XM-6402B",  "1008", "toshiba_6402b",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  2 } }, /* Updated version of XM-6202B(?) */
+    { "TOSHIBA",  "CD-ROM XM-6402B",  "1008", "toshiba_6402b",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  2 } }, /* Updated version of XM-6202B */
     { "TOSHIBA",  "CD-ROM XM-6702B",  "1007", "toshiba_6720b",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  2 } },
-    { "TOSHIBA",  "DVD-ROM SD-M1802", "1051", "toshiba_m1802",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } }, /* DVD version of XM-6702B(?) */
+    { "TOSHIBA",  "DVD-ROM SD-M1802", "1051", "toshiba_m1802",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } },
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, {  0, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDX-435",   "M62 ", "chinon_435",     BUS_TYPE_SCSI, 1,  2, 36, 1, { -1, -1, -1, -1 } },
