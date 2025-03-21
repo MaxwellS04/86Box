@@ -197,6 +197,7 @@ static const struct cdrom_drive_types_s {
     { "DEC",      "RRD45   (C) DEC",  "0436", "dec_45",         BUS_TYPE_SCSI, 1,  4, 36, 0, { -1, -1, -1, -1 } },
     { "MATSHITA", "CD-ROM CR-501",    "1.0b", "matshita_501",   BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } },
     { "MATSHITA", "CD-ROM CR-504",    "1.0j", "matshita_504",   BUS_TYPE_SCSI, 1,  4, 36, 0, { -1, -1, -1, -1 } }, /* Also known as AppleCD 600i */
+    { "MATSHITA", "CD-ROM CR-506",    "8.0h", "matshita_506",   BUS_TYPE_SCSI, 1,  8, 36, 0, { -1, -1, -1, -1 } }, /* Also known as AppleCD 1200i */
     { "NEC",      "CD-ROM DRIVE:25",  "1.0a", "nec_25",         BUS_TYPE_SCSI, 1,  2, 36, 0, { -1, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:38",  "1.00", "nec_38",         BUS_TYPE_SCSI, 2,  1, 36, 0, { -1, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:75",  "1.03", "nec_75",         BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the CDR-74. */
