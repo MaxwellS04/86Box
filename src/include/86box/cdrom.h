@@ -205,13 +205,16 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CD-ROM DRIVE:464", "1.05", "nec_464",        BUS_TYPE_SCSI, 2,  3, 36, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the CDR-400. */
     { "ShinaKen", "CD-ROM DM-3x1S",   "1.04", "shinaken_3x1s",  BUS_TYPE_SCSI, 1,  3, 36, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the name. */
     { "SONY",     "CD-ROM CDU-541",   "1.0i", "sony_541",       BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } },
-    { "SONY",     "CD-ROM CDU-561",   "1.8k", "sony_561",       BUS_TYPE_SCSI, 2,  2, 36, 1, { -1, -1, -1, -1 } },
+    { "SONY",     "CD-ROM CDU-561",   "1.9a", "sony_561",       BUS_TYPE_SCSI, 2,  2, 36, 1, { -1, -1, -1, -1 } }, /* Also known as AppleCD 300 */
     { "SONY",     "CD-ROM CDU-76S",   "1.00", "sony_76s",       BUS_TYPE_SCSI, 2,  4, 36, 0, { -1, -1, -1, -1 } },
     { "PHILIPS",  "CDD2600",          "1.07", "philips_2600",   BUS_TYPE_SCSI, 2,  6, 36, 0, { -1, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DRM-604X",  "2403", "pioneer_604x",   BUS_TYPE_SCSI, 2,  4, 47, 0, { -1, -1, -1, -1 } }, /* NOTE: The real thing is a CD changer drive! */
+    { "PLEXTOR",  "CD-ROM PX-12SC",   "1.01", "plextor_12sc",   BUS_TYPE_SCSI, 2, 12, 36, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-32TS",   "1.03", "plextor_32ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, { -1, -1, -1, -1 } },
+    { "PLEXTOR",  "CD-ROM PX-40TS",   "1.14", "plextor_40ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD 50",            "1.00", "teac_50",        BUS_TYPE_SCSI, 2,  4, 36, 1, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the R55S. */
     { "TEAC",     "CD-ROM R55S",      "1.0R", "teac_55s",       BUS_TYPE_SCSI, 2,  4, 36, 0, { -1, -1, -1, -1 } },
+    { "TEAC",     "CD-516S",          "2.0H", "teac_516s",      BUS_TYPE_SCSI, 1, 16, 36, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD-532S",          "1.02", "teac_532s",      BUS_TYPE_SCSI, 1, 32, 36, 0, { -1, -1, -1, -1 } }, /* This is a SCSI-1 drive confirmed on The Retro Web */
     { "TEXEL",    "CD-ROM DM-3024",   "1.00", "texel_3024",     BUS_TYPE_SCSI, 2,  2, 36, 1, { -1, -1, -1, -1 } }, /* Texel is Plextor according to Plextor's own EU website. */
     /*
@@ -228,7 +231,9 @@ static const struct cdrom_drive_types_s {
     { "TOSHIBA",  "CD-ROM DRIVE:XM",  "3433", "toshiba_xm",     BUS_TYPE_SCSI, 2,  2, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
     { "TOSHIBA",  "CD-ROM XM-3201B",  "3232", "toshiba_3201b",  BUS_TYPE_SCSI, 1,  1, 96, 1, { -1, -1, -1, -1 } }, /* Caddy. */
     { "TOSHIBA",  "CD-ROM XM-3301TA", "0272", "toshiba_3301ta", BUS_TYPE_SCSI, 2,  2, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
+    { "TOSHIBA",  "CD-ROM XM-5401B",  "1036", "toshiba_5401b",  BUS_TYPE_SCSI, 2,  4, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
     { "TOSHIBA",  "CD-ROM XM-5701TA", "3136", "toshiba_5701a",  BUS_TYPE_SCSI, 2, 12, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
+    { "TOSHIBA",  "CD-ROM XM-6401TA", "1404", "toshiba_6401a",  BUS_TYPE_SCSI, 2, 32, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
     { "TOSHIBA",  "DVD-ROM SD-M1401", "1008", "toshiba_m1401",  BUS_TYPE_SCSI, 2, 40, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
     { "",         "",                 "",     "",               BUS_TYPE_NONE, 0, -1,  0, 0, { -1, -1, -1, -1 } }
 };
