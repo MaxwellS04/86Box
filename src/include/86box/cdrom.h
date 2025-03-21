@@ -131,10 +131,11 @@ static const struct cdrom_drive_types_s {
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
     { "CREATIVE", "CD3621E",          "SB03", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  2 } }, /* Creative Labs' Infra 5400; current firmware revision not confirmed yet. */
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
-    { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  2, -1 } }, /* Not much known about this CD-ROM drive. */
+    { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
+    { "HITACHI",  "GD-2500",          "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HL-DT-ST", "CD-ROM GCR-8526B", "1.01", "hldtst_8526b",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
@@ -149,7 +150,7 @@ static const struct cdrom_drive_types_s {
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
-    { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  0 } },
+    { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  0 } }, /* Early version of CR-587(?) */
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
@@ -169,7 +170,7 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "ND-3530A",         "1.04", "nec_d3530a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x/16x version of ND-1300A */
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     { "PIONEER",  "CD-ROM DR-A12X",   "1.00", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2, -1 } },
-    { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } }, /* Firmware revision confirmed somewhere but not really yet. */
+    { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "DVD-RAM DVR-106D", "1.08", "pioneer_106d",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2 , 5 } },
     { "PIONEER",  "DVD-RAM DVR-110D", "1.41", "pioneer_110d",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2 , 5 } },
     { "SAMSUNG",  "CD-ROM SC-140",    "BS14", "samsung_140",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } },
@@ -230,13 +231,13 @@ static const struct cdrom_drive_types_s {
 
        Also, INQUIRY length is always 96 on these Toshiba drives.
      */
-    { "TOSHIBA",  "CD-ROM DRIVE:XM",  "3433", "toshiba_xm",     BUS_TYPE_SCSI, 2,  2, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
+    { "TOSHIBA",  "CD-ROM DRIVE:XM",  "3433", "toshiba_xm",     BUS_TYPE_SCSI, 2,  2, 96, 0, { -1, -1, -1, -1 } }, /* Tray. */
     { "TOSHIBA",  "CD-ROM XM-3201B",  "3232", "toshiba_3201b",  BUS_TYPE_SCSI, 1,  1, 96, 1, { -1, -1, -1, -1 } }, /* Caddy. */
-    { "TOSHIBA",  "CD-ROM XM-3301TA", "0272", "toshiba_3301ta", BUS_TYPE_SCSI, 2,  2, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
-    { "TOSHIBA",  "CD-ROM XM-5401B",  "1036", "toshiba_5401b",  BUS_TYPE_SCSI, 2,  4, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
-    { "TOSHIBA",  "CD-ROM XM-5701TA", "3136", "toshiba_5701a",  BUS_TYPE_SCSI, 2, 12, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
-    { "TOSHIBA",  "CD-ROM XM-6401TA", "1404", "toshiba_6401a",  BUS_TYPE_SCSI, 2, 32, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
-    { "TOSHIBA",  "DVD-ROM SD-M1401", "1008", "toshiba_m1401",  BUS_TYPE_SCSI, 2, 40, 96, 0, { -1, -1, -1, -1 } }, /* Tray.  */
+    { "TOSHIBA",  "CD-ROM XM-3301TA", "0272", "toshiba_3301ta", BUS_TYPE_SCSI, 2,  2, 96, 0, { -1, -1, -1, -1 } }, /* Tray. */
+    { "TOSHIBA",  "CD-ROM XM-5401B",  "1036", "toshiba_5401b",  BUS_TYPE_SCSI, 2,  4, 96, 0, { -1, -1, -1, -1 } }, /* Tray. */
+    { "TOSHIBA",  "CD-ROM XM-5701TA", "3136", "toshiba_5701a",  BUS_TYPE_SCSI, 2, 12, 96, 0, { -1, -1, -1, -1 } }, /* Tray. */
+    { "TOSHIBA",  "CD-ROM XM-6401TA", "1404", "toshiba_6401a",  BUS_TYPE_SCSI, 2, 32, 96, 0, { -1, -1, -1, -1 } }, /* Tray; SCSI version of XM-6402B. */
+    { "TOSHIBA",  "DVD-ROM SD-M1401", "1008", "toshiba_m1401",  BUS_TYPE_SCSI, 2, 40, 96, 0, { -1, -1, -1, -1 } }, /* Tray. */
     { "",         "",                 "",     "",               BUS_TYPE_NONE, 0, -1,  0, 0, { -1, -1, -1, -1 } }
 };
 
