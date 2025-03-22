@@ -135,7 +135,7 @@ static const struct cdrom_drive_types_s {
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
-    { "HITACHI",  "GD-2500",          "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
+    { "HITACHI",  "DVD-ROM GD-2500",  "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HL-DT-ST", "CD-ROM GCR-8526B", "1.01", "hldtst_8526b",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  2 } },
     { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
@@ -212,9 +212,9 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU-76S",   "1.00", "sony_76s",       BUS_TYPE_SCSI, 2,  4, 36, 0, { -1, -1, -1, -1 } },
     { "PHILIPS",  "CDD2600",          "1.07", "philips_2600",   BUS_TYPE_SCSI, 2,  6, 36, 0, { -1, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DRM-604X",  "2403", "pioneer_604x",   BUS_TYPE_SCSI, 2,  4, 47, 0, { -1, -1, -1, -1 } }, /* NOTE: The real thing is a CD changer drive! */
-    { "PLEXTOR",  "CD-ROM PX-12SC",   "1.01", "plextor_12sc",   BUS_TYPE_SCSI, 2, 12, 36, 0, { -1, -1, -1, -1 } },
+    { "PLEXTOR",  "CD-ROM PX-12SC",   "1.01", "plextor_12sc",   BUS_TYPE_SCSI, 1, 12, 36, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-32TS",   "1.03", "plextor_32ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, { -1, -1, -1, -1 } },
-    { "PLEXTOR",  "CD-ROM PX-40TS",   "1.14", "plextor_40ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, { -1, -1, -1, -1 } },
+    { "PLEXTOR",  "CD-ROM PX-40TS",   "1.14", "plextor_40ts",   BUS_TYPE_SCSI, 2, 40, 36, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD 50",            "1.00", "teac_50",        BUS_TYPE_SCSI, 2,  4, 36, 1, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the R55S. */
     { "TEAC",     "CD-ROM R55S",      "1.0R", "teac_55s",       BUS_TYPE_SCSI, 2,  4, 36, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD-516S",          "2.0H", "teac_516s",      BUS_TYPE_SCSI, 1, 16, 36, 0, { -1, -1, -1, -1 } },
