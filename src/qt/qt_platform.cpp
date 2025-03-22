@@ -54,6 +54,10 @@
 #include "qt_progsettings.hpp"
 #include "qt_util.hpp"
 
+#ifndef Q_OS_WINDOWS
+#    include <signal.h>
+#endif
+
 #ifdef Q_OS_UNIX
 #    include <pthread.h>
 #    include <sys/mman.h>
@@ -840,5 +844,15 @@ plat_set_thread_name(void *thread, const char *name)
 #    else
     pthread_setname_np(thread ? *((pthread_t *) thread) : pthread_self(), truncated);
 #    endif
+#endif
+}
+
+void
+plat_break(void)
+{
+#ifdef Q_OS_WINDOWS
+    DebugBreak();
+#else
+    raise(SIGTRAP);
 #endif
 }
