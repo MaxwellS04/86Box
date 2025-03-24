@@ -2758,9 +2758,9 @@ const machine_t machines[] = {
         .bus_flags = MACHINE_PS2,
         .flags = MACHINE_XTA | MACHINE_VIDEO_FIXED,
         .ram = {
-            .min = 1024,
+            .min = 512,
             .max = 16384,
-            .step = 1024
+            .step = 512
         },
         .nvrmask = 127,
         .kbc_device = NULL,
@@ -4733,6 +4733,44 @@ const machine_t machines[] = {
             .min = 512,
             .max = 8192,
             .step = 128
+        },
+        .nvrmask = 127,
+        .kbc_device = NULL,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = NULL,
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
+    { .name = "[NEAT] OKI if386AX30L",
+        .internal_name = "if386sx",
+        .type = MACHINE_TYPE_386SX,
+        .chipset = MACHINE_CHIPSET_NEAT,
+        .init = machine_at_if386sx_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_386SX,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 0,
+            .max_bus = 0,
+            .min_voltage = 0,
+            .max_voltage = 0,
+            .min_multi = 0,
+            .max_multi = 0
+        },
+        .bus_flags = MACHINE_AT,
+        .flags = MACHINE_VIDEO,
+        .ram = {
+            .min = 1024,
+            .max = 4096,
+            .step = 1024
         },
         .nvrmask = 127,
         .kbc_device = NULL,
