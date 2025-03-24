@@ -169,7 +169,7 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "ND-1300A",         "1.0B", "nec_d1300a",     BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
     { "NEC",      "ND-3530A",         "1.04", "nec_d3530a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x/16x version of ND-1300A */
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
-    { "PIONEER",  "CD-ROM DR-A12X",   "1.00", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2, -1 } },
+    { "PIONEER",  "CD-ROM DR-A12X",   "1.00", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "DVD-RAM DVR-106D", "1.08", "pioneer_106d",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2 , 5 } },
     { "PIONEER",  "DVD-RAM DVR-110D", "1.41", "pioneer_110d",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2 , 5 } },
@@ -212,7 +212,8 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU-76S",   "1.00", "sony_76s",       BUS_TYPE_SCSI, 2,  4, 36, 0, { -1, -1, -1, -1 } },
     { "PHILIPS",  "CDD2600",          "1.07", "philips_2600",   BUS_TYPE_SCSI, 2,  6, 36, 0, { -1, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DRM-604X",  "2403", "pioneer_604x",   BUS_TYPE_SCSI, 2,  4, 47, 0, { -1, -1, -1, -1 } }, /* NOTE: The real thing is a CD changer drive! */
-    { "PLEXTOR",  "CD-ROM PX-12SC",   "1.01", "plextor_12sc",   BUS_TYPE_SCSI, 1, 12, 36, 0, { -1, -1, -1, -1 } },
+    { "PLEXTOR",  "CD-ROM PX-43CH",   "13C4", "plextor_43ch",   BUS_TYPE_SCSI, 2,  4, 36, 1, { -1, -1, -1, -1 } }, /* Caddy; not sure about this firmware revision. */
+    { "PLEXTOR",  "CD-ROM PX-12SC",   "1.01", "plextor_12sc",   BUS_TYPE_SCSI, 2, 12, 36, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-32TS",   "1.03", "plextor_32ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-40TS",   "1.14", "plextor_40ts",   BUS_TYPE_SCSI, 2, 40, 36, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD 50",            "1.00", "teac_50",        BUS_TYPE_SCSI, 2,  4, 36, 1, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the R55S. */
