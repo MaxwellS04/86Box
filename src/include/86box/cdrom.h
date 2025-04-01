@@ -136,7 +136,7 @@ static const struct cdrom_drive_types_s {
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
-    { "HITACHI",  "DVD-ROM GD-2500",  "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
+    { "HITACHI",  "DVD-ROM GD-2500",  "A012", "hitachi_2500",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } },
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* DVD. */
     { "HL-DT-ST", "CD-ROM GCR-8526B", "1.01", "hldtst_8526b",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
