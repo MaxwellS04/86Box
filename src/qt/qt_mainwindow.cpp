@@ -180,7 +180,8 @@ MainWindow::MainWindow(QWidget *parent)
     extern MainWindow *main_window;
     main_window = this;
     ui->setupUi(this);
-    status->setSoundGainAction(ui->actionSound_gain);
+    status->setSoundMenu(ui->menuSound);
+    ui->actionMute_Unmute->setText(sound_muted ? tr("&Unmute") : tr("&Mute"));
     ui->menuEGA_S_VGA_settings->menuAction()->setMenuRole(QAction::NoRole);
     ui->stackedWidget->setMouseTracking(true);
     statusBar()->setVisible(!hide_status_bar);
@@ -674,7 +675,11 @@ MainWindow::MainWindow(QWidget *parent)
     /* Remove default Shift+F10 handler, which unfocuses keyboard input even with no context menu. */
     connect(new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F10), this), &QShortcut::activated, this, [](){});
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    auto windowedShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_PageDown), this);
+#else
     auto windowedShortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_PageDown), this);
+#endif
     windowedShortcut->setContext(Qt::ShortcutContext::ApplicationShortcut);
     connect(windowedShortcut, &QShortcut::activated, this, [this] () {
         if (video_fullscreen)
@@ -1330,7 +1335,7 @@ void
 MainWindow::refreshMediaMenu()
 {
     mm->refresh(ui->menuMedia);
-    status->setSoundGainAction(ui->actionSound_gain);
+    status->setSoundMenu(ui->menuSound);
     status->refresh(ui->statusbar);
     ui->actionMCA_devices->setVisible(machine_has_bus(machine, MACHINE_BUS_MCA));
     ui->actionACPI_Shutdown->setEnabled(!!acpi_enabled);
@@ -1931,6 +1936,15 @@ MainWindow::on_actionTake_screenshot_triggered()
         ++monitor.mon_screenshots;
     endblit();
     device_force_redraw();
+}
+
+void
+MainWindow::on_actionMute_Unmute_triggered()
+{
+    sound_muted ^= 1;
+    config_save();
+    status->updateSoundIcon();
+    ui->actionMute_Unmute->setText(sound_muted ? tr("&Unmute") : tr("&Mute"));
 }
 
 void
