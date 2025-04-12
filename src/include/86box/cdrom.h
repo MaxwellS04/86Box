@@ -117,7 +117,6 @@ static const struct cdrom_drive_types_s {
     const int     inquiry_len;
     const int     caddy;
     const int     transfer_max[4];
-    /* NOTE: These new CD-ROM models are for 86Box version 4.4 only! */
 } cdrom_drive_types[] = {
     { EMU_NAME,   "86B_CD",           CDV,    "86cd",           BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } },
     { EMU_NAME,   "86B_CD",           "1.00", "86cd100",        BUS_TYPE_BOTH, 1, -1, 36, 1, {  0, -1, -1, -1 } }, /* SCSI-1 / early ATAPI generic - second on purpose so the later variant is the default. */
