@@ -179,6 +179,7 @@ static const struct cdrom_drive_types_s {
     { "SAMSUNG",  "DVD-ROM SH-D162C", "TS05", "samsung_d162c",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
     { "SONY",     "CD-ROM CDU76",     "1.0i", "sony_76",        BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } },
     { "SONY",     "CD-ROM CDU311",    "3.0h", "sony_311",       BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  1, -1 } },
+    { "SONY",     "CD-ROM CDU611",    "BA  ", "sony_611",       BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } },
     { "SONY",     "CD-ROM CDU5225",   "NYS4", "sony_5225",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "TEAC",     "CD 55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  1,  4, 36, 0, {  2, -1, -1, -1 } }, /* Firmware version confirmed in its manual, but it's not %100 confirmed yet. */
     { "TEAC",     "CD-SN250",         "N.0A", "teac_520",       BUS_TYPE_IDE,  0, 10, 36, 0, {  3,  2,  1,  0 } },
