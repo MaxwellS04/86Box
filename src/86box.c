@@ -222,6 +222,37 @@ int      other_ide_present = 0;                                   /* IDE control
 int      other_scsi_present = 0;                                  /* SCSI controllers from non-SCSI cards are
                                                                      present */
 
+// Accelerator key array
+struct accelKey acc_keys[NUM_ACCELS];
+
+// Default accelerator key values
+struct accelKey def_acc_keys[NUM_ACCELS] = {
+	{	.name="send_ctrl_alt_del", 	.desc="Send Control+Alt+Del",
+		.seq="Ctrl+F12" },
+		
+	{	.name="send_ctrl_alt_esc", 	.desc="Send Control+Alt+Escape", 	
+		.seq="Ctrl+F10" },
+		
+	{	.name="fullscreen", 		.desc="Toggle fullscreen", 				
+		.seq="Ctrl+Alt+PgUp" },
+		
+	{	.name="screenshot", 		.desc="Screenshot", 				
+		.seq="Ctrl+F11" },
+		
+	{	.name="release_mouse", 		.desc="Release mouse pointer", 		
+		.seq="Ctrl+End" },
+		
+	{	.name="hard_reset", 		.desc="Hard reset", 				
+		.seq="Ctrl+Alt+F12" },
+		
+	{	.name="pause", 				.desc="Toggle pause", 				
+		.seq="Ctrl+Alt+F1" },
+	
+	{	.name="mute", 				.desc="Toggle mute", 				
+		.seq="Ctrl+Alt+M" }	
+};
+
+
 /* Statistics. */
 extern int mmuflush;
 extern int readlnum;
@@ -635,41 +666,44 @@ usage:
                 }
             }
 
-            printf("\nUsage: 86box [options] [cfg-file]\n\n");
-            printf("Valid options are:\n\n");
-            printf("-? or --help            - show this information\n");
-            printf("-C or --config path     - set 'path' to be config file\n");
+            ui_msgbox(MBX_INFO, L"\nUsage: 86box [options] [cfg-file]\n\n"
+                   "Valid options are:\n\n"
+                   "-? or --help\t\t\t- show this information\n"
+                   "-C or --config path\t\t- set 'path' to be config file\n"
 #ifdef _WIN32
-            printf("-D or --debug           - force debug output logging\n");
+                   "-D or --debug\t\t\t- force debug output logging\n"
 #endif
 #if 0
-            printf("-E or --nographic       - forces the old behavior\n");
+                   "-E or --nographic\t\t- forces the old behavior\n"
 #endif
-            printf("-F or --fullscreen      - start in fullscreen mode\n");
-            printf("-G or --lang langid     - start with specified language (e.g. en-US, or system)\n");
+                   "-F or --fullscreen\t\t- start in fullscreen mode\n"
+                   "-G or --lang langid\t\t- start with specified language\n"
+                   "\t\t\t\t   (e.g. en-US, or system)\n"
 #ifdef _WIN32
-            printf("-H or --hwnd id,hwnd    - sends back the main dialog's hwnd\n");
+                   "-H or --hwnd id,hwnd\t\t- sends back the main dialog's hwnd\n"
 #endif
-            printf("-I or --image d:path    - load 'path' as floppy image on drive d\n");
+                   "-I or --image d:path\t\t- load 'path' as floppy image on drive d\n"
 #ifdef USE_INSTRUMENT
-            printf("-J or --instrument name - set 'name' to be the profiling instrument\n");
+                   "-J or --instrument name\t- set 'name' to be the profiling instrument\n"
 #endif
-            printf("-K or --keycodes codes  - set 'codes' to be the uncapture combination\n");
-            printf("-L or --logfile path    - set 'path' to be the logfile\n");
-            printf("-M or --missing         - dump missing machines and video cards\n");
-            printf("-N or --noconfirm       - do not ask for confirmation on quit\n");
-            printf("-P or --vmpath path     - set 'path' to be root for vm\n");
-            printf("-R or --rompath path    - set 'path' to be ROM path\n");
+                   "-L or --logfile pat\t\t- set 'path' to be the logfile\n"
+                   "-M or --missing\t\t- dump missing machines and video cards\n"
+                   "-N or --noconfirm\t\t- do not ask for confirmation on quit\n"
+                   "-P or --vmpath path\t\t- set 'path' to be root for vm\n"
+                   "-R or --rompath path\t\t- set 'path' to be ROM path\n"
 #ifndef USE_SDL_UI
-            printf("-S or --settings        - show only the settings dialog\n");
+                   "-S or --settings\t\t\t- show only the settings dialog\n"
 #endif
-            printf("-T or --testmode        - test mode: execute the test mode entry point on init/hard reset\n");
-            printf("-V or --vmname name     - overrides the name of the running VM\n");
-            printf("-W or --nohook          - disables keyboard hook (compatibility-only outside Windows)\n");
-            printf("-X or --clear what      - clears the 'what' (cmos/flash/both)\n");
-            printf("-Y or --donothing       - do not show any UI or run the emulation\n");
-            printf("-Z or --lastvmpath      - the last parameter is VM path rather than config\n");
-            printf("\nA config file can be specified. If none is, the default file will be used.\n");
+                   "-T or --testmode\t\t- test mode: execute the test mode entry\n"
+                   "\t\t\t\t   point on init/hard reset\n"
+                   "-V or --vmname name\t\t- overrides the name of the running VM\n"
+                   "-W or --nohook\t\t- disables keyboard hook\n"
+                   "\t\t\t\t   (compatibility-only outside Windows)\n"
+                   "-X or --clear what\t\t- clears the 'what' (cmos/flash/both)\n"
+                   "-Y or --donothing\t\t- do not show any UI or run the emulation\n"
+                   "-Z or --lastvmpath\t\t- the last parameter is VM path rather\n"
+                   "\t\t\t\t  than config\n"
+                   "\nA config file can be specified. If none is, the default file will be used.\n");
             return 0;
         } else if (!strcasecmp(argv[c], "--lastvmpath") || !strcasecmp(argv[c], "-Z")) {
             lvmp = 1;
@@ -745,13 +779,6 @@ usage:
             do_nothing = 1;
         } else if (!strcasecmp(argv[c], "--nohook") || !strcasecmp(argv[c], "-W")) {
             hook_enabled = 0;
-        } else if (!strcasecmp(argv[c], "--keycodes") || !strcasecmp(argv[c], "-K")) {
-            if ((c + 1) == argc)
-                goto usage;
-
-            sscanf(argv[++c], "%03hX,%03hX,%03hX,%03hX,%03hX,%03hX",
-                   &key_prefix_1_1, &key_prefix_1_2, &key_prefix_2_1, &key_prefix_2_2,
-                   &key_uncapture_1, &key_uncapture_2);
         } else if (!strcasecmp(argv[c], "--clearboth") || !strcasecmp(argv[c], "-X")) {
             if ((c + 1) == argc)
                 goto usage;
@@ -972,6 +999,13 @@ usage:
     cdrom_global_init();
     zip_global_init();
     mo_global_init();
+
+    /* Initialize the keyboard accelerator list with default values */
+    for (int x = 0; x < NUM_ACCELS; x++) {
+        strcpy(acc_keys[x].name, def_acc_keys[x].name);
+        strcpy(acc_keys[x].desc, def_acc_keys[x].desc);
+        strcpy(acc_keys[x].seq, def_acc_keys[x].seq);
+    }
 
     /* Load the configuration file. */
     config_load();
@@ -1788,4 +1822,17 @@ do_pause(int p)
             ;
     }
     atomic_store(&pause_ack, 0);
+}
+
+// Helper to find an accelerator key and return it's index in acc_keys
+int FindAccelerator(const char *name) {
+	for(int x=0;x<NUM_ACCELS;x++)
+	{
+		if(strcmp(acc_keys[x].name, name) == 0)
+		{
+			return(x);
+		}
+	}
+	// No key was found
+	return -1;
 }

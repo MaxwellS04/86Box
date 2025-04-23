@@ -472,6 +472,12 @@ ui_sb_update_icon(UNUSED(int tag), UNUSED(int active))
 }
 
 void
+ui_sb_update_icon_write(UNUSED(int tag), UNUSED(int active))
+{
+    /* No-op. */
+}
+
+void
 plat_delay_ms(uint32_t count)
 {
     SDL_Delay(count);
@@ -1337,9 +1343,6 @@ main(int argc, char **argv)
                         }
                     }
             }
-        }
-        if (mouse_capture && keyboard_ismsexit()) {
-            plat_mouse_capture(0);
         }
         if (blitreq) {
             extern void sdl_blit(int x, int y, int w, int h);
