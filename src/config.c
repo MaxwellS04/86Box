@@ -746,7 +746,7 @@ load_ports(void)
     char          temp[512];
     memset(temp, 0, sizeof(temp));
 
-    for (int c = 0; c < SERIAL_MAX; c++) {
+    for (int c = 0; c < (SERIAL_MAX - 1); c++) {
         sprintf(temp, "serial%d_enabled", c + 1);
         com_ports[c].enabled = !!ini_section_get_int(cat, temp, (c >= 2) ? 0 : 1);
 
@@ -1774,9 +1774,12 @@ load_keybinds(void)
 
     /* Now load values from config */
     for (int x = 0; x < NUM_ACCELS; x++) {
-         p = ini_section_get_string(cat, acc_keys[x].name, "none");
+         p = ini_section_get_string(cat, acc_keys[x].name, "default");
+         /* Check if the binding was marked as cleared */
+         if (strcmp(p, "none") == 0)
+             acc_keys[x].seq[0] = '\0';
          /* If there's no binding in the file, leave it alone. */
-         if (strcmp(p, "none") != 0) {
+         else if (strcmp(p, "default") != 0) {
              /*
                 It would be ideal to validate whether the user entered a
                 valid combo at this point, but the Qt method for testing that is
@@ -1836,7 +1839,7 @@ config_load(void)
 
         com_ports[0].enabled = 1;
         com_ports[1].enabled = 1;
-        for (i = 2; i < SERIAL_MAX; i++)
+        for (i = 2; i < (SERIAL_MAX - 1); i++)
             com_ports[i].enabled = 0;
 
         lpt_ports[0].enabled = 1;
@@ -2456,7 +2459,7 @@ save_ports(void)
     ini_section_t cat = ini_find_or_create_section(config, "Ports (COM & LPT)");
     char          temp[512];
 
-    for (int c = 0; c < SERIAL_MAX; c++) {
+    for (int c = 0; c < (SERIAL_MAX - 1); c++) {
         sprintf(temp, "serial%d_enabled", c + 1);
         if (((c < 2) && com_ports[c].enabled) || ((c >= 2) && !com_ports[c].enabled))
             ini_section_delete_var(cat, temp);
@@ -2527,6 +2530,9 @@ save_keybinds(void)
         /* Has accelerator been changed from default? */
         if (strcmp(def_acc_keys[x].seq, acc_keys[x].seq) == 0)
             ini_section_delete_var(cat, acc_keys[x].name);
+        /* Check for a cleared binding to avoid saving it as an empty string */
+        else if (acc_keys[x].seq[0] == '\0')
+            ini_section_set_string(cat, acc_keys[x].name, "none");
         else
             ini_section_set_string(cat, acc_keys[x].name, acc_keys[x].seq);
     }
