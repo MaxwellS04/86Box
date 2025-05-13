@@ -130,6 +130,7 @@ static const struct cdrom_drive_types_s {
     { "AZT",      "CDA46802I",        "1.15", "azt_cda",        BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  0,  0,  0 } },
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
     { "CREATIVE", "CD3621E",          "SB03", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  0 } }, /* Creative Labs' Infra 5400; current firmware revision not confirmed yet. */
+    { "CREATIVE", "CD5233E",          "2.02", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  1, -1 } },
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
@@ -174,6 +175,7 @@ static const struct cdrom_drive_types_s {
     { "PIONEER",  "CD-ROM DR-U24X",   "1.00", "pioneer_u24x",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2 , 0 } },
     { "PIONEER",  "DVD-RAM DVR-106D", "1.08", "pioneer_106d",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2 , 5 } },
     { "PIONEER",  "DVD-RAM DVR-110D", "1.41", "pioneer_110d",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2 , 5 } }, /* 40x version of DVR-110D */
+    { "RICOH",    "MP7040A",          "1.60", "ricoh_7040",     BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "SAMSUNG",  "CD-ROM SCR-3231",  "S101", "samsung_3231",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } },
     { "SAMSUNG",  "CD-ROM SC-140",    "BS14", "samsung_140",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  0 } },
     { "SAMSUNG",  "CD-ROM SC-148F",   "PS07", "samsung_148f",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
