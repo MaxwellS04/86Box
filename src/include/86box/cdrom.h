@@ -122,7 +122,7 @@ static const struct cdrom_drive_types_s {
     { EMU_NAME,   "86B_CD",           "1.00", "86cd100",        BUS_TYPE_BOTH, 1, -1, 36, 1, {  0, -1, -1, -1 } }, /* SCSI-1 / early ATAPI generic - second on purpose so the later variant is the default. */
     { EMU_NAME,   "86B_DVD",          "4.30", "86dvd",          BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } }, /* No difference from 86BOX CD-ROM, other than name - but enough people have requested such a name to warrant it. */
     { "AOpen",    "CD-948E",          "4.02", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
-    { "AOpen",    "CD-952E",          "2.01", "aopen_952e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
+    { "AOpen",    "CD-952E",          "2.01", "aopen_952e",     BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "AOpen",    "DVD-9632",         "1.15", "aopen_9632",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } },
     { "ASUS",     "CD-S500/A",        "1.41", "asus_500",       BUS_TYPE_IDE,  0, 50, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
@@ -148,14 +148,16 @@ static const struct cdrom_drive_types_s {
     { "LG",       "CD-ROM CRD-8482B", "1.00", "lg_8482",        BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8522B", "2.03", "lg_8522",        BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "LG",       "DVD-ROM DRD-820B", "1.04", "lg_d820",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } },
+    { "LG",       "DVDROM DRD-8160B", "1.01", "lg_8160b",       BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
+    { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
+    { "MATSHITA", "CR-572",           "1.0j", "matshita_572",   BUS_TYPE_IDE,  0,  4, 36, 0, {  0, -1, -1, -1 } },
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  2,  1, -1 } },
     { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  0 } }, /* Early version of CR-587(?) */
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } },
-    { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
-    { "MATSHITA", "CR-572",           "1.0j", "matshita_572",   BUS_TYPE_IDE,  0,  4, 36, 0, {  0, -1, -1, -1 } },
+    { "MATSHITA", "DVD-ROM SR-8587",  "CA5B", "matshita_8587",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
     { "MITSUMI",  "CRMC-FX810T4",     "????", "mitsumi_810t4",  BUS_TYPE_IDE,  0,  8, 36, 0, {  4,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "MITSUMI",  "CRMC-FX322M",      "????", "mitsumi_322m",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  0 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "MITSUMI",  "CRMC-FX4820T",     "D02A", "mitsumi_4820t",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
@@ -202,6 +204,7 @@ static const struct cdrom_drive_types_s {
     { "TOSHIBA",  "DVD-ROM SD-M1712", "1004", "toshiba_m1712",  BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  4 } }, /* DVD version of XM-6702B */
     { "TOSHIBA",  "DVD-ROM SD-M1802", "1051", "toshiba_m1802",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } },
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, {  0, -1, -1, -1 } },
+    { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, {  4,  2,  2,  4 } },
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDX-435",   "M62 ", "chinon_435",     BUS_TYPE_SCSI, 1,  2, 36, 1, { -1, -1, -1, -1 } },
     { "DEC",      "RRD45   (C) DEC",  "0436", "dec_45",         BUS_TYPE_SCSI, 1,  4, 36, 0, { -1, -1, -1, -1 } },
