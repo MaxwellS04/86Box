@@ -105,7 +105,7 @@
 /* Feature flags for advanced devices. */
 #define MACHINE_APM               0x00080000 /* sys has APM */
 #define MACHINE_ACPI              0x00100000 /* sys has ACPI */
-#define MACHINE_HWM               0x00200000 /* sys has hw monitor */
+#define MACHINE_PCI_INTERNAL      0x00200000 /* sys has only internal PCI */
 #define MACHINE_CARTRIDGE         0x00400000 /* sys has cartridge bays */
 /* Feature flags for internal storage controllers. */
 #define MACHINE_MFM               0x00800000 /* sys has int MFM/RLL */
@@ -532,6 +532,8 @@ extern int machine_at_cs4031_init(const machine_t *);
 extern int machine_at_pb410a_init(const machine_t *);
 
 extern int machine_at_decpclpv_init(const machine_t *);
+extern int machine_at_dell466np_init(const machine_t *);
+
 extern int machine_at_acerv10_init(const machine_t *);
 
 extern int machine_at_acera1g_init(const machine_t *);
@@ -545,6 +547,7 @@ extern int machine_at_exp4349_init(const machine_t *);
 
 extern int machine_at_vect486vl_init(const machine_t *);
 extern int machine_at_d824_init(const machine_t *);
+extern int machine_at_martin_init(const machine_t *);
 
 extern int machine_at_403tg_init(const machine_t *);
 extern int machine_at_403tg_d_init(const machine_t *);
@@ -587,6 +590,7 @@ extern int machine_at_sb486p_init(const machine_t *);
 extern int machine_at_486sp3_init(const machine_t *);
 extern int machine_at_486sp3c_init(const machine_t *);
 extern int machine_at_486sp3g_init(const machine_t *);
+extern int machine_at_sb486pv_init(const machine_t *);
 extern int machine_at_486ap4_init(const machine_t *);
 extern int machine_at_g486vpa_init(const machine_t *);
 extern int machine_at_486vipio2_init(const machine_t *);
@@ -668,6 +672,7 @@ extern int machine_at_tek932_init(const machine_t *);
 
 extern int machine_at_acerv30_init(const machine_t *);
 extern int machine_at_apollo_init(const machine_t *);
+extern int machine_at_optiplex_gxl_init(const machine_t *);
 extern int machine_at_zappa_init(const machine_t *);
 extern int machine_at_powermatev_init(const machine_t *);
 extern int machine_at_hawk_init(const machine_t *);
@@ -747,6 +752,7 @@ extern int machine_at_gw2kte_init(const machine_t *);
 extern int machine_at_ma23c_init(const machine_t *);
 extern int machine_at_nupro592_init(const machine_t *);
 extern int machine_at_tx97_init(const machine_t *);
+extern int machine_at_optiplex_gn_init(const machine_t *);
 #ifdef USE_AN430TX
 extern int machine_at_an430tx_init(const machine_t *);
 #endif /* USE_AN430TX */
