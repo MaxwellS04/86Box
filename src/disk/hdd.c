@@ -600,6 +600,10 @@ static hdd_preset_t hdd_speed_presets[] = {
     { .name = "[ATA-5] Seagate U8 - 17.2gb",                      .internal_name = "ST317221A", .model = "ST317221A", .zones =  16,  .avg_spt = 289, .heads = 3, .rpm = 5400, .full_stroke_ms = 25, .track_seek_ms = 1.5,   .rcache_num_seg =  16, .rcache_seg_size =  512, .max_multiple =  32 },
     { .name = "[ATA-5] Western Digital Caviar 102AA",             .internal_name = "WD102AA", .model = "WDC WD102AA-00ANA0", .zones =  16,  .avg_spt = 295, .heads = 8, .rpm = 5400, .full_stroke_ms = 12, .track_seek_ms = 1.5,   .rcache_num_seg =  16, .rcache_seg_size =  512, .max_multiple =  32 },
     { .name = "[ATA-5] Western Digital Expert 135BA",             .internal_name = "WD135BA", .model = "WDC WD135BA-60AK", .zones =  16,  .avg_spt = 350, .heads = 6, .rpm = 7200, .full_stroke_ms = 15, .track_seek_ms = 2,   .rcache_num_seg =  16, .rcache_seg_size =  1920, .max_multiple =  32 },
+    { .name = "[Custom] Eastern Electric M1.2",                   .internal_name = "EASTM12", .model = "EASTERN ELETRIC M1.2", .zones =  16,  .avg_spt = 150, .heads = 3, .rpm = 4500, .full_stroke_ms = 28, .track_seek_ms = 2.5,   .rcache_num_seg =  8, .rcache_seg_size =  256, .max_multiple =  16 },
+    { .name = "[Custom] Lycoris Centro 1.2G",                     .internal_name = "LCT12GB", .model = "Lycoris CENTRO 1.2G HDD", .zones =  8,  .avg_spt = 190, .heads = 2, .rpm = 4500, .full_stroke_ms = 22, .track_seek_ms = 3,   .rcache_num_seg =  16, .rcache_seg_size =  128, .max_multiple =  16 },
+    { .name = "[Custom] Lycoris Centro 2.1G",                     .internal_name = "LCT21GB", .model = "Lycoris CENTRO 2.1G HDD", .zones =  8,  .avg_spt = 210, .heads = 3, .rpm = 4500, .full_stroke_ms = 22, .track_seek_ms = 2.5,   .rcache_num_seg =  16, .rcache_seg_size =  128, .max_multiple =  16 },
+    { .name = "[Custom] Shorthorn S528AT",                        .internal_name = "S528AT", .model = "SHORTHORN 528AT-R3", .zones =  1,  .avg_spt = 90, .heads = 2, .rpm = 3600, .full_stroke_ms = 30, .track_seek_ms = 4,   .rcache_num_seg =  8, .rcache_seg_size =  64, .max_multiple =  8 },
    // clang-format on
 };
 
