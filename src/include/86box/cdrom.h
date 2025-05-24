@@ -155,6 +155,7 @@ static const struct cdrom_drive_types_s {
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "LITE-ON",  "SOHD167T",         "9S14", "liteon_167t",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
+    { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 16, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "DVD-24A",          "1.03", "lycoris_dvd24",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
