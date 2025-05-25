@@ -153,6 +153,9 @@ static const struct cdrom_drive_types_s {
     { "LG",       "CD-ROM CRD-8522B", "2.03", "lg_8522",        BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "LG",       "DVD-ROM DRD-820B", "1.04", "lg_d820",        BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } },
     { "LG",       "DVDROM DRD-8160B", "1.01", "lg_8160b",       BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
+    { "LIMEHILL", "CDR-S224T",        "1.20", "limehill_224",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  1,  0 } }, /* Custom */
+    { "LIMEHILL", "CDR-S400i",        "1.40", "limehill_400",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "LIMEHILL", "DDR-U448",         "2.00", "limehill_448",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "LITE-ON",  "SOHD167T",         "9S14", "liteon_167t",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
@@ -183,9 +186,9 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CD-3002A",         "N   ", "nec_3002a",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "NEC",      "ND-1300A",         "1.0B", "nec_d1300a",     BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
     { "NEC",      "ND-3500A",         "2.1A", "nec_d3500a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x version of ND-1300A */
-    { "NEWLINK",  "32x CD-ROM DRIVE", "v1.2", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NEWLINK",  "40x CD-ROM DRIVE", "v1.3", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NEWLINK",  "DiVA Star DRD",    "v1.0", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Custom; DVD. */
+    { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NEWLINK",  "40x CD-ROM DRIVE", "1.3 ", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NEWLINK",  "DiVA Star DRD",    "1.0a", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Custom; DVD. */
     { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     { "PIONEER",  "CD-ROM DR-A12X",   "1.00", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  1, -1 } },
