@@ -124,6 +124,11 @@ static const struct cdrom_drive_types_s {
     { "AOpen",    "CD-948E",          "4.02", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "AOpen",    "CD-952E",          "2.01", "aopen_952e",     BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "AOpen",    "DVD-9632",         "1.15", "aopen_9632",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } },
+    { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  1 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484a",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400n",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
+    { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525c",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  5 } }, /* Custom */
     { "ASUS",     "CD-S500/A",        "1.41", "asus_500",       BUS_TYPE_IDE,  0, 50, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "ASUS",     "DVD-E616P2",       "1.08", "asus_e616",      BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
