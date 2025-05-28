@@ -211,6 +211,7 @@ enum {
     MACHINE_CHIPSET_SCAT_SX,
     MACHINE_CHIPSET_NEAT,
     MACHINE_CHIPSET_NEAT_SX,
+    MACHINE_CHIPSET_CT_AT,
     MACHINE_CHIPSET_CT_386,
     MACHINE_CHIPSET_CT_CS4031,
     MACHINE_CHIPSET_CONTAQ_82C596,
@@ -475,6 +476,7 @@ extern int machine_at_spc4216p_init(const machine_t *);
 extern int machine_at_spc4620p_init(const machine_t *);
 extern int machine_at_kmxc02_init(const machine_t *);
 extern int machine_at_deskmaster286_init(const machine_t *);
+extern int machine_at_dells200_init(const machine_t *);
 
 extern int machine_at_pc8_init(const machine_t *);
 extern int machine_at_3302_init(const machine_t *);
@@ -754,11 +756,9 @@ extern int machine_at_ma23c_init(const machine_t *);
 extern int machine_at_nupro592_init(const machine_t *);
 extern int machine_at_tx97_init(const machine_t *);
 extern int machine_at_optiplex_gn_init(const machine_t *);
-#ifdef USE_AN430TX
-extern int machine_at_an430tx_init(const machine_t *);
-#endif /* USE_AN430TX */
 extern int machine_at_ym430tx_init(const machine_t *);
 extern int machine_at_thunderbolt_init(const machine_t *);
+extern int machine_at_an430tx_init(const machine_t *);
 extern int machine_at_mb540n_init(const machine_t *);
 extern int machine_at_56a5_init(const machine_t *);
 extern int machine_at_p5mms98_init(const machine_t *);
