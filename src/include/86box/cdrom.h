@@ -136,7 +136,7 @@ static const struct cdrom_drive_types_s {
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
     { "CREATIVE", "CD3621E",          "SB03", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  0 } }, /* Creative Labs' Infra 5400; current firmware revision not confirmed yet. */
     { "CREATIVE", "CD5233E",          "2.02", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
-    { "EASTERN",  "CD-ROM ECD-RD6i",  "V212", "eastern_rd6",    BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  2,  1,  0 } }, /* Custom */
+    { "EASTERN",  "CD-ROM ECD-RD6i",  "V212", "eastern_rd6",    BUS_TYPE_IDE,  0,  6, 36, 1, {  3,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX8e",  "V308", "eastern_ax8",    BUS_TYPE_IDE,  0,  8, 36, 0, {  4,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-DX32",  "V130", "eastern_dx32",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
@@ -168,6 +168,9 @@ static const struct cdrom_drive_types_s {
     { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-32R",           "1.05", "lycoris_cd32r",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "Lycoris",  "CD-40R",           "1.13", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "Lycoris",  "Railgun CD Drive", "2.00", "lycoris_railcd", BUS_TYPE_IDE,  0, -1, 72, 0, {  4,  2,  2,  2 } }, /* Custom; 32x/40x/48x selection */
     { "Lycoris",  "DVD-24A",          "1.03", "lycoris_dvd24",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "Lycoris",  "DVD-48EX",         "DIVA", "lycoris_dvd48",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, {  0, -1, -1, -1 } },
@@ -192,14 +195,14 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CD-3002A",         "N   ", "nec_3002a",      BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "NEC",      "ND-1300A",         "1.0B", "nec_d1300a",     BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
     { "NEC",      "ND-3500A",         "2.1A", "nec_d3500a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x version of ND-1300A */
-    { "NEWLINK",  "CDR 4x",           "1.5b", "newlink_4x",     BUS_TYPE_IDE,  1,  4, 36, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "NEWLINK",  "CDR 6x",           "1.8a", "newlink_6x",     BUS_TYPE_IDE,  1,  6, 36, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "NEWLINK",  "8x CD-ROM DRIVE",  "2.1 ", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "NEWLINK",  "12x CD-ROM DRIVE", "2.0c", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "NEWLINK",  "16x CD-ROM DRIVE", "1.4a", "newlink_16x",    BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NEWLINK",  "40x CD-ROM DRIVE", "1.3 ", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NEWLINK",  "DiVA Star DRD",    "1.0a", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Custom; DVD. */
+    { "NEWLINK",  "CDR 4x",           "1.5b", "newlink_4x",     BUS_TYPE_IDE,  1,  4, 96, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "NEWLINK",  "CDR 6x",           "1.8a", "newlink_6x",     BUS_TYPE_IDE,  1,  6, 96, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "NEWLINK",  "8x CD-ROM DRIVE",  "2.1 ", "newlink_8x",     BUS_TYPE_IDE,  0, 12, 96, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "NEWLINK",  "12x CD-ROM DRIVE", "2.0c", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 96, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "NEWLINK",  "16x CD-ROM DRIVE", "1.4a", "newlink_16x",    BUS_TYPE_IDE,  0, 16, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NEWLINK",  "40x CD-ROM DRIVE", "1.3 ", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NEWLINK",  "DiVA Star DRD",    "1.0a", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 48, 0, {  4,  2,  2,  4 } }, /* Custom; DVD. */
     { "PHILIPS",  "CD-ROM PCA323CD",  "????", "philips_323",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "PHILIPS",  "CD-ROM PCA403CD",  "U31P", "philips_403",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2, -1 } },
     { "PIONEER",  "CD-ROM DR-A12X",   "1.00", "pioneer_a12x",   BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  1, -1 } },
