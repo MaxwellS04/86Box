@@ -165,7 +165,7 @@ static const struct cdrom_drive_types_s {
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "LITE-ON",  "SOHD167T",         "9S14", "liteon_167t",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
-    { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 16, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "DVD-24A",          "1.03", "lycoris_dvd24",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
@@ -193,6 +193,8 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "ND-1300A",         "1.0B", "nec_d1300a",     BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  5 } },
     { "NEC",      "ND-3500A",         "2.1A", "nec_d3500a",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  5 } }, /* 48x version of ND-1300A */
     { "NEWLINK",  "CDR 4x",           "1.5b", "newlink_4x",     BUS_TYPE_IDE,  1,  4, 36, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "NEWLINK",  "CDR 6x",           "1.8a", "newlink_6x",     BUS_TYPE_IDE,  1,  6, 36, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "NEWLINK",  "8x CD-ROM DRIVE",  "2.1 ", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "NEWLINK",  "12x CD-ROM DRIVE", "2.0c", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "NEWLINK",  "16x CD-ROM DRIVE", "1.4a", "newlink_16x",    BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
