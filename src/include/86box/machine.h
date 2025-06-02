@@ -664,6 +664,7 @@ extern int machine_at_p5sp4_init(const machine_t *);
 /* m_at_socket5.c */
 extern int machine_at_plato_init(const machine_t *);
 extern int machine_at_dellplato_init(const machine_t *);
+extern int machine_at_d842_init(const machine_t *);
 extern int machine_at_ambradp90_init(const machine_t *);
 extern int machine_at_p54np4_init(const machine_t *);
 extern int machine_at_586ip_init(const machine_t *);
@@ -708,6 +709,7 @@ extern int machine_at_fmb_init(const machine_t *);
 extern int machine_at_acerm3a_init(const machine_t *);
 extern int machine_at_ap53_init(const machine_t *);
 extern int machine_at_8500tuc_init(const machine_t *);
+extern int machine_at_d943_init(const machine_t *);
 extern int machine_at_p55t2s_init(const machine_t *);
 
 extern int machine_at_p5vxb_init(const machine_t *);
