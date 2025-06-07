@@ -209,6 +209,7 @@ static const struct cdrom_drive_types_s {
     { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, {  4,  2,  2,  4 } },
     { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  1 } }, /* Custom */
     { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404c",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484a",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400n",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525c",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  5 } }, /* Custom */
@@ -249,6 +250,12 @@ static const struct cdrom_drive_types_s {
     { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "NEWLINK",  "40x CD-ROM DRIVE", "1.3 ", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "NEWLINK",  "DiVA Star DRD",    "1.0a", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 48, 0, {  4,  2,  2,  4 } }, /* Custom; DVD. */
+    { "NOVATECH", "CCD-216RT",        "1.5b", "novatech_216",   BUS_TYPE_IDE,  0, 16, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NOVATECH", "CCD-224RT",        "1.5b", "novatech_224",   BUS_TYPE_IDE,  0, 24, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NOVATECH", "CCD-232RT",        "1.5b", "novatech_232",   BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NOVATECH", "CCD-440RX",        "1.5b", "novatech_440",   BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NOVATECH", "CCD-440RX",        "1.5b", "novatech_448",   BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NOVATECH", "DCD-R552TX",       "1.5b", "novatech_552",   BUS_TYPE_IDE,  0, 52, 96, 0, {  4,  2,  2,  5 } }, /* Custom; DVD. */
     { "SOUTHERN", "SCD104",           "1.06", "southern_104",   BUS_TYPE_IDE,  1,  1, 36, 1, {  0, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "SCD204",           "1.06", "southern_204",   BUS_TYPE_IDE,  1,  2, 36, 1, {  0, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "SCD408",           "1.01", "southern_408",   BUS_TYPE_IDE,  1,  4, 36, 0, {  0, -1, -1, -1 } }, /* Custom */
