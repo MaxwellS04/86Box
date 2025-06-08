@@ -213,9 +213,6 @@ static const struct cdrom_drive_types_s {
     { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484a",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400n",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525c",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  5 } }, /* Custom */
-    { "ARABTECH", "CD-RAX124",        "7301", "arab_124",       BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "ARABTECH", "CD-RTX240",        "4942", "arab_240",       BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2,  0 } }, /* Custom */
-    { "ARABTECH", "CD-RQX363",        "1953", "arab_363",       BUS_TYPE_IDE,  0, 36, 36, 0, {  3,  2,  2,  2 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-RD6i",  "V212", "eastern_rd6",    BUS_TYPE_IDE,  0,  6, 36, 1, {  3,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX8e",  "V308", "eastern_ax8",    BUS_TYPE_IDE,  0,  8, 36, 0, {  4,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
@@ -230,9 +227,6 @@ static const struct cdrom_drive_types_s {
     { "GOLDHAWK", "CDR-1002A",        "2.14", "goldhawk_1002",  BUS_TYPE_IDE,  0, 48, 40, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "GOLDHAWK", "DRD-963A",         "1.05", "goldhawk_963",   BUS_TYPE_IDE,  0, 40, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-1008A",        "1.15", "goldhawk_1008",  BUS_TYPE_IDE,  0, 48, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "LIMEHILL", "CDR-S224T",        "1.20", "limehill_224",   BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  1,  0 } }, /* Custom */
-    { "LIMEHILL", "CDR-S400i",        "1.40", "limehill_400",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "LIMEHILL", "DDR-U448",         "2.00", "limehill_448",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } }, /* Custom; DVD. */
     { "Lycoris",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  0,  0, -1 } }, /* Custom */
     { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
