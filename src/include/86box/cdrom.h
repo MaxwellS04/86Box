@@ -218,6 +218,7 @@ static const struct cdrom_drive_types_s {
     { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-DX32",  "V130", "eastern_dx32",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "EASTERN",  "DVD-ROM ED-EX32",  "V141", "eastern_ex32",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
+    { "EASTERN",  "DVD-ROM ED-EX48",  "V140", "eastern_ex48",   BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "CRD-310A",         "1.30", "goldhawk_310",   BUS_TYPE_IDE,  1,  2, 40, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "GOLDHAWK", "CRD-312B",         "2.05", "goldhawk_312",   BUS_TYPE_IDE,  0,  2, 40, 0, {  2, -1, -1, -1 } }, /* Custom; later version of 310A */
     { "GOLDHAWK", "CRD-560A",         "1.04", "goldhawk_560",   BUS_TYPE_IDE,  0,  4, 40, 0, {  3, -1, -1, -1 } }, /* Custom */
