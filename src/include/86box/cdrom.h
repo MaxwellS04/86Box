@@ -121,15 +121,18 @@ static const struct cdrom_drive_types_s {
     { EMU_NAME,   "86B_CD",           CDV,    "86cd",           BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } },
     { EMU_NAME,   "86B_CD",           "1.00", "86cd100",        BUS_TYPE_BOTH, 1, -1, 36, 1, {  0, -1, -1, -1 } }, /* SCSI-1 / early ATAPI generic - second on purpose so the later variant is the default. */
     { EMU_NAME,   "86B_DVD",          "4.30", "86dvd",          BUS_TYPE_BOTH, 2, -1, 36, 0, {  4,  2,  2,  5 } }, /* No difference from 86BOX CD-ROM, other than name - but enough people have requested such a name to warrant it. */
+    { "AOpen",    "CD-924E",          "A205", "aopen_924e",     BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  0 } },
     { "AOpen",    "CD-948E",          "4.02", "aopen_948e",     BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } },
     { "AOpen",    "CD-952E",          "2.01", "aopen_952e",     BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
+    { "AOpen",    "CD-956E",          "2480", "aopen_956e",     BUS_TYPE_IDE,  0, 56, 36, 0, {  4,  2,  2,  4 } },
     { "AOpen",    "DVD-9632",         "1.15", "aopen_9632",     BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } },
     { "ASUS",     "CD-S500/A",        "1.41", "asus_500",       BUS_TYPE_IDE,  0, 50, 36, 0, {  4,  2,  2,  2 } },
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "ASUS",     "DVD-E616P2",       "1.08", "asus_e616",      BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } },
     { "AZT",      "CDA46802I",        "1.15", "azt_cda",        BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  0,  0,  0 } },
+    { "BTC",      "CD-ROM BCD16XA",   "U2.2", "btc_16xa",       BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2, -1 } },
-    { "CREATIVE", "CD3621E",          "SB03", "creative_3621",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  0 } }, /* Creative Labs' Infra 5400; current firmware revision not confirmed yet. */
+    { "CREATIVE", "CD3630E",          "A   ", "creative_3630",  BUS_TYPE_IDE,  0, 36, 36, 0, {  4,  2,  2,  0 } },
     { "CREATIVE", "CD5233E",          "2.02", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  4 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } },
     { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, {  3,  2,  1, -1 } },
