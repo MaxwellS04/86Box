@@ -420,28 +420,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEnable_Discord_integration->setEnabled(discord_loaded);
 #endif
 
-#if defined Q_OS_WINDOWS || defined Q_OS_MACOS
-    /* Make the option visible only if ANGLE is loaded. */
-    ui->actionHardware_Renderer_OpenGL_ES->setVisible(QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES);
-    if (QOpenGLContext::openGLModuleType() != QOpenGLContext::LibGLES && vid_api == 2)
-        vid_api = 1;
-#endif
-    ui->actionHardware_Renderer_OpenGL->setVisible(QOpenGLContext::openGLModuleType() != QOpenGLContext::LibGLES);
-    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES && vid_api == 1)
-        vid_api = 0;
-
     if ((QApplication::platformName().contains("eglfs") || QApplication::platformName() == "haiku")) {
         if (vid_api >= 1)
             fprintf(stderr, "OpenGL renderers are unsupported on %s.\n", QApplication::platformName().toUtf8().data());
         vid_api = 0;
-        ui->actionHardware_Renderer_OpenGL->setVisible(false);
-        ui->actionHardware_Renderer_OpenGL_ES->setVisible(false);
         ui->actionVulkan->setVisible(false);
         ui->actionOpenGL_3_0_Core->setVisible(false);
     }
 
 #ifndef USE_VNC
-    if (vid_api == 5)
+    if (vid_api == 3)
         vid_api = 0;
     ui->actionVNC->setVisible(false);
 #endif
@@ -462,15 +450,13 @@ MainWindow::MainWindow(QWidget *parent)
     if (!vulkanAvailable)
 #endif
     {
-        if (vid_api == 4)
+        if (vid_api == 2)
             vid_api = 0;
         ui->actionVulkan->setVisible(false);
     }
 
     auto actGroup = new QActionGroup(this);
     actGroup->addAction(ui->actionSoftware_Renderer);
-    actGroup->addAction(ui->actionHardware_Renderer_OpenGL);
-    actGroup->addAction(ui->actionHardware_Renderer_OpenGL_ES);
     actGroup->addAction(ui->actionOpenGL_3_0_Core);
     actGroup->addAction(ui->actionVulkan);
     actGroup->addAction(ui->actionVNC);
@@ -479,7 +465,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(actGroup, &QActionGroup::triggered, [this](QAction *action) {
         vid_api = action->property("vid_api").toInt();
 #ifdef USE_VNC
-        if (vnc_enabled && vid_api != 5) {
+        if (vnc_enabled && vid_api != 3) {
             startblit();
             vnc_enabled = 0;
             vnc_close();
@@ -495,19 +481,13 @@ MainWindow::MainWindow(QWidget *parent)
                 newVidApi = RendererStack::Renderer::Software;
                 break;
             case 1:
-                newVidApi = RendererStack::Renderer::OpenGL;
-                break;
-            case 2:
-                newVidApi = RendererStack::Renderer::OpenGLES;
-                break;
-            case 3:
                 newVidApi = RendererStack::Renderer::OpenGL3;
                 break;
-            case 4:
+            case 2:
                 newVidApi = RendererStack::Renderer::Vulkan;
                 break;
 #ifdef USE_VNC
-            case 5:
+            case 3:
                 {
                     newVidApi = RendererStack::Renderer::Software;
                     startblit();
