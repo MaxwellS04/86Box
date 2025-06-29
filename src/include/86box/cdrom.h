@@ -233,10 +233,13 @@ static const struct cdrom_drive_types_s {
     { "GOLDHAWK", "CRD-764A",         "1.42", "goldhawk_764",   BUS_TYPE_IDE,  0, 16, 40, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "GOLDHAWK", "CRD-898A",         "2.11", "goldhawk_898",   BUS_TYPE_IDE,  0, 32, 40, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "GOLDHAWK", "CDR-1002A",        "2.14", "goldhawk_1002",  BUS_TYPE_IDE,  0, 48, 40, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "GOLDHAWK", "DRD-904A",         "1.07", "goldhawk_904",   BUS_TYPE_IDE,  0, 32, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-963A",         "1.05", "goldhawk_963",   BUS_TYPE_IDE,  0, 40, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-1008A",        "1.15", "goldhawk_1008",  BUS_TYPE_IDE,  0, 48, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
+    { "Lycoris",  "CD-ROM 6A",        "2.15", "lycoris_cd6a",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  0,  0, -1 } }, /* Custom */
     { "Lycoris",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  0,  0, -1 } }, /* Custom */
     { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-12R",           "1.19", "lycoris_cd12r",  BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-32R",           "1.05", "lycoris_cd32r",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
