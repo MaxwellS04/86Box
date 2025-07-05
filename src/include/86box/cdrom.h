@@ -212,6 +212,7 @@ static const struct cdrom_drive_types_s {
     { "TOSHIBA",  "CD-ROM XM-6702B",  "1007", "toshiba_6702b",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  2 } },
     { "TOSHIBA",  "DVD-ROM SD-M1712", "1004", "toshiba_m1712",  BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  4 } }, /* DVD version of XM-6702B */
     { "TOSHIBA",  "DVD-ROM SD-M1802", "1051", "toshiba_m1802",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } },
+    { "ULTIMA",   "DVD-ROM DHI-G40",  "1.61", "ultima_g40",     BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* TODO: Find a real name for model. */
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, {  0, -1, -1, -1 } },
     { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, {  4,  2,  2,  4 } },
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, { -1, -1, -1, -1 } },
