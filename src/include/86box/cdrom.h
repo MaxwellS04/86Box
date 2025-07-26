@@ -29,8 +29,9 @@
 #define CD_STATUS_STOPPED           6
 #define CD_STATUS_PLAYING_COMPLETED 7
 #define CD_STATUS_HOLD              8
+#define CD_STATUS_DVD_REJECTED      16
 #define CD_STATUS_HAS_AUDIO         0xc
-#define CD_STATUS_MASK              0xf
+#define CD_STATUS_MASK              0x1f
 
 /* Medium changed flag. */
 #define CD_STATUS_TRANSITION     0x40
@@ -118,6 +119,7 @@ static const struct cdrom_drive_types_s {
     const int     speed;
     const int     inquiry_len;
     const int     caddy;
+    const int     is_dvd;
     const int     transfer_max[4];
 } cdrom_drive_types[] = {
     { EMU_NAME,   "86B_CD",           CDV,    "86cd",           BUS_TYPE_BOTH, 2, -1, 36, 0, 0, {  4,  2,  2,  5 } },
@@ -252,7 +254,7 @@ static const struct cdrom_drive_types_s {
        Unusual 2.23x according to Google, I'm rounding it upwards to 3x.
        Assumed caddy based on the DM-3024.
      */
-    { "TEXEL",    "CD-ROM DM-3028",   "1.06", "texel_3028",     BUS_TYPE_SCSI, 2,  3, 36, 1, { -1, -1, -1, -1 } }, /* Caddy. */
+    { "TEXEL",    "CD-ROM DM-3028",   "1.06", "texel_3028",     BUS_TYPE_SCSI, 2,  3, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy. */
     /*
        The characteristics are a complete guesswork because I can't find
        this one on Google.
@@ -431,6 +433,7 @@ extern void            cdrom_get_model(const int type, char *name, const int id)
 extern char           *cdrom_get_revision(const int type);
 extern int             cdrom_get_scsi_std(const int type);
 extern int             cdrom_is_early(const int type);
+extern int             cdrom_is_dvd(const int type);
 extern int             cdrom_is_generic(const int type);
 extern int             cdrom_is_caddy(const int type);
 extern int             cdrom_get_speed(const int type);
