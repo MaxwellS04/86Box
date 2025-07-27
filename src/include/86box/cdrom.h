@@ -222,81 +222,81 @@ static const struct cdrom_drive_types_s {
     { "ULTIMA",   "DVD-ROM DHI-G40",  "1.61", "ultima_g40",     BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* TODO: Find a real name for model. */
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, 0, {  0, -1, -1, -1 } },
     { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, 0, {  4,  2,  2,  4 } },
-    { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  1 } }, /* Custom */
-    { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404c",    BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484a",    BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400n",    BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525c",    BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  5 } }, /* Custom */
-    { "EASTERN",  "CD-ROM ECD-RD6i",  "V212", "eastern_rd6",    BUS_TYPE_IDE,  0,  6, 36, 1, {  3,  2,  1,  0 } }, /* Custom */
-    { "EASTERN",  "CD-ROM ECD-AX8e",  "V308", "eastern_ax8",    BUS_TYPE_IDE,  0,  8, 36, 0, {  4,  2,  1,  0 } }, /* Custom */
-    { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "EASTERN",  "CD-ROM ECD-DX32",  "V130", "eastern_dx32",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "EASTERN",  "DVD-ROM ED-EX32",  "V141", "eastern_ex32",   BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "EASTERN",  "DVD-ROM ED-EX48",  "V140", "eastern_ex48",   BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "GOLDHAWK", "CRD-310A",         "1.30", "goldhawk_310",   BUS_TYPE_IDE,  1,  2, 40, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "GOLDHAWK", "CRD-312B",         "2.05", "goldhawk_312",   BUS_TYPE_IDE,  0,  2, 40, 0, {  2, -1, -1, -1 } }, /* Custom; later version of 310A */
-    { "GOLDHAWK", "CRD-560A",         "1.04", "goldhawk_560",   BUS_TYPE_IDE,  0,  4, 40, 0, {  3, -1, -1, -1 } }, /* Custom */
-    { "GOLDHAWK", "CRD-636A",         "1.03", "goldhawk_636",   BUS_TYPE_IDE,  0,  8, 40, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "GOLDHAWK", "CRD-764A",         "1.42", "goldhawk_764",   BUS_TYPE_IDE,  0, 16, 40, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "GOLDHAWK", "CRD-898A",         "2.11", "goldhawk_898",   BUS_TYPE_IDE,  0, 32, 40, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "GOLDHAWK", "CDR-1002A",        "2.14", "goldhawk_1002",  BUS_TYPE_IDE,  0, 48, 40, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "GOLDHAWK", "DRD-904A",         "1.07", "goldhawk_904",   BUS_TYPE_IDE,  0, 32, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "GOLDHAWK", "DRD-963A",         "1.05", "goldhawk_963",   BUS_TYPE_IDE,  0, 40, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "GOLDHAWK", "DRD-1008A",        "1.15", "goldhawk_1008",  BUS_TYPE_IDE,  0, 48, 40, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "Lycoris",  "CD-ROM 6A",        "2.15", "lycoris_cd6a",   BUS_TYPE_IDE,  0,  6, 36, 0, {  3,  0,  0, -1 } }, /* Custom */
-    { "Lycoris",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, {  3,  0,  0, -1 } }, /* Custom */
-    { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "Lycoris",  "CD-12R",           "1.19", "lycoris_cd12r",  BUS_TYPE_IDE,  0, 12, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
-    { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
-    { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2, -1 } }, /* Custom */
-    { "Lycoris",  "CD-32R",           "1.05", "lycoris_cd32r",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "Lycoris",  "CD-40R",           "1.13", "lycoris_cd40r",  BUS_TYPE_IDE,  0, 40, 36, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "Lycoris",  "Railgun CD Drive", "1.0A", "lycoris_rail10", BUS_TYPE_IDE,  0, -1, 36, 0, {  4,  2,  2,  0 } }, /* Custom; 40x/48x selection; early version */
-    { "Lycoris",  "Railgun CD Drive", "2.00", "lycoris_rail20", BUS_TYPE_IDE,  0, -1, 72, 0, {  4,  2,  2,  2 } }, /* Custom; 40x/48x selection */
-    { "Lycoris",  "DVD-24A",          "1.03", "lycoris_dvd24",  BUS_TYPE_IDE,  0, 24, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "Lycoris",  "DVD-32A",          "1.05", "lycoris_dvd32",  BUS_TYPE_IDE,  0, 32, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "Lycoris",  "DVD-48EX",         "L30Z", "lycoris_dvd48",  BUS_TYPE_IDE,  0, 48, 36, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "Lycoris",  "DVR-52MD",         "U91D", "lycoris_dvd52",  BUS_TYPE_IDE,  0, 52, 36, 0, {  4,  2,  2,  5 } }, /* Custom */
-    { "Lycoris",  "DVR-72MD",         "M2A0", "lycoris_dvd72",  BUS_TYPE_IDE,  0, 72, 36, 0, {  4,  2,  2,  5 } }, /* Custom */
-    { "NEWLINK",  "CDR 4x",           "1.5b", "newlink_4x",     BUS_TYPE_IDE,  1,  4, 96, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "NEWLINK",  "CDR 6x",           "1.8a", "newlink_6x",     BUS_TYPE_IDE,  1,  6, 96, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "NEWLINK",  "8x CD-ROM DRIVE",  "2.1 ", "newlink_8x",     BUS_TYPE_IDE,  0,  8, 96, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "NEWLINK",  "12x CD-ROM DRIVE", "2.0c", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 96, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "NEWLINK",  "16x CD-ROM DRIVE", "1.4a", "newlink_16x",    BUS_TYPE_IDE,  0, 16, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NEWLINK",  "40x CD-ROM DRIVE", "1.3 ", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NEWLINK",  "DiVA Star DRD",    "1.0a", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 48, 0, {  4,  2,  2,  5 } }, /* Custom; DVDRAM. */
-    { "NOVATECH", "CCD-216RT",        "1.5b", "novatech_216",   BUS_TYPE_IDE,  0, 16, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "NOVATECH", "CCD-224RT",        "1.3a", "novatech_224",   BUS_TYPE_IDE,  0, 24, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "NOVATECH", "CCD-232RT",        "1.3a", "novatech_232",   BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "NOVATECH", "CCD-440RX",        "1.2a", "novatech_440",   BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NOVATECH", "CCD-448RX",        "1.3a", "novatech_448",   BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "NOVATECH", "DCD-548TX",        "1.3a", "novatech_548",   BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "NOVATECH", "DCR-552TX",        "1.0c", "novatech_552",   BUS_TYPE_IDE,  0, 52, 96, 0, {  4,  2,  2,  5 } }, /* Custom */
-    { "SOUTHERN", "SCD104",           "1.06", "southern_104",   BUS_TYPE_IDE,  1,  1, 36, 1, {  0, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "SCD204",           "1.06", "southern_204",   BUS_TYPE_IDE,  1,  2, 36, 1, {  0, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "SCD408",           "1.01", "southern_408",   BUS_TYPE_IDE,  1,  4, 36, 0, {  0, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "SCD608",           "1.03", "southern_408",   BUS_TYPE_IDE,  1,  6, 36, 0, {  0, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST424",        "1.4a", "southern_424",   BUS_TYPE_IDE,  0,  4, 36, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST648",        "1.5a", "southern_648",   BUS_TYPE_IDE,  0,  6, 36, 0, {  2, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST816",        "1.4 ", "southern_816",   BUS_TYPE_IDE,  0,  8, 36, 0, {  2,  0,  0, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST1284",       "1.4 ", "southern_1284",  BUS_TYPE_IDE,  0, 12, 36, 0, {  2,  0,  0, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST1640",       "1.3c", "southern_1640",  BUS_TYPE_IDE,  0, 16, 36, 0, {  3,  2,  1, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST2484",       "1.2 ", "southern_2484",  BUS_TYPE_IDE,  0, 24, 36, 0, {  3,  2,  2, -1 } }, /* Custom */
-    { "SOUTHERN", "CDD-ST3212",       "1.3 ", "southern_3212",  BUS_TYPE_IDE,  0, 32, 36, 0, {  3,  2,  2,  0 } }, /* Custom */
-    { "SOUTHERN", "CDD-STX3228",      "1.5 ", "southern_3228",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  0 } }, /* Custom */
-    { "SOUTHERN", "CDD-STX3608",      "1.4b", "southern_3608",  BUS_TYPE_IDE,  0, 36, 96, 0, {  4,  2,  2,  1 } }, /* Custom */
-    { "SOUTHERN", "CDD-STX4020",      "1.3 ", "southern_4020",  BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  1 } }, /* Custom */
-    { "SOUTHERN", "CDD-STX4824",      "1.2a", "southern_4824",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  1 } }, /* Custom */
-    { "SOUTHERN", "CDD-STX7220",      "1.1d", "southern_7220",  BUS_TYPE_IDE,  0, 72, 96, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "SOUTHERN", "CDD Select",       "1.5 ", "southern_cdd15", BUS_TYPE_IDE,  0, -1, 36, 0, {  4,  2,  2,  1 } }, /* Custom; 32x/36x/40x/48x selection; early version */
-    { "SOUTHERN", "CDD Select",       "2.0c", "southern_cdd20", BUS_TYPE_IDE,  0, -1, 96, 0, {  4,  2,  2,  2 } }, /* Custom; 32x/36x/40x/48x/72x selection */
-    { "SOUTHERN", "DVD-STX3230",      "1.3b", "southern_3230",  BUS_TYPE_IDE,  0, 32, 96, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "SOUTHERN", "DVD-STX4080",      "1.1a", "southern_4080",  BUS_TYPE_IDE,  0, 40, 96, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "SOUTHERN", "DVD-STX4848",      "1.1 ", "southern_4848",  BUS_TYPE_IDE,  0, 48, 96, 0, {  4,  2,  2,  4 } }, /* Custom */
-    { "SOUTHERN", "DVD Select",       "2.0a", "southern_dvd",   BUS_TYPE_IDE,  0, -1, 96, 0, {  4,  2,  2,  4 } }, /* Custom; 32x/40x/48x selection */
-    { "SOUTHERN", "DVR-STX5280",      "1.2 ", "southern_5280",  BUS_TYPE_IDE,  0, 52, 96, 0, {  4,  2,  2,  5 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404c",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484a",    BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400n",    BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525c",    BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "EASTERN",  "CD-ROM ECD-RD6i",  "V212", "eastern_rd6",    BUS_TYPE_IDE,  0,  6, 36, 1, 0, {  3,  2,  1,  0 } }, /* Custom */
+    { "EASTERN",  "CD-ROM ECD-AX8e",  "V308", "eastern_ax8",    BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  4,  2,  1,  0 } }, /* Custom */
+    { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "EASTERN",  "CD-ROM ECD-DX32",  "V130", "eastern_dx32",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "EASTERN",  "DVD-ROM ED-EX32",  "V141", "eastern_ex32",   BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "EASTERN",  "DVD-ROM ED-EX48",  "V140", "eastern_ex48",   BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "GOLDHAWK", "CRD-310A",         "1.30", "goldhawk_310",   BUS_TYPE_IDE,  1,  2, 40, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "GOLDHAWK", "CRD-312B",         "2.05", "goldhawk_312",   BUS_TYPE_IDE,  0,  2, 40, 0, 0, {  2, -1, -1, -1 } }, /* Custom; later version of 310A */
+    { "GOLDHAWK", "CRD-560A",         "1.04", "goldhawk_560",   BUS_TYPE_IDE,  0,  4, 40, 0, 0, {  3, -1, -1, -1 } }, /* Custom */
+    { "GOLDHAWK", "CRD-636A",         "1.03", "goldhawk_636",   BUS_TYPE_IDE,  0,  8, 40, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "GOLDHAWK", "CRD-764A",         "1.42", "goldhawk_764",   BUS_TYPE_IDE,  0, 16, 40, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "GOLDHAWK", "CRD-898A",         "2.11", "goldhawk_898",   BUS_TYPE_IDE,  0, 32, 40, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "GOLDHAWK", "CDR-1002A",        "2.14", "goldhawk_1002",  BUS_TYPE_IDE,  0, 48, 40, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "GOLDHAWK", "DRD-904A",         "1.07", "goldhawk_904",   BUS_TYPE_IDE,  0, 32, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "GOLDHAWK", "DRD-963A",         "1.05", "goldhawk_963",   BUS_TYPE_IDE,  0, 40, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "GOLDHAWK", "DRD-1008A",        "1.15", "goldhawk_1008",  BUS_TYPE_IDE,  0, 48, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "Lycoris",  "CD-ROM 6A",        "2.15", "lycoris_cd6a",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
+    { "Lycoris",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
+    { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-12R",           "1.19", "lycoris_cd12r",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  4,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2, -1 } }, /* Custom */
+    { "Lycoris",  "CD-32R",           "1.05", "lycoris_cd32r",  BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "Lycoris",  "CD-40R",           "1.13", "lycoris_cd40r",  BUS_TYPE_IDE,  0, 40, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "Lycoris",  "Railgun CD Drive", "1.0A", "lycoris_rail10", BUS_TYPE_IDE,  0, -1, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom; 40x/48x selection; early version */
+    { "Lycoris",  "Railgun CD Drive", "2.00", "lycoris_rail20", BUS_TYPE_IDE,  0, -1, 72, 0, 0, {  4,  2,  2,  2 } }, /* Custom; 40x/48x selection */
+    { "Lycoris",  "DVD-24A",          "1.03", "lycoris_dvd24",  BUS_TYPE_IDE,  0, 24, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "Lycoris",  "DVD-32A",          "1.05", "lycoris_dvd32",  BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "Lycoris",  "DVD-48EX",         "L30Z", "lycoris_dvd48",  BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "Lycoris",  "DVR-52MD",         "U91D", "lycoris_dvd52",  BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "Lycoris",  "DVR-72MD",         "M2A0", "lycoris_dvd72",  BUS_TYPE_IDE,  0, 72, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "NEWLINK",  "CDR 4x",           "1.5b", "newlink_4x",     BUS_TYPE_IDE,  1,  4, 96, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "NEWLINK",  "CDR 6x",           "1.8a", "newlink_6x",     BUS_TYPE_IDE,  1,  6, 96, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "NEWLINK",  "8x CD-ROM DRIVE",  "2.1 ", "newlink_8x",     BUS_TYPE_IDE,  0,  8, 96, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "NEWLINK",  "12x CD-ROM DRIVE", "2.0c", "newlink_12x",    BUS_TYPE_IDE,  0, 12, 96, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "NEWLINK",  "16x CD-ROM DRIVE", "1.4a", "newlink_16x",    BUS_TYPE_IDE,  0, 16, 96, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NEWLINK",  "32x CD-ROM DRIVE", "1.2 ", "newlink_32x",    BUS_TYPE_IDE,  0, 32, 96, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NEWLINK",  "40x CD-ROM DRIVE", "1.3 ", "newlink_40x",    BUS_TYPE_IDE,  0, 40, 96, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NEWLINK",  "DiVA Star DRD",    "1.0a", "newlink_diva",   BUS_TYPE_IDE,  0, 52, 48, 0, 1, {  4,  2,  2,  5 } }, /* Custom; DVDRAM. */
+    { "NOVATECH", "CCD-216RT",        "1.5b", "novatech_216",   BUS_TYPE_IDE,  0, 16, 96, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NOVATECH", "CCD-224RT",        "1.3a", "novatech_224",   BUS_TYPE_IDE,  0, 24, 96, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NOVATECH", "CCD-232RT",        "1.3a", "novatech_232",   BUS_TYPE_IDE,  0, 32, 96, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "NOVATECH", "CCD-440RX",        "1.2a", "novatech_440",   BUS_TYPE_IDE,  0, 40, 96, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NOVATECH", "CCD-448RX",        "1.3a", "novatech_448",   BUS_TYPE_IDE,  0, 48, 96, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "NOVATECH", "DCD-548TX",        "1.3a", "novatech_548",   BUS_TYPE_IDE,  0, 48, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "NOVATECH", "DCR-552TX",        "1.0c", "novatech_552",   BUS_TYPE_IDE,  0, 52, 96, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "SOUTHERN", "SCD104",           "1.06", "southern_104",   BUS_TYPE_IDE,  1,  1, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "SCD204",           "1.06", "southern_204",   BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "SCD408",           "1.01", "southern_408",   BUS_TYPE_IDE,  1,  4, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "SCD608",           "1.03", "southern_408",   BUS_TYPE_IDE,  1,  6, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST424",        "1.4a", "southern_424",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST648",        "1.5a", "southern_648",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST816",        "1.4 ", "southern_816",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  2,  0,  0, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST1284",       "1.4 ", "southern_1284",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  2,  0,  0, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST1640",       "1.3c", "southern_1640",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  3,  2,  1, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST2484",       "1.2 ", "southern_2484",  BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "SOUTHERN", "CDD-ST3212",       "1.3 ", "southern_3212",  BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  3,  2,  2,  0 } }, /* Custom */
+    { "SOUTHERN", "CDD-STX3228",      "1.5 ", "southern_3228",  BUS_TYPE_IDE,  0, 32, 96, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
+    { "SOUTHERN", "CDD-STX3608",      "1.4b", "southern_3608",  BUS_TYPE_IDE,  0, 36, 96, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
+    { "SOUTHERN", "CDD-STX4020",      "1.3 ", "southern_4020",  BUS_TYPE_IDE,  0, 40, 96, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
+    { "SOUTHERN", "CDD-STX4824",      "1.2a", "southern_4824",  BUS_TYPE_IDE,  0, 48, 96, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
+    { "SOUTHERN", "CDD-STX7220",      "1.1d", "southern_7220",  BUS_TYPE_IDE,  0, 72, 96, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "SOUTHERN", "CDD Select",       "1.5 ", "southern_cdd15", BUS_TYPE_IDE,  0, -1, 36, 0, 0, {  4,  2,  2,  1 } }, /* Custom; 32x/36x/40x/48x selection; early version */
+    { "SOUTHERN", "CDD Select",       "2.0c", "southern_cdd20", BUS_TYPE_IDE,  0, -1, 96, 0, 0, {  4,  2,  2,  2 } }, /* Custom; 32x/36x/40x/48x/72x selection */
+    { "SOUTHERN", "DVD-STX3230",      "1.3b", "southern_3230",  BUS_TYPE_IDE,  0, 32, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "SOUTHERN", "DVD-STX4080",      "1.1a", "southern_4080",  BUS_TYPE_IDE,  0, 40, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "SOUTHERN", "DVD-STX4848",      "1.1 ", "southern_4848",  BUS_TYPE_IDE,  0, 48, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "SOUTHERN", "DVD Select",       "2.0a", "southern_dvd",   BUS_TYPE_IDE,  0, -1, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom; 32x/40x/48x selection */
+    { "SOUTHERN", "DVR-STX5280",      "1.2 ", "southern_5280",  BUS_TYPE_IDE,  0, 52, 96, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDX-435",   "M62 ", "chinon_435",     BUS_TYPE_SCSI, 1,  2, 36, 1, 0, { -1, -1, -1, -1 } },
     { "DEC",      "RRD45   (C) DEC",  "0436", "dec_45",         BUS_TYPE_SCSI, 1,  4, 36, 0, 0, { -1, -1, -1, -1 } },
