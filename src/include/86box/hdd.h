@@ -41,7 +41,7 @@ enum {
     BUS_XTA                 = 0x03,
     BUS_ESDI                = 0x04,
 
-    BUS_PANASONIC           = 0x21,    / These four are for CD-ROM only. */
+    BUS_PANASONIC           = 0x21,    /* These four are for CD-ROM only. */
     BUS_PHILIPS             = 0x22,
     BUS_SONY                = 0x23,
     BUS_MITSUMI             = 0x24,
