@@ -73,6 +73,7 @@ extern const device_t dells333sl_device;
 extern const device_t hot433a_device; 
 extern const device_t pbl300sx_device; 
 extern const device_t v12p_device; 
+extern const device_t f82c710_pc5086_device; 
  
 const machine_filter_t machine_types[] = { 
     { "None",                             MACHINE_TYPE_NONE       }, 
@@ -2319,6 +2320,46 @@ const machine_t machines[] = {
         .snd_device = NULL, 
         .net_device = NULL 
     }, 
+    {
+        .name = "[8086] Amstrad PC5086",
+        .internal_name = "pc5086",
+        .type = MACHINE_TYPE_8086,
+        .chipset = MACHINE_CHIPSET_PROPRIETARY,
+        .init = machine_pc5086_init,
+        .p1_handler = NULL,
+        .gpio_handler = NULL,
+        .available_flag = MACHINE_AVAILABLE,
+        .gpio_acpi_handler = NULL,
+        .cpu = {
+            .package = CPU_PKG_8086,
+            .block = CPU_BLOCK_NONE,
+            .min_bus = 0,
+            .max_bus = 0,
+            .min_voltage = 0,
+            .max_voltage = 0,
+            .min_multi = 0,
+            .max_multi = 0
+        },
+        .bus_flags = MACHINE_PC | MACHINE_BUS_PS2,
+        .flags = MACHINE_XTA,
+        .ram = {
+            .min = 512,
+            .max = 640,
+            .step = 128
+        },
+        .nvrmask = 63,
+        .kbc_device = &kbc_xt_device,
+        .kbc_p1 = 0xff,
+        .gpio = 0xffffffff,
+        .gpio_acpi = 0xffffffff,
+        .device = &f82c710_pc5086_device,
+        .kbd_device = NULL, 
+        .fdc_device = NULL,
+        .sio_device = NULL,
+        .vid_device = NULL,
+        .snd_device = NULL,
+        .net_device = NULL
+    },
     { 
         .name = "[8086] Amstrad PPC512/640", 
         .internal_name = "ppc512", 
