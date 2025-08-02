@@ -228,6 +228,7 @@ static const struct cdrom_drive_types_s {
     { "ULTIMA",   "DVD-ROM DHI-G40",  "1.61", "ultima_g40",     BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* TODO: Find a real name for model. */
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, 0, {  0, -1, -1, -1 } },
     { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, 0, {  4,  2,  2,  4 } },
+    { "Absolute", "Moonlight CDR",    "1.0a", "amm_cdr",        BUS_TYPE_IDE,  0, -1, 36, 0, 0, {  4,  2,  2,  2 } }, /* Internal */
     { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
     { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404c",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
@@ -240,6 +241,14 @@ static const struct cdrom_drive_types_s {
     { "EASTERN",  "CD-ROM ECD-DX32",  "V130", "eastern_dx32",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "EASTERN",  "DVD-ROM ED-EX32",  "V141", "eastern_ex32",   BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "EASTERN",  "DVD-ROM ED-EX48",  "V140", "eastern_ex48",   BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "FUTURE",   "CDR:23",           "1.1 ", "future_23",      BUS_TYPE_IDE,  1,  1, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:25",           "1.1 ", "future_25",      BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:41",           "1.03", "future_41",      BUS_TYPE_IDE,  1,  1, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:151",          "1.01", "future_151",     BUS_TYPE_IDE,  0,  2, 36, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:155",          "1.05", "future_155",     BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:173",          "2.10", "future_173",     BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:181",          "2.09", "future_181",     BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "FUTURE",   "CDR:203",          "1.90", "future_203",     BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "GOLDHAWK", "CRD-310A",         "1.30", "goldhawk_310",   BUS_TYPE_IDE,  1,  2, 40, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "GOLDHAWK", "CRD-312B",         "2.05", "goldhawk_312",   BUS_TYPE_IDE,  0,  2, 40, 0, 0, {  2, -1, -1, -1 } }, /* Custom; later version of 310A */
     { "GOLDHAWK", "CRD-560A",         "1.04", "goldhawk_560",   BUS_TYPE_IDE,  0,  4, 40, 0, 0, {  3, -1, -1, -1 } }, /* Custom */
@@ -250,9 +259,11 @@ static const struct cdrom_drive_types_s {
     { "GOLDHAWK", "DRD-904A",         "1.07", "goldhawk_904",   BUS_TYPE_IDE,  0, 32, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-963A",         "1.05", "goldhawk_963",   BUS_TYPE_IDE,  0, 40, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-1008A",        "1.15", "goldhawk_1008",  BUS_TYPE_IDE,  0, 48, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
-    { "Lycoris",  "CD-ROM 6A",        "2.15", "lycoris_cd6a",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
-    { "Lycoris",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
-    { "Lycoris",  "CD-ROM 12D",       "2.33", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
+    { "LYCORIS",  "CD-ROM DRIVE:2x",  "1.01", "lycoris_22",     BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "LYCORIS",  "CD-ROM DRIVE:4x",  "1.00", "lycoris_40",     BUS_TYPE_IDE,  1,  4, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "LYCORIS",  "CD-ROM 6A",        "2.15", "lycoris_cd6a",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
+    { "LYCORIS",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
+    { "Lycoris",  "CD-ROM 12D",       "1.43", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-12R",           "1.19", "lycoris_cd12r",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-16R",           "1.20", "lycoris_cd16r",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2, -1 } }, /* Custom */
     { "Lycoris",  "CD-24R",           "1.19", "lycoris_cd24r",  BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2, -1 } }, /* Custom */
@@ -265,6 +276,8 @@ static const struct cdrom_drive_types_s {
     { "Lycoris",  "DVD-48EX",         "L30Z", "lycoris_dvd48",  BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "Lycoris",  "DVR-52MD",         "U91D", "lycoris_dvd52",  BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
     { "Lycoris",  "DVR-72MD",         "M2A0", "lycoris_dvd72",  BUS_TYPE_IDE,  0, 72, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "M3GAN",    "Internal DVD",     "1.0 ", "m3gan",          BUS_TYPE_IDE,  0, -1, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "M3GAN",    "Internal DVD",     "2.0 ", "m3gan_20",       BUS_TYPE_IDE,  0, -1, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
     { "NEWLINK",  "CDR 4x",           "1.5b", "newlink_4x",     BUS_TYPE_IDE,  1,  4, 96, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "NEWLINK",  "CDR 6x",           "1.8a", "newlink_6x",     BUS_TYPE_IDE,  1,  6, 96, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "NEWLINK",  "8x CD-ROM DRIVE",  "2.1 ", "newlink_8x",     BUS_TYPE_IDE,  0,  8, 96, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
