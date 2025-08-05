@@ -228,8 +228,6 @@ static const struct cdrom_drive_types_s {
     { "ULTIMA",   "DVD-ROM DHI-G40",  "1.61", "ultima_g40",     BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* TODO: Find a real name for model. */
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, 0, {  0, -1, -1, -1 } },
     { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, 0, {  4,  2,  2,  4 } },
-    { "Absolute", "Moonlight CDR",    "1.0a", "amm_cdr",        BUS_TYPE_IDE,  0, -1, 36, 0, 0, {  4,  2,  2,  2 } }, /* Internal */
-    { "Absolute", "Moonlight DRD",    "1.0a", "amm_drd",        BUS_TYPE_IDE,  0, -1, 36, 0, 1, {  4,  2,  2,  5 } }, /* Internal */
     { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
     { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404c",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
