@@ -300,9 +300,9 @@ static wchar_t mouse_msg[3][200];
 static volatile atomic_int do_pause_ack = 0;
 static volatile atomic_int pause_ack = 0;
 
-#ifndef RELEASE_BUILD
+#define LOG_SIZE_BUFFER 8192            /* Log size buffer */
 
-#define LOG_SIZE_BUFFER 1024            /* Log size buffer */
+#ifndef RELEASE_BUILD
 
 static char buff[LOG_SIZE_BUFFER];
 
@@ -364,8 +364,6 @@ pclog_ex(UNUSED(const char *fmt), UNUSED(va_list ap))
 #endif
 }
 
-
-
 void
 pclog_toggle_suppr(void)
 {
@@ -387,11 +385,35 @@ pclog(UNUSED(const char *fmt), ...)
 #endif
 }
 
+/* Log something even in release builds. */
+void
+always_log(const char *fmt, ...)
+{
+    char    temp[LOG_SIZE_BUFFER];
+    va_list ap;
+
+    va_start(ap, fmt);
+
+    if (stdlog == NULL) {
+        if (log_path[0] != '\0') {
+            stdlog = plat_fopen(log_path, "w");
+            if (stdlog == NULL)
+                stdlog = stdout;
+        } else
+            stdlog = stdout;
+    }
+
+    vsprintf(temp, fmt, ap);
+    fprintf(stdlog, "%s", temp);
+    fflush(stdlog);
+    va_end(ap);
+}
+
 /* Log a fatal error, and display a UI message before exiting. */
 void
 fatal(const char *fmt, ...)
 {
-    char    temp[1024];
+    char    temp[LOG_SIZE_BUFFER];
     va_list ap;
     char   *sp;
 
@@ -439,7 +461,7 @@ fatal(const char *fmt, ...)
 void
 fatal_ex(const char *fmt, va_list ap)
 {
-    char  temp[1024];
+    char  temp[LOG_SIZE_BUFFER];
     char *sp;
 
     if (stdlog == NULL) {
@@ -482,7 +504,7 @@ fatal_ex(const char *fmt, va_list ap)
 void
 warning(const char *fmt, ...)
 {
-    char    temp[1024];
+    char    temp[LOG_SIZE_BUFFER];
     va_list ap;
     char   *sp;
 
@@ -518,7 +540,7 @@ warning(const char *fmt, ...)
 void
 warning_ex(const char *fmt, va_list ap)
 {
-    char  temp[1024];
+    char  temp[LOG_SIZE_BUFFER];
     char *sp;
 
     if (stdlog == NULL) {
@@ -595,13 +617,15 @@ extern void  device_find_all_descs(void);
 static void
 pc_show_usage(char *s)
 {
-    char p[4096] = { 0 };
+    char p[8192] = { 0 };
 
     sprintf(p,
             "\n%sUsage: 86box [options] [cfg-file]\n\n"
             "Valid options are:\n\n"
             "-? or --help\t\t\t- show this information\n"
+#ifdef SHOW_EXTRA_PARAMS
             "-C or --config path\t\t- set 'path' to be config file\n"
+#endif
 #ifdef _WIN32
             "-D or --debug\t\t\t- force debug output logging\n"
 #endif
@@ -611,8 +635,10 @@ pc_show_usage(char *s)
             "-F or --fullscreen\t\t- start in fullscreen mode\n"
             "-G or --lang langid\t\t- start with specified language\n"
             "\t\t\t\t   (e.g. en-US, or system)\n"
+#ifdef SHOW_EXTRA_PARAMS
 #ifdef _WIN32
             "-H or --hwnd id,hwnd\t\t- sends back the main dialog's hwnd\n"
+#endif
 #endif
             "-I or --image d:path\t\t- load 'path' as floppy image on drive d\n"
 #ifdef USE_INSTRUMENT
@@ -627,23 +653,29 @@ pc_show_usage(char *s)
 #ifndef USE_SDL_UI
             "-S or --settings\t\t\t- show only the settings dialog\n"
 #endif
+#ifdef SHOW_EXTRA_PARAMS
             "-T or --testmode\t\t- test mode: execute the test mode entry\n"
             "\t\t\t\t   point on init/hard reset\n"
+#endif
             "-V or --vmname name\t\t- overrides the name of the running VM\n"
+#ifdef _WIN32
             "-W or --nohook\t\t- disables keyboard hook\n"
-            "\t\t\t\t   (compatibility-only outside Windows)\n"
+#else
+            "-W or --nohook\t\t- alters keyboard behavior\n"
+#endif
             "-X or --clear what\t\t- clears the 'what' (cmos/flash/both)\n"
+#ifdef SHOW_EXTRA_PARAMS
             "-Y or --donothing\t\t- do not show any UI or run the emulation\n"
-            "-Z or --lastvmpath\t\t- the last parameter is VM path rather\n"
-            "\t\t\t\t  than config\n"
+#endif
+            "-Z or --lastvmpath\t\t- the last param. is VM path rather than config\n"
             "\nA config file can be specified. If none is, the default file will be used.\n",
-            (s == NULL) ? "" : s);
+            s);
 
 #ifdef _WIN32
     ui_msgbox(MBX_ANSI | ((s == NULL) ? MBX_INFO : MBX_WARNING), p);
 #else
     if (s == NULL)
-        pclog("%s", p);
+        always_log("%s", p);
     else
         ui_msgbox(MBX_ANSI | MBX_WARNING, p);
 #endif
@@ -733,7 +765,7 @@ usage:
                 }
             }
 
-            pc_show_usage(NULL);
+            pc_show_usage("");
             return 0;
         } else if (!strcasecmp(argv[c], "--lastvmpath") || !strcasecmp(argv[c], "-Z")) {
             lvmp = 1;
@@ -859,7 +891,7 @@ usage:
 
             lang_init = plat_language_code(argv[++c]);
             if (!lang_init)
-                printf("\nWarning: Invalid language code, ignoring --lang parameter.\n\n");
+                always_log("\nWarning: Invalid language code, ignoring --lang parameter.\n\n");
 
             // The return value of 0 only means that the code is invalid,
             //   not related to that translation is exists or not for the
