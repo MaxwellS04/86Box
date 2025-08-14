@@ -140,6 +140,7 @@ static const struct cdrom_drive_types_s {
     { "ASUS",     "CD-S520/A4",       "1.32", "asus_520",       BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
     { "ASUS",     "DVD-E616P2",       "1.08", "asus_e616",      BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } },
     { "AZT",      "CDA46802I",        "1.15", "azt_cda",        BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  0,  0,  0 } },
+    { "BENQ",     "CD-656A",          "56AI", "benq_656a",      BUS_TYPE_IDE,  0, 56, 36, 0, 0, {  4,  2,  2,  4 } },
     { "BTC",      "CD-ROM BCD16XA",   "U2.2", "btc_16xa",       BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2, -1 } },
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2, -1 } },
     { "CREATIVE", "CD3630E",          "A   ", "creative_3630",  BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2,  0 } },
@@ -238,8 +239,8 @@ static const struct cdrom_drive_types_s {
     { "EASTERN",  "CD-ROM ECD-AX8e",  "V308", "eastern_ax8",    BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  4,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-DX32",  "V130", "eastern_dx32",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "EASTERN",  "DVD-ROM ED-EX32",  "V141", "eastern_ex32",   BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
-    { "EASTERN",  "DVD-ROM ED-EX48",  "V140", "eastern_ex48",   BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "EASTERN",  "DVD-ROM ED-EX32",  "C   ", "eastern_ex32",   BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "EASTERN",  "DVD-ROM ED-EX48",  "BA  ", "eastern_ex48",   BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "FUTURE",   "CDR:23",           "1.1 ", "future_23",      BUS_TYPE_IDE,  1,  1, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
     { "FUTURE",   "CDR:25",           "1.1 ", "future_25",      BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
     { "FUTURE",   "CDR:41",           "1.03", "future_41",      BUS_TYPE_IDE,  1,  1, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
@@ -318,7 +319,7 @@ static const struct cdrom_drive_types_s {
     { "SOUTHERN", "DVD-STX4080",      "1.1a", "southern_4080",  BUS_TYPE_IDE,  0, 40, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "SOUTHERN", "DVD-STX4848",      "1.1 ", "southern_4848",  BUS_TYPE_IDE,  0, 48, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "SOUTHERN", "DVD Select",       "2.0a", "southern_dvd",   BUS_TYPE_IDE,  0, -1, 96, 0, 1, {  4,  2,  2,  4 } }, /* Custom; 32x/40x/48x selection */
-    { "SOUTHERN", "DVR-STX5280",      "1.2 ", "southern_5280",  BUS_TYPE_IDE,  0, 52, 96, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "SOUTHERN", "DVR-STX5280",      "0024", "southern_5280",  BUS_TYPE_IDE,  0, 52, 96, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDX-435",   "M62 ", "chinon_435",     BUS_TYPE_SCSI, 1,  2, 36, 1, 0, { -1, -1, -1, -1 } },
     { "DEC",      "RRD45   (C) DEC",  "0436", "dec_45",         BUS_TYPE_SCSI, 1,  4, 36, 0, 0, { -1, -1, -1, -1 } },
@@ -338,14 +339,14 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU-76S",   "1.00", "sony_76s",       BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PHILIPS",  "CDD2600",          "1.07", "philips_2600",   BUS_TYPE_SCSI, 2,  6, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DRM-604X",  "2403", "pioneer_604x",   BUS_TYPE_SCSI, 2,  4, 47, 0, 0, { -1, -1, -1, -1 } }, /* NOTE: The real thing is a CD changer drive! */
-    { "PLEXTOR",  "CD-ROM PX-43CH",   "13C4", "plextor_43ch",   BUS_TYPE_SCSI, 2,  4, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy; not sure about this firmware revision. */
+    { "PLEXTOR",  "CD-ROM PX-43CH",   "0204", "plextor_43ch",   BUS_TYPE_SCSI, 2,  4, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy */
     { "PLEXTOR",  "CD-ROM PX-12SC",   "1.01", "plextor_12sc",   BUS_TYPE_SCSI, 2, 12, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-32TS",   "1.03", "plextor_32ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-40TS",   "1.14", "plextor_40ts",   BUS_TYPE_SCSI, 2, 40, 36, 0, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD 50",            "1.00", "teac_50",        BUS_TYPE_SCSI, 2,  4, 36, 1, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the R55S. */
     { "TEAC",     "CD-ROM R55S",      "1.0R", "teac_55s",       BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD-516S",          "2.0H", "teac_516s",      BUS_TYPE_SCSI, 1, 16, 36, 0, 0, { -1, -1, -1, -1 } },
-    { "TEAC",     "CD-532S",          "1.02", "teac_532s",      BUS_TYPE_SCSI, 1, 32, 36, 0, 0, { -1, -1, -1, -1 } }, /* This is a SCSI-1 drive confirmed on The Retro Web */
+    { "TEAC",     "CD-532S",          "3.0A", "teac_532s",      BUS_TYPE_SCSI, 1, 32, 36, 0, 0, { -1, -1, -1, -1 } }, /* This is a SCSI-1 drive confirmed on The Retro Web */
     { "TEXEL",    "CD-ROM DM-3024",   "1.00", "texel_3024",     BUS_TYPE_SCSI, 2,  2, 36, 1, 0, { -1, -1, -1, -1 } }, /* Texel is Plextor according to Plextor's own EU website. */
     /*
        Unusual 2.23x according to Google, I'm rounding it upwards to 3x.
