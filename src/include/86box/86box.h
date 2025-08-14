@@ -25,6 +25,11 @@
 #include <stdarg.h>
 #endif
 
+#if defined(__HAIKU__)
+/* Doesn't compile on Haiku without this include */
+#include <stdlib.h>
+#endif
+
 /* Configuration values. */
 #define GFXCARD_MAX  2
 #define SERIAL_MAX   8
@@ -154,6 +159,7 @@ extern int      confirm_exit;               /* (C) enable exit confirmation */
 extern int      confirm_save;               /* (C) enable save confirmation */
 extern int      enable_discord;             /* (C) enable Discord integration */
 extern int      force_10ms;                 /* (C) force 10ms CPU frame interval */
+extern int      jumpered_internal_ecp_dma;  /* (C) Jumpered internal EPC DMA */
 extern int      other_ide_present;          /* IDE controllers from non-IDE cards are present */
 extern int      other_scsi_present;         /* SCSI controllers from non-SCSI cards are present */
 extern int      is_pcjr;                    /* The current machine is PCjr. */
@@ -176,6 +182,7 @@ extern int    hook_enabled;                 /* (C) Keyboard hook is enabled */
 extern char exe_path[2048];     /* path (dir) of executable */
 extern char usr_path[1024];     /* path (dir) of user data */
 extern char cfg_path[1024];     /* full path of config file */
+extern char global_cfg_path[1024]; /* full path of global config file */
 extern int  open_dir_usr_path;  /* default file open dialog directory of usr_path */
 extern char uuid[MAX_UUID_LEN]; /* UUID or machine identifier */
 extern char vmm_path[1024];       /* VM Manager path to scan (temporary) */
@@ -195,6 +202,7 @@ extern void warning_ex(const char *fmt, va_list ap);
 #endif
 extern void pclog_toggle_suppr(void);
 extern void pclog(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+extern void always_log(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 extern void fatal(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 extern void warning(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 extern void set_screen_size(int x, int y);

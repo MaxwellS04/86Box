@@ -46,7 +46,10 @@ enum class Name {
     Disks,
     Floppy,
     CD,
+    RDisk,
+    MO,
     SCSIController,
+    StorageController,
     MidiOut,
     Joystick,
     Serial,
@@ -54,7 +57,11 @@ enum class Name {
     Audio,
     Voodoo,
     NIC,
+    Keyboard,
     Mouse,
+    IsaRtc,
+    IsaMem,
+    IsaRom,
     Unknown
 };
 Q_ENUM_NS(Name)
@@ -129,6 +136,7 @@ public:
     QProcess *process = new QProcess();
 
     bool window_obscured;
+    bool config_signal_connected = false;
 
     QString getDisplayValue(VMManager::Display::Name key);
     QFileInfoList getScreenshots();

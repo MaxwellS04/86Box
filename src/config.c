@@ -90,6 +90,7 @@ static int   cy;
 static int   cw;
 static int   ch;
 static ini_t config;
+static ini_t global;
 
 #ifdef ENABLE_CONFIG_LOG
 int config_do_log = ENABLE_CONFIG_LOG;
@@ -109,6 +110,33 @@ config_log(const char *fmt, ...)
 #    define config_log(fmt, ...)
 #endif
 
+/* Load global configuration */
+static void
+load_global(void)
+{
+    ini_section_t cat = ini_find_section(global, "");
+    char         *p;
+
+    p = ini_section_get_string(cat, "language", NULL);
+    if (p != NULL)
+        lang_id = plat_language_code(p);
+    else
+        lang_id = plat_language_code(DEFAULT_LANGUAGE);
+
+    open_dir_usr_path = ini_section_get_int(cat, "open_dir_usr_path", 0);
+
+    confirm_reset = ini_section_get_int(cat, "confirm_reset", 1);
+    confirm_exit  = ini_section_get_int(cat, "confirm_exit", 1);
+    confirm_save  = ini_section_get_int(cat, "confirm_save", 1);
+
+    inhibit_multimedia_keys = ini_section_get_int(cat, "inhibit_multimedia_keys", 0);
+
+    mouse_sensitivity = ini_section_get_double(cat, "mouse_sensitivity", 1.0);
+    if (mouse_sensitivity < 0.1)
+        mouse_sensitivity = 0.1;
+    else if (mouse_sensitivity > 2.0)
+        mouse_sensitivity = 2.0;
+}
 
 /* Load "General" section. */
 static void
@@ -131,8 +159,6 @@ load_general(void)
     video_fullscreen_scale = ini_section_get_int(cat, "video_fullscreen_scale", 1);
 
     video_filter_method = ini_section_get_int(cat, "video_filter_method", 1);
-
-    inhibit_multimedia_keys = ini_section_get_int(cat, "inhibit_multimedia_keys", 0);
 
     force_43 = !!ini_section_get_int(cat, "force_43", 0);
     scale    = ini_section_get_int(cat, "scale", 1);
@@ -181,25 +207,7 @@ load_general(void)
     hide_tool_bar   = ini_section_get_int(cat, "hide_tool_bar", 0);
     sound_muted     = ini_section_get_int(cat, "sound_muted", 0);
 
-    confirm_reset = ini_section_get_int(cat, "confirm_reset", 1);
-    confirm_exit  = ini_section_get_int(cat, "confirm_exit", 1);
-    confirm_save  = ini_section_get_int(cat, "confirm_save", 1);
-
-    p = ini_section_get_string(cat, "language", NULL);
-    if (p != NULL)
-        lang_id = plat_language_code(p);
-    else
-        lang_id = plat_language_code(DEFAULT_LANGUAGE);
-
-    mouse_sensitivity = ini_section_get_double(cat, "mouse_sensitivity", 1.0);
-    if (mouse_sensitivity < 0.1)
-        mouse_sensitivity = 0.1;
-    else if (mouse_sensitivity > 2.0)
-        mouse_sensitivity = 2.0;
-
     enable_discord = !!ini_section_get_int(cat, "enable_discord", 0);
-
-    open_dir_usr_path = ini_section_get_int(cat, "open_dir_usr_path", 0);
 
     video_framerate = ini_section_get_int(cat, "video_gl_framerate", -1);
     video_vsync     = ini_section_get_int(cat, "video_gl_vsync", 0);
@@ -484,6 +492,8 @@ load_input_devices(void)
     p = ini_section_get_string(cat, "keyboard_type", NULL);
     if (p != NULL)
         keyboard_type = keyboard_get_from_internal_name(p);
+    else if (strstr(machine_get_internal_name(), "pc5086"))
+        keyboard_type = KEYBOARD_TYPE_PC_XT;
     else if (machine_has_bus(machine, MACHINE_BUS_PS2_PORTS)) {
         if (machine_has_flags(machine, MACHINE_KEYBOARD_JIS))
             keyboard_type = KEYBOARD_TYPE_PS55;
@@ -681,6 +691,10 @@ load_network(void)
                 nc->net_type = NET_TYPE_VDE;
             else if (!strcmp(p, "tap") || !strcmp(p, "4"))
                 nc->net_type = NET_TYPE_TAP;
+            else if (!strcmp(p, "nmswitch") || !strcmp(p, "5"))
+                nc->net_type = NET_TYPE_NMSWITCH;
+            else if (!strcmp(p, "nrswitch") || !strcmp(p, "6"))
+                nc->net_type = NET_TYPE_NRSWITCH;
             else
                 nc->net_type = NET_TYPE_NONE;
         } else
@@ -729,6 +743,10 @@ load_network(void)
                 nc->net_type = NET_TYPE_VDE;
             else if (!strcmp(p, "tap") || !strcmp(p, "4"))
                 nc->net_type = NET_TYPE_TAP;
+            else if (!strcmp(p, "nmswitch") || !strcmp(p, "5"))
+                nc->net_type = NET_TYPE_NMSWITCH;
+            else if (!strcmp(p, "nrswitch") || !strcmp(p, "6"))
+                nc->net_type = NET_TYPE_NRSWITCH;
             else
                 nc->net_type = NET_TYPE_NONE;
         } else
@@ -750,6 +768,19 @@ load_network(void)
         } else
             strcpy(nc->host_dev_name, "none");
 
+         sprintf(temp, "net_%02i_switch_group", c + 1);
+         net_cards_conf[c].switch_group = ini_section_get_int(cat, temp, 0);
+
+         sprintf(temp, "net_%02i_promisc", c + 1);
+         net_cards_conf[c].promisc_mode = ini_section_get_int(cat, temp, 0);
+
+         sprintf(temp, "net_%02i_nrs_host", c + 1);
+         p = ini_section_get_string(cat, temp, NULL);
+         if (p != NULL)
+            strncpy(net_cards_conf[c].nrs_hostname, p, sizeof(net_cards_conf[c].nrs_hostname) - 1);
+         else
+            strncpy(net_cards_conf[c].nrs_hostname, "", sizeof(net_cards_conf[c].nrs_hostname) - 1);
+
         sprintf(temp, "net_%02i_link", c + 1);
         nc->link_state = ini_section_get_int(cat, temp,
                                              (NET_LINK_10_HD | NET_LINK_10_FD |
@@ -767,6 +798,14 @@ load_ports(void)
     char          temp[512];
     memset(temp, 0, sizeof(temp));
 
+    int           has_jumpers = machine_has_jumpered_ecp_dma(machine, DMA_ANY);
+    int           def_jumper  = machine_get_default_jumpered_ecp_dma(machine);
+
+    jumpered_internal_ecp_dma = ini_section_get_int(cat, "jumpered_internal_ecp_dma", -1);
+
+    if (!has_jumpers || (jumpered_internal_ecp_dma == def_jumper))
+        ini_section_delete_var(cat, "jumpered_internal_ecp_dma");
+
     for (int c = 0; c < (SERIAL_MAX - 1); c++) {
         sprintf(temp, "serial%d_enabled", c + 1);
         com_ports[c].enabled = !!ini_section_get_int(cat, temp, (c >= 2) ? 0 : 1);
@@ -783,8 +822,8 @@ load_ports(void)
         lpt_ports[c].enabled = !!ini_section_get_int(cat, temp, (c == 0) ? 1 : 0);
 
         sprintf(temp, "lpt%d_device", c + 1);
-        p                   = ini_section_get_string(cat, temp, "none");
-        lpt_ports[c].device = lpt_device_get_from_internal_name(p);
+        p                    = ini_section_get_string(cat, temp, "none");
+        lpt_ports[c].device  = lpt_device_get_from_internal_name(p);
     }
 
 #if 0
@@ -825,12 +864,12 @@ load_image_file(char *dest, char *p, uint8_t *ui_wp)
        prefix = "wp://";
 
     if (path_abs(p)) {
-        if ((strlen(prefix) + strlen(p)) > (MAX_IMAGE_PATH_LEN - 1))
+        if ((strlen(prefix) + strlen(p)) > (MAX_IMAGE_PATH_LEN - 11))
             ret = 1;
         else
             snprintf(dest, MAX_IMAGE_PATH_LEN, "%s%s", prefix, p);
     } else {
-        if ((strlen(prefix) + strlen(usr_path) + strlen(path_get_slash(usr_path)) + strlen(p)) > (MAX_IMAGE_PATH_LEN - 1))
+        if ((strlen(prefix) + strlen(usr_path) + strlen(path_get_slash(usr_path)) + strlen(p)) > (MAX_IMAGE_PATH_LEN - 11))
             ret = 1;
         else
             snprintf(dest, MAX_IMAGE_PATH_LEN, "%s%s%s%s", prefix, usr_path, path_get_slash(usr_path), p);
@@ -1346,7 +1385,7 @@ load_floppy_and_cdrom_drives(void)
         cdrom[c].speed = ini_section_get_int(cat, temp, 8);
 
         sprintf(temp, "cdrom_%02i_type", c + 1);
-        p = ini_section_get_string(cat, temp, "86cd");
+        p = ini_section_get_string(cat, temp, cdrom[c].bus_type == CDROM_BUS_MKE ? "cr563" : "86cd");
         /* TODO: Configuration migration, remove when no longer needed. */
         int cdrom_type = cdrom_get_from_internal_name(p);
         if (cdrom_type == -1) {
@@ -1966,7 +2005,21 @@ config_load(void)
     int           i;
     ini_section_t c;
 
-    config_log("Loading config file '%s'..\n", cfg_path);
+    config_log("Loading global config file '%s'...\n", global_cfg_path);
+
+    global = ini_read(global_cfg_path);
+
+    if (global == NULL) {
+        global = ini_new();
+
+        lang_id = plat_language_code(DEFAULT_LANGUAGE);
+
+        config_log("Global config file not present or invalid!\n");
+    } else {
+        load_global();
+    }
+
+    config_log("Loading VM config file '%s'...\n", cfg_path);
 
     memset(hdd, 0, sizeof(hard_disk_t));
     memset(cdrom, 0, sizeof(cdrom_t) * CDROM_NUM);
@@ -1978,8 +2031,7 @@ config_load(void)
     config = ini_read(cfg_path);
 
     if (config == NULL) {
-        config         = ini_new();
-        config_changed = 1;
+        config = ini_new();
 
         cpu_f = (cpu_family_t *) &cpu_families[0];
         cpu   = 0;
@@ -2005,6 +2057,8 @@ config_load(void)
 
         for (int i = 0; i < HDC_MAX; i++)
             hdc_current[i]         = hdc_get_from_internal_name("none");
+
+        jumpered_internal_ecp_dma = -1;
 
         com_ports[0].enabled = 1;
         com_ports[1].enabled = 1;
@@ -2044,9 +2098,7 @@ config_load(void)
         cassette_pcm          = 0;
         cassette_ui_writeprot = 0;
 
-        lang_id = plat_language_code(DEFAULT_LANGUAGE);
-
-        config_log("Config file not present or invalid!\n");
+        config_log("VM config file not present or invalid!\n");
     } else {
         load_general();                 /* General */
         for (i = 0; i < MONITORS_NUM; i++)
@@ -2084,13 +2136,58 @@ config_load(void)
         if (c != NULL)
             ini_rename_section(c, "3Dfx Voodoo Banshee");
 
-        /* Mark the configuration as changed. */
-        config_changed = 1;
-
-        config_log("Config loaded.\n\n");
+        config_log("VM config loaded.\n\n");
     }
 
+    /* Mark the configuration as changed. */
+    config_changed = 1;
+
     video_copy = (video_grayscale || invert_display) ? video_transform_copy : memcpy;
+}
+
+/* Save global configuration */
+static void
+save_global(void)
+{
+    ini_section_t cat = ini_find_or_create_section(global, "");
+    char          buffer[512] = { 0 };
+
+    if (lang_id == plat_language_code(DEFAULT_LANGUAGE))
+        ini_section_delete_var(cat, "language");
+    else {
+        plat_language_code_r(lang_id, buffer, 511);
+        ini_section_set_string(cat, "language", buffer);
+    }
+
+    if (open_dir_usr_path)
+        ini_section_set_int(cat, "open_dir_usr_path", open_dir_usr_path);
+    else
+        ini_section_delete_var(cat, "open_dir_usr_path");
+
+    if (confirm_reset != 1)
+        ini_section_set_int(cat, "confirm_reset", confirm_reset);
+    else
+        ini_section_delete_var(cat, "confirm_reset");
+
+    if (confirm_exit != 1)
+        ini_section_set_int(cat, "confirm_exit", confirm_exit);
+    else
+        ini_section_delete_var(cat, "confirm_exit");
+
+    if (confirm_save != 1)
+        ini_section_set_int(cat, "confirm_save", confirm_save);
+    else
+        ini_section_delete_var(cat, "confirm_save");
+
+    if (inhibit_multimedia_keys == 1)
+        ini_section_set_int(cat, "inhibit_multimedia_keys", inhibit_multimedia_keys);
+    else
+        ini_section_delete_var(cat, "inhibit_multimedia_keys");
+
+    if (mouse_sensitivity != 1.0)
+        ini_section_set_double(cat, "mouse_sensitivity", mouse_sensitivity);
+    else
+        ini_section_delete_var(cat, "mouse_sensitivity");
 }
 
 /* Save "General" section. */
@@ -2099,17 +2196,12 @@ save_general(void)
 {
     ini_section_t cat = ini_find_or_create_section(config, "General");
     char          temp[512];
-    char          buffer[512] = { 0 };
 
     const char *va_name;
 
     ini_section_set_int(cat, "force_10ms", force_10ms);
     if (force_10ms == 0)
         ini_section_delete_var(cat, "force_10ms");
-
-    ini_section_set_int(cat, "inhibit_multimedia_keys", inhibit_multimedia_keys);
-    if (inhibit_multimedia_keys == 0)
-        ini_section_delete_var(cat, "inhibit_multimedia_keys");
 
     ini_section_set_int(cat, "sound_muted", sound_muted);
     if (sound_muted == 0)
@@ -2211,42 +2303,10 @@ save_general(void)
     else
         ini_section_delete_var(cat, "hide_tool_bar");
 
-    if (confirm_reset != 1)
-        ini_section_set_int(cat, "confirm_reset", confirm_reset);
-    else
-        ini_section_delete_var(cat, "confirm_reset");
-
-    if (confirm_exit != 1)
-        ini_section_set_int(cat, "confirm_exit", confirm_exit);
-    else
-        ini_section_delete_var(cat, "confirm_exit");
-
-    if (confirm_save != 1)
-        ini_section_set_int(cat, "confirm_save", confirm_save);
-    else
-        ini_section_delete_var(cat, "confirm_save");
-
-    if (mouse_sensitivity != 1.0)
-        ini_section_set_double(cat, "mouse_sensitivity", mouse_sensitivity);
-    else
-        ini_section_delete_var(cat, "mouse_sensitivity");
-
-    if (lang_id == plat_language_code(DEFAULT_LANGUAGE))
-        ini_section_delete_var(cat, "language");
-    else {
-        plat_language_code_r(lang_id, buffer, 511);
-        ini_section_set_string(cat, "language", buffer);
-    }
-
     if (enable_discord)
         ini_section_set_int(cat, "enable_discord", enable_discord);
     else
         ini_section_delete_var(cat, "enable_discord");
-
-    if (open_dir_usr_path)
-        ini_section_set_int(cat, "open_dir_usr_path", open_dir_usr_path);
-    else
-        ini_section_delete_var(cat, "open_dir_usr_path");
 
     if (video_framerate != -1)
         ini_section_set_int(cat, "video_gl_framerate", video_framerate);
@@ -2601,6 +2661,12 @@ save_network(void)
             case NET_TYPE_TAP:
                 ini_section_set_string(cat, temp, "tap");
                 break;
+            case NET_TYPE_NMSWITCH:
+                ini_section_set_string(cat, temp, "nmswitch");
+                break;
+            case NET_TYPE_NRSWITCH:
+                ini_section_set_string(cat, temp, "nrswitch");
+                break;
             default:
                 break;
         }
@@ -2621,6 +2687,28 @@ save_network(void)
             ini_section_delete_var(cat, temp);
         else
             ini_section_set_int(cat, temp, nc->link_state);
+
+        sprintf(temp, "net_%02i_switch_group", c + 1);
+        if (nc->device_num == 0)
+            ini_section_delete_var(cat, temp);
+        else
+            ini_section_set_int(cat, temp, net_cards_conf[c].switch_group);
+
+        sprintf(temp, "net_%02i_promisc", c + 1);
+        if (nc->device_num == 0)
+            ini_section_delete_var(cat, temp);
+        else
+            ini_section_set_int(cat, temp, net_cards_conf[c].promisc_mode);
+
+        sprintf(temp, "net_%02i_nrs_host", c + 1);
+        if (nc->device_num == 0)
+            ini_section_delete_var(cat, temp);
+        else {
+            if (nc->nrs_hostname[0] != '\0')
+                ini_section_set_string(cat, temp, net_cards_conf[c].nrs_hostname);
+            else
+                ini_section_delete_var(cat, temp);
+        }
     }
 
     ini_delete_section_if_empty(config, cat);
@@ -2632,6 +2720,14 @@ save_ports(void)
 {
     ini_section_t cat = ini_find_or_create_section(config, "Ports (COM & LPT)");
     char          temp[512];
+
+    int           has_jumpers = machine_has_jumpered_ecp_dma(machine, DMA_ANY);
+    int           def_jumper  = machine_get_default_jumpered_ecp_dma(machine);
+
+    if (!has_jumpers || (jumpered_internal_ecp_dma == def_jumper))
+        ini_section_delete_var(cat, "jumpered_internal_ecp_dma");
+    else
+        ini_section_set_int(cat, "jumpered_internal_ecp_dma", jumpered_internal_ecp_dma);
 
     for (int c = 0; c < (SERIAL_MAX - 1); c++) {
         sprintf(temp, "serial%d_enabled", c + 1);
@@ -2659,8 +2755,7 @@ save_ports(void)
         if (lpt_ports[c].device == 0)
             ini_section_delete_var(cat, temp);
         else
-            ini_section_set_string(cat, temp,
-                                   lpt_device_get_internal_name(lpt_ports[c].device));
+            ini_section_set_string(cat, temp, lpt_device_get_internal_name(lpt_ports[c].device));
     }
 
 #if 0
@@ -3327,6 +3422,9 @@ save_other_removable_devices(void)
 void
 config_save(void)
 {
+    save_global();                  /* Global */
+    ini_write(global, global_cfg_path);
+
     save_general();                 /* General */
     for (uint8_t i = 0; i < MONITORS_NUM; i++)
         save_monitor(i);            /* Monitors */
