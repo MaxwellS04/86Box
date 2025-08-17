@@ -1266,9 +1266,6 @@ msgstr ""
 msgid "Error adding system"
 msgstr ""
 
-msgid "Abnormal program termination while creating new system: exit code %1, exit status %2.\n\nThe system will not be added."
-msgstr ""
-
 msgid "Remove directory failed"
 msgstr ""
 
@@ -2448,6 +2445,9 @@ msgstr "256 KB"
 msgid "Composite"
 msgstr "합성"
 
+msgid "True color"
+msgstr ""
+
 msgid "Old"
 msgstr "Old"
 
@@ -2920,6 +2920,18 @@ msgid "86Box Update"
 msgstr ""
 
 msgid "Release notes:"
+msgstr ""
+
+msgid "%1 Hz"
+msgstr "%1 Hz"
+
+msgid "Virtual machine crash"
+msgstr ""
+
+msgid "The virtual machine \"%1\"'s process has unexpectedly terminated with exit code %2."
+msgstr ""
+
+msgid "The system will not be added."
 msgstr ""
 
 #~ msgid "HD Controller:"

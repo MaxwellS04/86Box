@@ -271,7 +271,7 @@ msgid "&Folder..."
 msgstr "&Mapa..."
 
 msgid "Target &framerate"
-msgstr "&Ciljno št. sličic na sekundo"
+msgstr "&Ciljno št. kadrov na sekundo"
 
 msgid "&Sync with video"
 msgstr "&Sinhroniziraj z videom"
@@ -400,13 +400,13 @@ msgid "Dynamic Recompiler"
 msgstr "Dinamični prevajalnik"
 
 msgid "CPU frame size"
-msgstr "Velikost izvršnih fragmentov procesorja"
+msgstr "Velikost blokov procesorja"
 
 msgid "Larger frames (less smooth)"
-msgstr "Večji izvršni fragmenti (manj gladko)"
+msgstr "Večji bloki (manj gladko)"
 
 msgid "Smaller frames (smoother)"
-msgstr "Manjši izvršni fragmenti (bolj gladko)"
+msgstr "Manjši bloki (bolj gladko)"
 
 msgid "Video:"
 msgstr "Video:"
@@ -580,7 +580,7 @@ msgid "Hard disks:"
 msgstr "Trdi diski:"
 
 msgid "Firmware Version"
-msgstr ""
+msgstr "Različica programske opreme"
 
 msgid "&New..."
 msgstr "Nov..."
@@ -805,7 +805,7 @@ msgid "Other peripherals"
 msgstr "Druga periferija"
 
 msgid "Other devices"
-msgstr ""
+msgstr "Druge naprave"
 
 msgid "Click to capture mouse"
 msgstr "Kliknite za zajem miške"
@@ -1057,7 +1057,7 @@ msgid "Pause execution"
 msgstr "Prekini izvajanje"
 
 msgid "Ctrl+Alt+Del"
-msgstr ""
+msgstr "Ctrl+Alt+Del"
 
 msgid "Press Ctrl+Alt+Del"
 msgstr "Pritisni Ctrl+Alt+Del"
@@ -1265,9 +1265,6 @@ msgstr "Napaka pri odpiranju datoteke z nastavitvami %1 za pisanje"
 
 msgid "Error adding system"
 msgstr "Napaka pri dodajanju sistema"
-
-msgid "Abnormal program termination while creating new system: exit code %1, exit status %2.\n\nThe system will not be added."
-msgstr "Med ustvarjanjem novega sistema je prišlo do nenavadne prekinitev: izhodna koda %1, izhodni status %2.\n\nSistem ne bo dodan."
 
 msgid "Remove directory failed"
 msgstr "Napaka pri odstranjevanju imenika"
@@ -1678,7 +1675,7 @@ msgid "Null Driver"
 msgstr "Ničelni gonilnik"
 
 msgid "NIC:"
-msgstr ""
+msgstr "Omrežna kartica:"
 
 msgid "NIC %1 (%2) %3"
 msgstr "NIC %1 (%2) %3"
@@ -1690,7 +1687,7 @@ msgid "Render behavior"
 msgstr "Obnašanje pri upodabljanju"
 
 msgid "Use target framerate:"
-msgstr "Uporabi ciljno št. sličic na sekundo:"
+msgstr "Uporabi ciljno št. kadrov na sekundo:"
 
 msgid " fps"
 msgstr " fps"
@@ -2716,10 +2713,10 @@ msgid "Options"
 msgstr "Možnosti"
 
 msgid "Model"
-msgstr ""
+msgstr "Model"
 
 msgid "Model:"
-msgstr ""
+msgstr "Model:"
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Inicializacija upodobljevalnika Vulkan ni uspela."
@@ -2924,6 +2921,18 @@ msgstr "Posodobitev programa 86Box"
 
 msgid "Release notes:"
 msgstr "Opombe različice:"
+
+msgid "%1 Hz"
+msgstr "%1 Hz"
+
+msgid "Virtual machine crash"
+msgstr "Sesutje navidezne naprave"
+
+msgid "The virtual machine \"%1\"'s process has unexpectedly terminated with exit code %2."
+msgstr "Proces navidezne naprave \"%1\" se je nepričakovano zaključil z izhodno kodo %2."
+
+msgid "The system will not be added."
+msgstr "Sistem ne bo dodan."
 
 #~ msgid "HD Controller:"
 #~ msgstr "Krmilnik trdega diska:"
