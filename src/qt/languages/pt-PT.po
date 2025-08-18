@@ -556,7 +556,7 @@ msgid "Quaternary IDE Controller"
 msgstr "Controlador IDE quaternário"
 
 msgid "Hard disk"
-msgstr "Disko rígido"
+msgstr "Disco rígido"
 
 msgid "SCSI"
 msgstr "SCSI"
@@ -1141,7 +1141,7 @@ msgid "New configuration"
 msgstr "Nova configuração"
 
 msgid "Complete"
-msgstr "Completado"
+msgstr "Completar"
 
 msgid "The wizard will now launch the configuration for the new system."
 msgstr "Este assistente agora vai abrir as definições do novo sistema."
