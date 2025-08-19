@@ -251,7 +251,7 @@ static const struct cdrom_drive_types_s {
     { "FUTURE",   "CDR:203",          "1.90", "future_203",     BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
     { "FUTURE",   "CDR-406",          "1.03", "future_406",     BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
     { "FUTURE",   "CDR-414",          "1.11", "future_414",     BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "FUTURE",   "DDR-412",          "1.01", "future_414",     BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "FUTURE",   "DDR-412",          "1.01", "future_412",     BUS_TYPE_IDE,  0, 32, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "FUTURE",   "DDR-425",          "1.04", "future_425",     BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "CRD-310A",         "1.30", "goldhawk_310",   BUS_TYPE_IDE,  1,  2, 40, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "GOLDHAWK", "CRD-312B",         "2.05", "goldhawk_312",   BUS_TYPE_IDE,  0,  2, 40, 0, 0, {  2, -1, -1, -1 } }, /* Custom; later version of 310A */
