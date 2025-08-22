@@ -66,8 +66,8 @@ msgstr "&VNC"
 msgid "Specify &dimensions..."
 msgstr "&Указать размеры главного окна..."
 
-msgid "F&orce 4:3 display ratio"
-msgstr "У&становить соотношение сторон 4:3"
+msgid "Force &4:3 display ratio"
+msgstr "Установить соотношение сторон &4:3"
 
 msgid "&Window scale factor"
 msgstr "&Масштаб окна"
@@ -774,11 +774,11 @@ msgstr "Порты (COM и LPT)"
 msgid "Ports"
 msgstr "Порты"
 
-msgid "Serial ports"
-msgstr "Последовательные порты"
+msgid "Serial ports:"
+msgstr "Последовательные порты:"
 
-msgid "Parallel ports"
-msgstr "Параллельные порты"
+msgid "Parallel ports:"
+msgstr "Параллельные порты:"
 
 msgid "Storage controllers"
 msgstr "Контроллеры дисков"
@@ -2829,14 +2829,11 @@ msgstr "Режим концентратора"
 msgid "Hostname:"
 msgstr "Имя хоста:"
 
-msgid "ISA RTC"
-msgstr "ISA RTC"
+msgid "ISA RAM:"
+msgstr "ISA ОЗУ:"
 
-msgid "ISA RAM"
-msgstr "ISA ОЗУ"
-
-msgid "ISA ROM"
-msgstr "ISA ПЗУ"
+msgid "ISA ROM:"
+msgstr "ISA ПЗУ:"
 
 msgid "&Wipe NVRAM"
 msgstr "&Стереть NVRAM"
