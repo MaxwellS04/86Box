@@ -229,12 +229,12 @@ static const struct cdrom_drive_types_s {
     { "ULTIMA",   "DVD-ROM DHI-G40",  "1.61", "ultima_g40",     BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* TODO: Find a real name for model. */
     { "WEARNES",  "CDD-110",          "1.02", "wearnes_110",    BUS_TYPE_IDE,  1,  2, 36, 0, 0, {  0, -1, -1, -1 } },
     { "YAMAHA",   "CRW-F1",           "1.0f", "yamaha_f1",      BUS_TYPE_IDE,  0, 44, 36, 0, 0, {  4,  2,  2,  4 } },
-    { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420s",    BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
-    { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322i",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404c",    BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484a",    BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
-    { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400n",    BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
-    { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525c",    BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-240s",  "2.33", "astral_420",     BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  1 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-322i",  "2.01", "astral_322",     BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-404c",  "1.32", "astral_404",     BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "CD-ROM CRD-484a",  "1.51", "astral_484",     BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } }, /* Custom */
+    { "ASTRAL",   "DVD-ROM DRD-400n", "KS9P", "astral_400",     BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
+    { "ASTRAL",   "DVD-RAM DRW-525c", "T7N1", "astral_525",     BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  5 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-RD6i",  "V212", "eastern_rd6",    BUS_TYPE_IDE,  0,  6, 36, 1, 0, {  3,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX8e",  "V308", "eastern_ax8",    BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  4,  2,  1,  0 } }, /* Custom */
     { "EASTERN",  "CD-ROM ECD-AX16",  "V304", "eastern_ax16",   BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2,  0 } }, /* Custom */
@@ -263,8 +263,8 @@ static const struct cdrom_drive_types_s {
     { "GOLDHAWK", "DRD-904A",         "1.07", "goldhawk_904",   BUS_TYPE_IDE,  0, 32, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-963A",         "1.05", "goldhawk_963",   BUS_TYPE_IDE,  0, 40, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
     { "GOLDHAWK", "DRD-1008A",        "1.15", "goldhawk_1008",  BUS_TYPE_IDE,  0, 48, 40, 0, 1, {  4,  2,  2,  4 } }, /* Custom */
-    { "LYCORIS",  "CD-ROM DRIVE:2x",  "1.01", "lycoris_22",     BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
-    { "LYCORIS",  "CD-ROM DRIVE:4x",  "1.00", "lycoris_40",     BUS_TYPE_IDE,  1,  4, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "LYCORIS",  "CD-ROM DRIVE:2x",  "1.01", "lycoris_2x",     BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "LYCORIS",  "CD-ROM DRIVE:4x",  "1.00", "lycoris_4x",     BUS_TYPE_IDE,  1,  4, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
     { "LYCORIS",  "CD-ROM 6A",        "2.15", "lycoris_cd6a",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
     { "LYCORIS",  "CD-ROM 8A",        "2.11", "lycoris_cd8a",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  0,  0, -1 } }, /* Custom */
     { "Lycoris",  "CD-ROM 12D",       "1.43", "lycoris_cd12d",  BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  3,  2,  2, -1 } }, /* Custom */
@@ -300,7 +300,7 @@ static const struct cdrom_drive_types_s {
     { "SOUTHERN", "SCD104",           "1.06", "southern_104",   BUS_TYPE_IDE,  1,  1, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "SCD204",           "1.06", "southern_204",   BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "SCD408",           "1.01", "southern_408",   BUS_TYPE_IDE,  1,  4, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
-    { "SOUTHERN", "SCD608",           "1.03", "southern_408",   BUS_TYPE_IDE,  1,  6, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
+    { "SOUTHERN", "SCD608",           "1.03", "southern_608",   BUS_TYPE_IDE,  1,  6, 36, 0, 0, {  0, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "CDD-ST424",        "1.4a", "southern_424",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "CDD-ST648",        "1.5a", "southern_648",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  2, -1, -1, -1 } }, /* Custom */
     { "SOUTHERN", "CDD-ST816",        "1.4 ", "southern_816",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  2,  0,  0, -1 } }, /* Custom */
