@@ -13,7 +13,7 @@ msgid "&Keyboard requires capture"
 msgstr "&Teclado requere captura"
 
 msgid "&Right CTRL is left ALT"
-msgstr "&CTRL direito é ALT esquerdo"
+msgstr "CTRL &direito é ALT esquerdo"
 
 msgid "&Hard Reset..."
 msgstr "&Reinicialização completa..."
@@ -31,7 +31,7 @@ msgid "Pause"
 msgstr "Pausa"
 
 msgid "Re&sume"
-msgstr "Re&tomar"
+msgstr "Reto&mar"
 
 msgid "E&xit"
 msgstr "&Sair"
@@ -199,7 +199,7 @@ msgid "&Update status bar icons"
 msgstr "&Atualizar ícones da barra de estado"
 
 msgid "Take s&creenshot"
-msgstr "Gravar imagem de ecrã"
+msgstr "Gravar imagem de &ecrã"
 
 msgid "S&ound"
 msgstr "&Som"
@@ -208,7 +208,7 @@ msgid "&Preferences..."
 msgstr "&Preferências..."
 
 msgid "Enable &Discord integration"
-msgstr "Ativar integração com &Discord"
+msgstr "Ativar integração com D&iscord"
 
 msgid "Sound &gain..."
 msgstr "&Ganho de som..."
@@ -1215,7 +1215,7 @@ msgstr "Menu de contexto"
 msgid "&Open folder..."
 msgstr "&Abrir pasta..."
 
-msgid "Open &printer tray..."
+msgid "Open p&rinter tray..."
 msgstr "Abrir &bandeja de impressora..."
 
 msgid "Set &icon..."
@@ -1600,7 +1600,7 @@ msgid "Fast"
 msgstr "Rápido"
 
 msgid "&Auto-pause on focus loss"
-msgstr "Pausa &automática na perda de focagem"
+msgstr "Pa&usa automática na perda de focagem"
 
 msgid "WinBox is no longer supported"
 msgstr "O WinBox não é mais suportado"
@@ -1642,7 +1642,7 @@ msgid "Show non-&primary monitors"
 msgstr "Mostrar monitores não &primários"
 
 msgid "Open screenshots &folder..."
-msgstr "Abrir a pasta de capturas de ecrã..."
+msgstr "Abrir a pas&ta de capturas de ecrã..."
 
 msgid "Appl&y fullscreen stretch mode when maximized"
 msgstr "Apl&icar o modo de estiramento na tela cheia quando maximizado"

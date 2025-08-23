@@ -64,7 +64,7 @@ msgid "&VNC"
 msgstr "&VNC"
 
 msgid "Specify &dimensions..."
-msgstr "Especificar as dimensões..."
+msgstr "Especificar as dime&nsões..."
 
 msgid "Force &4:3 display ratio"
 msgstr "Forçar proporção de tela em &4:3"
@@ -157,7 +157,7 @@ msgid "Generic RGBI color monitor"
 msgstr "Monitor colorido RGBI genérico"
 
 msgid "&Amber monitor"
-msgstr "Monitor &âmbar"
+msgstr "Monitor âmb&ar"
 
 msgid "&Green monitor"
 msgstr "Monitor &verde"
@@ -1215,7 +1215,7 @@ msgstr "Menu de contexto"
 msgid "&Open folder..."
 msgstr "Abrir &pasta..."
 
-msgid "Open &printer tray..."
+msgid "Open p&rinter tray..."
 msgstr "Abrir fila da &impressora..."
 
 msgid "Set &icon..."
@@ -1600,7 +1600,7 @@ msgid "Fast"
 msgstr "Rápido"
 
 msgid "&Auto-pause on focus loss"
-msgstr "Pausa &automática ao perder o foco"
+msgstr "Pa&usa automática ao perder o foco"
 
 msgid "WinBox is no longer supported"
 msgstr "O WinBox não é mais suportado"
@@ -1642,7 +1642,7 @@ msgid "Show non-&primary monitors"
 msgstr "Mostrar monitores não &primários"
 
 msgid "Open screenshots &folder..."
-msgstr "Abrir pasta de capturas de tela..."
+msgstr "Ab&rir pasta de capturas de tela..."
 
 msgid "Appl&y fullscreen stretch mode when maximized"
 msgstr "Apl&icar modo de ampliação em tela cheia quando maximizado"
@@ -2932,7 +2932,7 @@ msgid "The system will not be added."
 msgstr "O sistema não será adicionado."
 
 msgid "&Update mouse every CPU frame"
-msgstr "At&ualiza o estado do mouse em cada quadro do CPU"
+msgstr "&Atualiza o estado do mouse em cada quadro do CPU"
 
 msgid "Hue"
 msgstr "Matiz"

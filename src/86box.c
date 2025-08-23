@@ -234,29 +234,46 @@ struct accelKey acc_keys[NUM_ACCELS];
 
 // Default accelerator key values
 struct accelKey def_acc_keys[NUM_ACCELS] = {
-	{	.name="send_ctrl_alt_del", 	.desc="Send Control+Alt+Del",
-		.seq="Ctrl+F12" },
-
-	{	.name="send_ctrl_alt_esc", 	.desc="Send Control+Alt+Escape",
-		.seq="Ctrl+F10" },
-
-	{	.name="fullscreen", 		.desc="Toggle fullscreen",
-		.seq="Ctrl+Alt+PgUp" },
-
-	{	.name="screenshot", 		.desc="Screenshot",
-		.seq="Ctrl+F11" },
-
-	{	.name="release_mouse", 		.desc="Release mouse pointer",
-		.seq="Ctrl+End" },
-
-	{	.name="hard_reset", 		.desc="Hard reset",
-		.seq="Ctrl+Alt+F12" },
-
-	{	.name="pause", 				.desc="Toggle pause",
-		.seq="Ctrl+Alt+F1" },
-
-	{	.name="mute", 				.desc="Toggle mute",
-		.seq="Ctrl+Alt+M" }
+    {
+        .name="send_ctrl_alt_del",
+        .desc="Send Control+Alt+Del",
+        .seq="Ctrl+F12"
+    },
+    {
+        .name="send_ctrl_alt_esc",
+        .desc="Send Control+Alt+Escape",
+        .seq="Ctrl+F10"
+    },
+    {
+        .name="fullscreen",
+        .desc="Toggle fullscreen",
+        .seq="Ctrl+Alt+PgUp"
+    },
+    {
+        .name="screenshot",
+        .desc="Screenshot",
+        .seq="Ctrl+F11"
+    },
+    {
+        .name="release_mouse",
+        .desc="Release mouse pointer",
+        .seq="Ctrl+End"
+    },
+    {
+        .name="hard_reset",
+        .desc="Hard reset",
+        .seq="Ctrl+Alt+F12"
+    },
+    {
+        .name="pause",
+        .desc="Toggle pause",
+        .seq="Ctrl+Alt+F1"
+    },
+    {
+        .name="mute",
+        .desc="Toggle mute",
+        .seq="Ctrl+Alt+M"
+    }
 };
 
 char vmm_path[1024] = { '\0' }; /* VM manager path to scan for VMs */
@@ -729,10 +746,6 @@ pc_init(int argc, char *argv[])
         p                = path_get_filename(exe_path);
         *p               = '\0';
     }
-    if (!strncmp(exe_path, "/private/var/folders/", 21)) {
-        ui_msgbox_header(MBX_FATAL, L"App Translocation", EMU_NAME_W L" cannot determine the emulated machine's location due to a macOS security feature. Please move the " EMU_NAME_W L" app to another folder (not /Applications), or make a copy of it and open that copy instead.");
-        return 0;
-    }
 #elif !defined(_WIN32)
     /* Grab the actual path if we are an AppImage. */
     p = getenv("APPIMAGE");
@@ -1090,10 +1103,16 @@ usage:
 
     /* Determine whether to start the VM manager. */
 #ifndef USE_SDL_UI
-    if (vmm_disabled)
+    if (vmm_disabled && start_vmm)
 #endif
     {
         start_vmm = 0;
+#ifdef __APPLE__
+        if (!strncmp(exe_path, "/private/var/folders/", 21)) {
+            ui_msgbox_header(MBX_FATAL, L"App Translocation", EMU_NAME_W L" cannot determine the emulated machine's location due to a macOS security feature. Please move the " EMU_NAME_W L" app to another folder (not /Applications), or make a copy of it and open that copy instead.");
+            return 0;
+        }
+#endif
     }
 
 #ifndef USE_SDL_UI
@@ -1593,8 +1612,9 @@ pc_reset_hard_init(void)
        the chances of the SCSI controller ending up on the bridge. */
     video_voodoo_init();
 
-    if (joystick_type)
-        gameport_update_joystick_type(); /* installs game port if no device provides one, must be late */
+    /* installs first game port if no device provides one, must be late */
+    if (joystick_type[0])
+        gameport_update_joystick_type(0);
 
     ui_sb_update_panes();
 
@@ -1802,7 +1822,7 @@ pc_run(void)
 #ifdef USE_GDBSTUB /* avoid a KBC FIFO overflow when CPU emulation is stalled */
     }
 #endif
-    joystick_process();
+    joystick_process(0); // Gameport 0
     endblit();
 
     /* Done with this frame, update statistics. */
@@ -2007,13 +2027,11 @@ do_pause(int p)
 
 // Helper to find an accelerator key and return it's index in acc_keys
 int FindAccelerator(const char *name) {
-	for(int x=0;x<NUM_ACCELS;x++)
-	{
-		if(strcmp(acc_keys[x].name, name) == 0)
-		{
-			return(x);
-		}
-	}
-	// No key was found
-	return -1;
+    for (int x = 0; x < NUM_ACCELS; x++) {
+        if(strcmp(acc_keys[x].name, name) == 0)
+            return(x);
+    }
+
+    // No key was found
+    return -1;
 }
