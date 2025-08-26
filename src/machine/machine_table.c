@@ -4345,7 +4345,7 @@ const machine_t machines[] = {
         .nvrmask = 127,
         .jumpered_ecp_dma = 0,
         .default_jumpered_ecp_dma = -1,
-        .kbc_device = NULL,
+        .kbc_device = &kbc_at_device,
         .kbc_params = 0x00000000,
         .kbc_p1 = 0x000004f0,
         .gpio = 0xffffffff,
@@ -5089,7 +5089,7 @@ const machine_t machines[] = {
             .min_multi = 0,
             .max_multi = 0
         },
-        .bus_flags = MACHINE_AT,
+        .bus_flags = MACHINE_PS2,
         .flags = MACHINE_IDE,
         .ram = {
             .min = 1024,
@@ -9723,7 +9723,7 @@ const machine_t machines[] = {
             .min_multi = 0,
             .max_multi = 0
         },
-        .bus_flags = MACHINE_PCIV,
+        .bus_flags = MACHINE_PS2_PCIV,
         .flags = MACHINE_SUPER_IO | MACHINE_IDE | MACHINE_APM,
         .ram = {
             .min = 1024,
@@ -9856,7 +9856,7 @@ const machine_t machines[] = {
             .max_multi = 0
         },
         .bus_flags = MACHINE_PCI,
-        .flags = MACHINE_IDE | MACHINE_APM,
+        .flags = MACHINE_PS2_KBC | MACHINE_IDE | MACHINE_APM,
         .ram = {
             .min = 1024,
             .max = 131072,
@@ -9943,7 +9943,7 @@ const machine_t machines[] = {
             .min_multi = 0,
             .max_multi = 0
         },
-        .bus_flags = MACHINE_PCI,
+        .bus_flags = MACHINE_PS2_PCI,
         .flags = MACHINE_SUPER_IO | MACHINE_IDE_DUAL | MACHINE_APM,
         .ram = {
             .min = 1024,
@@ -12857,7 +12857,7 @@ const machine_t machines[] = {
             .max_multi = 1.5
         },
         .bus_flags = MACHINE_VLB,
-        .flags = MACHINE_APM,
+        .flags = MACHINE_PS2_KBC | MACHINE_APM,
         .ram = {
             .min = 2048,
             .max = 65536,
