@@ -3,7 +3,7 @@ name: CMake (macos)
 on:
 
   push:
-    branches: [ "master" ]
+    branches: [ "Fake_HDD_CD" ]
     paths:
       - src/**
       - cmake/**
@@ -15,7 +15,7 @@ on:
       - "!**/Makefile*"
 
   pull_request:
-    branches: [ "master" ]
+    branches: [ "Fake_HDD_CD" ]
     paths:
       - src/**
       - cmake/**
