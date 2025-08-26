@@ -8,15 +8,15 @@
  *
  *          Handling of the emulated machines.
  *
- *
- *
  * Authors: Sarah Walker, <https://pcem-emulator.co.uk/>
  *          Miran Grca, <mgrca8@gmail.com>
  *          Fred N. van Kempen, <decwiz@yahoo.com>
+ *          Jasmine Iwanek, <jriwanek@gmail.com>
  *
  *          Copyright 2008-2020 Sarah Walker.
- *          Copyright 2016-2020 Miran Grca.
+ *          Copyright 2016-2025 Miran Grca.
  *          Copyright 2017-2020 Fred N. van Kempen.
+ *          Copyright 2025      Jasmine Iwanek.
  */
 
 #ifndef EMU_MACHINE_H
@@ -196,6 +196,7 @@ enum {
     MACHINE_TYPE_486_S3_PCI,
     MACHINE_TYPE_486_MISC,
     MACHINE_TYPE_SOCKET4,
+    MACHINE_TYPE_SOCKET4_5,
     MACHINE_TYPE_SOCKET5,
     MACHINE_TYPE_SOCKET7_3V,
     MACHINE_TYPE_SOCKET7,
@@ -263,6 +264,7 @@ enum {
     MACHINE_CHIPSET_OPTI_493,
     MACHINE_CHIPSET_OPTI_495SLC,
     MACHINE_CHIPSET_OPTI_495SX,
+    MACHINE_CHIPSET_OPTI_496,
     MACHINE_CHIPSET_OPTI_498,
     MACHINE_CHIPSET_OPTI_499,
     MACHINE_CHIPSET_OPTI_895_802G,
@@ -336,7 +338,7 @@ typedef struct _machine_ {
     uint32_t               type;
     uintptr_t              chipset;
     int                  (*init)(const struct _machine_ *);
-    uint8_t              (*p1_handler)(uint8_t write, uint8_t val);
+    uint8_t              (*p1_handler)(void);
     uint32_t             (*gpio_handler)(uint8_t write, uint32_t val);
     uintptr_t              available_flag;
     uint32_t             (*gpio_acpi_handler)(uint8_t write, uint32_t val);
@@ -407,6 +409,9 @@ extern const char *    machine_get_internal_name_ex(int m);
 extern const char *    machine_get_nvr_name_ex(int m);
 extern int             machine_get_nvrmask(int m);
 extern int             machine_has_flags(int m, int flags);
+extern void            machine_set_ps2(void);
+extern void            machine_force_ps2(int is_ps2);
+extern int             machine_has_flags_ex(int flags);
 extern int             machine_has_bus(int m, int bus_flags);
 extern int             machine_has_cartridge(int m);
 extern int             machine_has_jumpered_ecp_dma(int m, int dma);
@@ -422,13 +427,19 @@ extern void            machine_close(void);
 extern int             machine_has_mouse(void);
 extern int             machine_is_sony(void);
 
+extern uint8_t         machine_compaq_p1_handler(void);
+extern uint8_t         machine_generic_p1_handler(void);
+extern uint8_t         machine_ncr_p1_handler(void);
+extern uint8_t         machine_ps1_p1_handler(void);
+extern uint8_t         machine_t3100e_p1_handler(void);
+
 extern uint8_t         machine_get_p1_default(void);
-extern uint8_t         machine_get_p1(void);
 extern void            machine_set_p1_default(uint8_t val);
 extern void            machine_set_p1(uint8_t val);
 extern void            machine_and_p1(uint8_t val);
 extern void            machine_init_p1(void);
 extern uint8_t         machine_handle_p1(uint8_t write, uint8_t val);
+extern uint8_t         machine_get_p1(uint8_t kbc_p1);
 extern uint32_t        machine_get_gpio_default(void);
 extern uint32_t        machine_get_gpio(void);
 extern void            machine_set_gpio_default(uint32_t val);
@@ -497,6 +508,8 @@ extern int             machine_at_ibmatpx_init(const machine_t *);
 /* IBM AT with Quadtel BIOS */
 extern int             machine_at_ibmatquadtel_init(const machine_t *);
 extern int             machine_at_pb286_init(const machine_t *);
+extern int             machine_at_mbc17_init(const machine_t *);
+extern int             machine_at_ax286_init(const machine_t *);
 /* Siemens PCD-2L. N82330 discrete machine. It segfaults in some places */
 extern int             machine_at_siemens_init(const machine_t *);
 
@@ -519,7 +532,11 @@ extern int             machine_at_neat_ami_init(const machine_t *);
 extern int             machine_at_3302_init(const machine_t *);
 extern int             machine_at_px286_init(const machine_t *);
 
+/* SCAMP */
+extern int             machine_at_pc7286_init(const machine_t *);
+
 /* SCAT */
+extern int             machine_at_pc5286_init(const machine_t *);
 extern int             machine_at_gw286ct_init(const machine_t *);
 extern int             machine_at_gdc212m_init(const machine_t *);
 extern int             machine_at_award286_init(const machine_t *);
@@ -565,6 +582,9 @@ extern int             machine_at_neat_init(const machine_t *);
 
 /* NEATsx */
 extern int             machine_at_if386sx_init(const machine_t *);
+
+/* OPTi 283 */
+extern int             machine_at_svc386sxp1_init(const machine_t *);
 
 /* OPTi 291 */
 extern int             machine_at_awardsx_init(const machine_t *);
@@ -647,6 +667,9 @@ extern int             machine_at_cs4031_init(const machine_t *);
 
 /* OPTi 381 */
 extern int             machine_at_ga486l_init(const machine_t *);
+
+/* OPTi 493 */
+extern int             machine_at_svc486wb_init(const machine_t *);
 
 /* OPTi 498 */
 extern int             machine_at_mvi486_init(const machine_t *);
@@ -853,6 +876,11 @@ extern int             machine_at_p5vl_init(const machine_t *);
 extern int             machine_at_excaliburpci2_init(const machine_t *);
 extern void            machine_at_sp4_common_init(const machine_t *model);
 extern int             machine_at_p5sp4_init(const machine_t *);
+extern int             machine_at_ecs50x_init(const machine_t *);
+
+/* m_at_socket4_5.c */
+/* OPTi 597 */
+extern int             machine_at_pci56001_init(const machine_t *);
 
 /* m_at_socket5.c */
 /* i430NX */
@@ -965,6 +993,10 @@ extern int             machine_at_p5vxb_init(const machine_t *);
 extern int             machine_at_p55va_init(const machine_t *);
 extern int             machine_at_gw2kte_init(const machine_t *);
 extern int             machine_at_brio80xx_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  lgibmx52_device;
+#endif
+extern int             machine_at_lgibmx52_init(const machine_t *);
 extern int             machine_at_pb680_init(const machine_t *);
 extern int             machine_at_pb810_init(const machine_t *);
 extern int             machine_at_mb520n_init(const machine_t *);

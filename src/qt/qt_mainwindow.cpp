@@ -33,6 +33,8 @@
 #include "qt_rendererstack.hpp"
 #include "qt_renderercommon.hpp"
 
+#include "qt_cgasettingsdialog.hpp"
+
 extern "C" {
 #include <86box/86box.h>
 #include <86box/config.h>
@@ -191,6 +193,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->stackedWidget->setMouseTracking(true);
     statusBar()->setVisible(!hide_status_bar);
 
+    auto hertz_label = new QLabel;
+    QTimer* frameRateTimer = new QTimer(this);
+    frameRateTimer->setInterval(1000);
+    frameRateTimer->setSingleShot(false);
+    connect(frameRateTimer, &QTimer::timeout, [hertz_label] {
+        hertz_label->setText(tr("%1 Hz").arg(QString::number(monitors[0].mon_actualrenderedframes.load()) + (monitors[0].mon_interlace ? "i" : "")));
+    });
+    statusBar()->addPermanentWidget(hertz_label);
+    frameRateTimer->start(1000);
+
     num_icon = QIcon(":/settings/qt/icons/num_lock_on.ico");
     num_icon_off = QIcon(":/settings/qt/icons/num_lock_off.ico");
     scroll_icon = QIcon(":/settings/qt/icons/scroll_lock_on.ico");
@@ -219,16 +231,6 @@ MainWindow::MainWindow(QWidget *parent)
     kana_label->setPixmap(kana_icon_off.pixmap(QSize(16, 16)));
     kana_label->setToolTip(QShortcut::tr("Kana Lock"));
     statusBar()->addPermanentWidget(kana_label);
-
-    auto hertz_label = new QLabel;
-    QTimer* frameRateTimer = new QTimer(this);
-    frameRateTimer->setInterval(1000);
-    frameRateTimer->setSingleShot(false);
-    connect(frameRateTimer, &QTimer::timeout, [this, hertz_label] {
-        hertz_label->setText(tr("%1 Hz").arg(monitors[0].mon_actualrenderedframes.load()));
-    });
-    statusBar()->addPermanentWidget(hertz_label);
-    frameRateTimer->start(1000);
 
     QTimer* ledKeyboardTimer = new QTimer(this);
     ledKeyboardTimer->setTimerType(Qt::CoarseTimer);
@@ -293,11 +295,18 @@ MainWindow::MainWindow(QWidget *parent)
 #else
         ui->menuTablet_tool->menuAction()->setVisible(false);
 #endif
+
+        bool enable_comp_option = false;
+        for (int i = 0; i < MONITORS_NUM; i++) {
+            if (monitors[i].mon_composite) { enable_comp_option = true; break; }
+        }
+
+        ui->actionCGA_composite_settings->setEnabled(enable_comp_option);
     });
 
     connect(this, &MainWindow::showMessageForNonQtThread, this, &MainWindow::showMessage_, Qt::QueuedConnection);
 
-    connect(this, &MainWindow::setTitle, this, [this, toolbar_label](const QString &title) {
+    connect(this, &MainWindow::setTitle, this, [toolbar_label](const QString &title) {
         if (dopause && !hide_tool_bar) {
             toolbar_label->setText(toolbar_label->text() + tr(" - PAUSED"));
             return;
@@ -678,6 +687,9 @@ MainWindow::MainWindow(QWidget *parent)
     if (do_auto_pause > 0) {
         ui->actionAuto_pause->setChecked(true);
     }
+    if (force_constant_mouse > 0) {
+        ui->actionUpdate_mouse_every_CPU_frame->setChecked(true);
+    }
 
 #ifdef Q_OS_MACOS
     ui->actionCtrl_Alt_Del->setShortcutVisibleInContextMenu(true);
@@ -736,7 +748,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     setContextMenuPolicy(Qt::PreventContextMenu);
     /* Remove default Shift+F10 handler, which unfocuses keyboard input even with no context menu. */
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    connect(new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F10), this), &QShortcut::activated, this, [](){});
+#else
     connect(new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F10), this), &QShortcut::activated, this, [](){});
+#endif
 
     connect(this, &MainWindow::initRendererMonitor, this, &MainWindow::initRendererMonitorSlot);
     connect(this, &MainWindow::initRendererMonitorForNonQtThread, this, &MainWindow::initRendererMonitorSlot, Qt::BlockingQueuedConnection);
@@ -1047,7 +1063,9 @@ MainWindow::showEvent(QShowEvent *event)
     }
     if (window_remember && vid_resize == 1) {
         ui->stackedWidget->setFixedSize(window_w, window_h);
+#ifndef Q_OS_MACOS
         QApplication::processEvents();
+#endif
         this->adjustSize();
     }
 }
@@ -1488,7 +1506,7 @@ MainWindow::eventFilter(QObject *receiver, QEvent *event)
         if (event->type() == QEvent::WindowBlocked) {
             window_blocked = true;
             curdopause = dopause;
-            plat_pause(isShowMessage ? 2 : 1);
+            plat_pause(isNonPause ? dopause : (isShowMessage ? 2 : 1));
             emit setMouseCapture(false);
             releaseKeyboard();
         } else if (event->type() == QEvent::WindowUnblocked) {
@@ -1521,6 +1539,13 @@ MainWindow::refreshMediaMenu()
     int int_ax_kbd = machine_has_flags(machine, MACHINE_KEYBOARD_JIS) &&
                      !machine_has_bus(machine, MACHINE_BUS_PS2_PORTS);
     kana_label->setVisible(ext_ax_kbd || int_ax_kbd);
+
+    bool enable_comp_option = false;
+    for (int i = 0; i < MONITORS_NUM; i++) {
+        if (monitors[i].mon_composite) { enable_comp_option = true; break; }
+    }
+
+    ui->actionCGA_composite_settings->setEnabled(enable_comp_option);
 }
 
 void
@@ -1630,11 +1655,12 @@ MainWindow::focusOutEvent(QFocusEvent *event)
 void
 MainWindow::on_actionResizable_window_triggered(bool checked)
 {
+    hide();
     if (checked) {
         vid_resize = 1;
-        setWindowFlag(Qt::WindowMaximizeButtonHint, true);
-        setWindowFlag(Qt::MSWindowsFixedSizeDialogHint, false);
         setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+        setWindowFlag(Qt::MSWindowsFixedSizeDialogHint, false);
+        setWindowFlag(Qt::WindowMaximizeButtonHint, true);
         for (int i = 1; i < MONITORS_NUM; i++) {
             if (monitors[i].target_buffer) {
                 renderers[i]->setWindowFlag(Qt::WindowMaximizeButtonHint, true);
@@ -1960,9 +1986,12 @@ MainWindow::on_actionCGA_PCjr_Tandy_EGA_S_VGA_overscan_triggered()
 void
 MainWindow::on_actionChange_contrast_for_monochrome_display_triggered()
 {
+    startblit();
     vid_cga_contrast ^= 1;
-    cgapal_rebuild();
+    for (int i = 0; i < MONITORS_NUM; i++)
+        cgapal_rebuild_monitor(i);
     config_save();
+    endblit();
 }
 
 void
@@ -1976,6 +2005,16 @@ MainWindow::on_actionAuto_pause_triggered()
 {
     do_auto_pause ^= 1;
     ui->actionAuto_pause->setChecked(do_auto_pause > 0 ? true : false);
+    config_save();
+}
+
+void
+MainWindow::on_actionUpdate_mouse_every_CPU_frame_triggered()
+{
+    force_constant_mouse ^= 1;
+    ui->actionUpdate_mouse_every_CPU_frame->setChecked(force_constant_mouse > 0 ? true : false);
+    mouse_update_sample_rate();
+    config_save();
 }
 
 void
@@ -2024,8 +2063,6 @@ MainWindow::on_actionHiDPI_scaling_triggered()
 void
 MainWindow::on_actionHide_status_bar_triggered()
 {
-    auto w = ui->stackedWidget->width();
-    auto h = ui->stackedWidget->height();
     hide_status_bar ^= 1;
     ui->actionHide_status_bar->setChecked(hide_status_bar);
     statusBar()->setVisible(!hide_status_bar);
@@ -2037,7 +2074,7 @@ MainWindow::on_actionHide_status_bar_triggered()
     } else {
         int vid_resize_orig = vid_resize;
         vid_resize          = 0;
-        emit resizeContents(w, h);
+        emit resizeContents(monitors[0].mon_scrnsz_x, monitors[0].mon_scrnsz_y);
         vid_resize = vid_resize_orig;
         if (vid_resize == 1)
             setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
@@ -2047,8 +2084,6 @@ MainWindow::on_actionHide_status_bar_triggered()
 void
 MainWindow::on_actionHide_tool_bar_triggered()
 {
-    auto w = ui->stackedWidget->width();
-    auto h = ui->stackedWidget->height();
     hide_tool_bar ^= 1;
     ui->actionHide_tool_bar->setChecked(hide_tool_bar);
     ui->toolBar->setVisible(!hide_tool_bar);
@@ -2057,7 +2092,7 @@ MainWindow::on_actionHide_tool_bar_triggered()
     } else {
         int vid_resize_orig = vid_resize;
         vid_resize          = 0;
-        emit resizeContents(w, h);
+        emit resizeContents(monitors[0].mon_scrnsz_x, monitors[0].mon_scrnsz_y);
         vid_resize = vid_resize_orig;
         if (vid_resize == 1)
             setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
@@ -2310,3 +2345,14 @@ void MainWindow::on_actionACPI_Shutdown_triggered()
 {
     acpi_pwrbut_pressed = 1;
 }
+
+void MainWindow::on_actionCGA_composite_settings_triggered()
+{
+    isNonPause = true;
+    CGASettingsDialog dialog;
+    dialog.setModal(true);
+    dialog.exec();
+    isNonPause = false;
+    config_save();
+}
+
