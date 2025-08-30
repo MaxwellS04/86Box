@@ -15,7 +15,6 @@ on:
       - "!**/Makefile*"
 
   pull_request:
-    branches: [ "Fake_HDD_CD" ]
     paths:
       - src/**
       - cmake/**
