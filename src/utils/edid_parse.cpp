@@ -29,8 +29,7 @@ extern "C"
     bool parse_edid_decode_file(const char* path, uint8_t* out, ssize_t* size_out) 
     {
         std::regex regexLib("^([a-f0-9]{32}|[a-f0-9 ]{47})$", std::regex_constants::egrep);
-        FILE* file;
-        pclog("Parse %s\n", path);
+        FILE* file = NULL;
         try {
             bool bom = ini_detect_bom(path);
             {
@@ -54,7 +53,7 @@ extern "C"
                             return false;
                         }
 
-                        if (str.find("edid-decode") == std::string::npos) {
+                        if (str.find("edid-decode (hex):") == std::string::npos) {
                             return false;
                         }
                     }
