@@ -145,7 +145,7 @@ static const struct cdrom_drive_types_s {
     { "BTC",      "CD-ROM BCD36XH",   "U1.0", "btc_36xh",       BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2, -1 } },
     { "CREATIVE", "CD3630E",          "A   ", "creative_3630",  BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2,  0 } },
     { "CREATIVE", "CD5233E",          "2.02", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
-    { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2, -1 } },
+    { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  1, -1 } },
     { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  1, -1 } },
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  2,  2, -1 } },
@@ -157,6 +157,7 @@ static const struct cdrom_drive_types_s {
     { "HL-DT-ST", "DVDRAM GSA-4160B", "A306", "hldtst_4160",    BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  5 } },
     { "KENWOOD",  "CD-ROM UCR-421",   "208E", "kenwood_421",    BUS_TYPE_IDE,  0, 72, 36, 0, 0, {  4,  2,  2,  4 } },
     { "LEOPTICS", "CD-ROM 24X",       "4.6C", "leoptics_24x",   BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } },
+    { "LG",       "CD-ROM CRD-8160B", "1.15", "lg_8160",        BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  1, -1 } }, /* Later version of GoldStar CRD-8160D */
     { "LG",       "CD-ROM CRD-8240B", "1.19", "lg_8240",        BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  1, -1 } },
     { "LG",       "CD-ROM CRD-8322B", "1.24", "lg_8322",        BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  1,  0 } },
     { "LG",       "CD-ROM CRD-8400C", "1.02", "lg_8400",        BUS_TYPE_IDE,  0, 40, 36, 0, 0, {  4,  2,  2,  2 } },
