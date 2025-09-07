@@ -444,9 +444,12 @@ extern void    ibm_rgb528_ramdac_out(uint16_t addr, int rs2, uint8_t val, void *
 extern uint8_t ibm_rgb528_ramdac_in(uint16_t addr, int rs2, void *priv, svga_t *svga);
 extern void    ibm_rgb528_recalctimings(void *priv, svga_t *svga);
 extern void    ibm_rgb528_hwcursor_draw(svga_t *svga, int displine);
+extern float   ibm_rgb528_getclock(int clock, void *priv);
+extern void    ibm_rgb528_ramdac_set_ref_clock(void *priv, svga_t *svga, float ref_clock);
 
 extern void  icd2061_write(void *priv, int val);
 extern float icd2061_getclock(int clock, void *priv);
+extern void  icd2061_set_ref_clock(void *priv, svga_t *svga, float ref_clock);
 
 /* The code is the same, the #define's are so that the correct name can be used. */
 #    define ics9161_write    icd2061_write
@@ -463,6 +466,8 @@ extern uint8_t sc1148x_ramdac_in(uint16_t addr, int rs2, void *priv, svga_t *svg
 
 extern void    sc1502x_ramdac_out(uint16_t addr, uint8_t val, void *priv, svga_t *svga);
 extern uint8_t sc1502x_ramdac_in(uint16_t addr, void *priv, svga_t *svga);
+extern void    sc1502x_rs2_ramdac_out(uint16_t addr, int rs2, uint8_t val, void *priv, svga_t *svga);
+extern uint8_t sc1502x_rs2_ramdac_in(uint16_t addr, int rs2, void *priv, svga_t *svga);
 
 extern void    sdac_ramdac_out(uint16_t addr, int rs2, uint8_t val, void *priv, svga_t *svga);
 extern uint8_t sdac_ramdac_in(uint16_t addr, int rs2, void *priv, svga_t *svga);
@@ -514,6 +519,7 @@ extern const device_t sc11487_ramdac_device;
 extern const device_t sc11486_ramdac_device;
 extern const device_t sc11484_nors2_ramdac_device;
 extern const device_t sc1502x_ramdac_device;
+extern const device_t sc1502x_rs2_ramdac_device;
 extern const device_t sdac_ramdac_device;
 extern const device_t stg_ramdac_device;
 extern const device_t tkd8001_ramdac_device;
