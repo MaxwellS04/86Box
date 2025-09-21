@@ -15352,7 +15352,7 @@ const machine_t machines[] = {
             .max_multi = 3.5
         },
         .bus_flags = MACHINE_PS2_PCI,
-        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI, /* Machine has internal video: ATI Mach64GT-B 3D Rage II */
+        .flags = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_SOUND | MACHINE_GAMEPORT, /* Machine has internal video: ATI Mach64GT-B 3D Rage II */
         .ram = {
             .min = 8192,
             .max = 262144,
@@ -15371,7 +15371,7 @@ const machine_t machines[] = {
         .fdc_device = NULL,
         .sio_device = NULL,
         .vid_device = NULL,
-        .snd_device = NULL,
+        .snd_device = &ymf715_onboard_device,
         .net_device = NULL
     },
     /* The BIOS sends KBC command BB and expects it to output a byte, which is AMI KBC behavior.
@@ -15476,7 +15476,7 @@ const machine_t machines[] = {
         .gpio_acpi_handler = NULL,
         .cpu = {
             .package = CPU_PKG_SOCKET5_7,
-            .block = CPU_BLOCK_NONE,
+            .block = CPU_BLOCK(CPU_Cx6x86MX),
             .min_bus = 50000000,
             .max_bus = 75000000,
             .min_voltage = 2100,
@@ -19531,7 +19531,7 @@ machine_has_bus(int m, int bus_flags)
     if ((bus_flags & MACHINE_BUS_XT_KBD) &&
         !(machines[m].bus_flags & MACHINE_BUS_ISA16) &&
         (!(machines[m].bus_flags & MACHINE_BUS_PS2_PORTS) ||
-        !(strcmp(machine_get_internal_name(), "pc5086"))))
+        (machines[m].init == machine_xt_pc5086_init)))
         ret |= MACHINE_BUS_XT_KBD;
 
 #ifdef ONLY_AT_KBD_ON_AT_KBC
