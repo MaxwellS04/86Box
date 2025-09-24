@@ -830,11 +830,9 @@ OpenGLRenderer::OpenGLRenderer(QWidget *parent)
     format.setVersion(3, 2);
 #endif
     format.setProfile(QSurfaceFormat::OpenGLContextProfile::CoreProfile);
-
-    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES)
-        format.setRenderableType(QSurfaceFormat::OpenGLES);
-
+    format.setRenderableType(QSurfaceFormat::OpenGL);
     format.setSwapInterval(video_vsync ? 1 : 0);
+    format.setAlphaBufferSize(0);
 
     setFormat(format);
 
@@ -1223,6 +1221,9 @@ OpenGLRenderer::resizeEvent(QResizeEvent *event)
         destination.y(),
         destination.width(),
         destination.height());
+    
+    if (video_framerate == -1)
+        render();
 }
 
 void
