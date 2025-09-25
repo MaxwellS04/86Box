@@ -146,7 +146,7 @@ static const struct cdrom_drive_types_s {
     { "CREATIVE", "CD3630E",          "A   ", "creative_3630",  BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2,  0 } },
     { "CREATIVE", "CD5233E",          "2.02", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  1, -1 } },
-    { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  1, -1 } },
+    { "GOLDSTAR", "GCD-R542B",        "1.20", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  1, -1 } },
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2, -1 } },
