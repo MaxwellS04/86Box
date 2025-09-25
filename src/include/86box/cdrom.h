@@ -146,7 +146,7 @@ static const struct cdrom_drive_types_s {
     { "CREATIVE", "CD3630E",          "A   ", "creative_3630",  BUS_TYPE_IDE,  0, 36, 36, 0, 0, {  4,  2,  2,  0 } },
     { "CREATIVE", "CD5233E",          "2.02", "creative_5233",  BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
     { "GOLDSTAR", "CRD-8160B",        "3.14", "goldstar_8160",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  1, -1 } },
-    { "GOLDSTAR", "GCD-R542B",        "1.04", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  1, -1 } },
+    { "GOLDSTAR", "GCD-R542B",        "1.20", "goldstar_542",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  1, -1 } },
     { "GOLDSTAR", "GCD-R560B",        "1.00", "goldstar_560",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "GOLDSTAR", "GCD-R580B",        "1.04", "goldstar_580",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  2,  2, -1 } },
     { "HITACHI",  "CDR-8130",         "0020", "hitachi_r8130",  BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  2, -1 } },
@@ -170,14 +170,15 @@ static const struct cdrom_drive_types_s {
     { "LITE-ON",  "SOHD167T",         "9S14", "liteon_167t",    BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } },
     { "MATSHITA", "CR-571",           "1.0e", "matshita_571",   BUS_TYPE_IDE,  0,  2, 36, 0, 0, {  0, -1, -1, -1 } },
     { "MATSHITA", "CR-572",           "1.0j", "matshita_572",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  0, -1, -1, -1 } },
+    { "MATSHITA", "CR-581",           "1.04", "matshita_581",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  1, -1 } },
     { "MATSHITA", "CD-ROM CR-583",    "1.07", "matshita_583",   BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  2,  1, -1 } },
     { "MATSHITA", "CD-ROM CR-585",    "Z18P", "matshita_585",   BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  0 } }, /* Early version of CR-587(?) */
     { "MATSHITA", "CD-ROM CR-587",    "7S13", "matshita_587",   BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "DVD-ROM SR-8587",  "CA5B", "matshita_8587",  BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } },
-    /* TODO: Find an IDENTIFY and/or INQUIRY dump for early Mitsumi IDE CD-ROM drives. */
-    { "MITSUMI",  "CRMC-FX400D",      "????", "mitsumi_400d",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  2, -1 } },
-    { "MITSUMI",  "CRMC-FX600S",      "????", "mitsumi_600s",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } },
+    /* TODO: Find an IDENTIFY and/or INQUIRY dump for four Mitsumi IDE CD-ROM drives. */
+    { "MITSUMI",  "FX400E",           "K02 ", "mitsumi_400e",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  2, -1 } },
+    { "MITSUMI",  "FX600S",           "????", "mitsumi_600s",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX810T4",     "????", "mitsumi_810t4",  BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  4,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX120T",      "????", "mitsumi_120t",   BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  4,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX322M",      "????", "mitsumi_322m",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2, -1 } },
@@ -185,7 +186,8 @@ static const struct cdrom_drive_types_s {
     { "MITSUMI",  "CRMC-FX4820T",     "D02A", "mitsumi_4820t",  BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } },
     { "NEC",      "CD-ROM DRIVE:260", "1.00", "nec_260_early",  BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:260", "1.01", "nec_260",        BUS_TYPE_IDE,  1,  4, 36, 1, 0, {  0, -1, -1, -1 } },
-    { "NEC",      "CD-ROM DRIVE:273", "4.25", "nec_273",        BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  0, -1, -1, -1 } },
+    { "NEC",      "CD-ROM DRIVE:272", "3.02", "nec_272",        BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  0, -1, -1, -1 } },
+    { "NEC",      "CD-ROM DRIVE:273", "4.20", "nec_273",        BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  2, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:280", "1.05", "nec_280_early",  BUS_TYPE_IDE,  0,  6, 36, 1, 0, {  3,  2,  2, -1 } },
     { "NEC",      "CD-ROM DRIVE:280", "3.08", "nec_280",        BUS_TYPE_IDE,  0,  8, 36, 1, 0, {  4,  2,  1, -1 } },
     { "NEC",      "CD-ROM DRIVE:289", "1.00", "nec_289",        BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  0 } },
