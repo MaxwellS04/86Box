@@ -177,8 +177,8 @@ static const struct cdrom_drive_types_s {
     { "MATSHITA", "CD-ROM CR-588",    "LS15", "matshita_588",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } },
     { "MATSHITA", "DVD-ROM SR-8587",  "CA5B", "matshita_8587",  BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } },
     /* TODO: Find an IDENTIFY and/or INQUIRY dump for four Mitsumi IDE CD-ROM drives. */
-    { "MITSUMI",  "FX400E",           "K02 ", "mitsumi_400e",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  2, -1 } },
-    { "MITSUMI",  "FX600S",           "????", "mitsumi_600s",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } },
+    { "MITSUMI",  "CRMC-FX400E",      "K02 ", "mitsumi_400e",   BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  3,  2,  2, -1 } },
+    { "MITSUMI",  "CRMC-FX600S",      "????", "mitsumi_600s",   BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX810T4",     "????", "mitsumi_810t4",  BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  4,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX120T",      "????", "mitsumi_120t",   BUS_TYPE_IDE,  0, 12, 36, 0, 0, {  4,  2,  2, -1 } },
     { "MITSUMI",  "CRMC-FX322M",      "????", "mitsumi_322m",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2, -1 } },
