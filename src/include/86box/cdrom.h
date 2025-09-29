@@ -165,6 +165,7 @@ static const struct cdrom_drive_types_s {
     { "LG",       "CD-ROM CRD-8522B", "2.03", "lg_8522",        BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
     { "LG",       "DVD-ROM DRD-820B", "1.04", "lg_d820",        BUS_TYPE_IDE,  0, 24, 36, 0, 1, {  4,  2,  2,  4 } },
     { "LG",       "DVDROM DRD-8160B", "1.01", "lg_8160b",       BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } },
+    { "LITE-ON",  "LTN301",           "?S??", "liteon_301",     BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "LITE-ON",  "LTN486S",          "YS0N", "liteon_486s",    BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } },
     { "LITE-ON",  "LTN526D",          "YSR5", "liteon_526d",    BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } }, /* Confirmed to be 52x, was the basis for deducing the other one's speed. */
     { "LITE-ON",  "SOHD167T",         "9S14", "liteon_167t",    BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  4 } },
@@ -212,7 +213,7 @@ static const struct cdrom_drive_types_s {
     { "SONY",     "CD-ROM CDU311",    "3.0h", "sony_311",       BUS_TYPE_IDE,  0,  8, 36, 0, 0, {  3,  2,  1, -1 } },
     { "SONY",     "CD-ROM CDU611",    "BA  ", "sony_611",       BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  0 } },
     { "SONY",     "CD-ROM CDU5225",   "NYS4", "sony_5225",      BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
-    { "TEAC",     "CD 55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  1,  4, 36, 0, 0, {  2, -1, -1, -1 } }, /* Firmware version confirmed in its manual, but it's not %100 confirmed yet. */
+    { "TEAC",     "CD 55A",           "2.10", "teac_55a",       BUS_TYPE_IDE,  1,  4, 36, 0, 0, {  2, -1, -1, -1 } }, /* Firmware version confirmed in its manual, although it's not %100 confirmed yet. */
     { "TEAC",     "CD-SN250",         "N.0A", "teac_520",       BUS_TYPE_IDE,  0, 10, 36, 0, 0, {  3,  2,  1,  0 } },
     { "TEAC",     "CD-516E",          "1.0G", "teac_516e",      BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  3,  2,  2,  1 } },
     { "TEAC",     "CD-524EA",         "3.0D", "teac_524ea",     BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } },
