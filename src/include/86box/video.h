@@ -8,8 +8,6 @@
  *
  *          Definitions for the video controller module.
  *
- *
- *
  * Authors: Sarah Walker, <https://pcem-emulator.co.uk/>
  *          Miran Grca, <mgrca8@gmail.com>
  *          Fred N. van Kempen, <decwiz@yahoo.com>
@@ -18,7 +16,6 @@
  *          Copyright 2016-2019 Miran Grca.
  *          Copyright 2017-2019 Fred N. van Kempen.
  */
-
 #ifndef EMU_VIDEO_H
 #define EMU_VIDEO_H
 
@@ -30,8 +27,8 @@ using atomic_int  = std::atomic_int;
 #    include <stdatomic.h>
 #endif
 
-#define makecol(r, g, b)   ((b) | ((g) << 8) | ((r) << 16))
-#define makecol32(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
+#define makecol(r, g, b)   ((b) | ((g) << 8) | ((r) << 16) | 0xff000000)
+#define makecol32(r, g, b) ((b) | ((g) << 8) | ((r) << 16) | 0xff000000)
 #define getcolr(color) (((color) >> 16) & 0xFF)
 #define getcolg(color) (((color) >> 8) & 0xFF)
 #define getcolb(color) ((color) & 0xFF)
@@ -335,6 +332,9 @@ extern void da2_device_add(void);
 extern const device_t mach64gx_isa_device;
 extern const device_t mach64gx_vlb_device;
 extern const device_t mach64gx_pci_device;
+extern const device_t mach64ct_device;
+extern const device_t mach64ct_device_onboard;
+extern const device_t mach64vt_device;
 extern const device_t mach64vt2_device;
 
 /* ATi 18800 */
