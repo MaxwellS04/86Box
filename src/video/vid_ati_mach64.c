@@ -51,6 +51,7 @@
 #define BIOS_ROMCT_PATH   "roms/video/mach64/mach64-68b110b8cddfd546595673.bin"
 #define BIOS_ROMVT_PATH   "roms/video/mach64/mach64vt-660c60c135839345779942.bin"
 #define BIOS_ROMVT2_PATH  "roms/video/mach64/atimach64vt2pci.bin"
+#define BIOS_ROMVT4_PATH  "roms/video/mach64/machvt4.vbi"
 
 #define FIFO_SIZE         65536
 #define FIFO_MASK         (FIFO_SIZE - 1)
@@ -79,7 +80,8 @@ enum {
     MACH64_GX = 0,
     MACH64_CT,
     MACH64_VT,
-    MACH64_VT2
+    MACH64_VT2,
+    MACH64_VT4
 };
 
 typedef struct mach64_t {
@@ -2607,7 +2609,7 @@ mach64_ext_readb(uint32_t addr, void *priv)
             case 0xdd:
             case 0xde:
             case 0xdf:
-                if (mach64->type != MACH64_VT2 && mach64->type != MACH64_VT)
+                if (mach64->type != MACH64_VT2 && mach64->type != MACH64_VT && mach64->type != MACH64_VT4)
                     mach64->config_cntl = (mach64->config_cntl & ~0x3ff0) | ((mach64->linear_base >> 22) << 4);
                 else
                     mach64->config_cntl = (mach64->config_cntl & ~0x3ff0) | ((mach64->linear_base >> 24) << 4);
@@ -5060,6 +5062,37 @@ mach64vt2_init(const device_t *info)
 
     return mach64;
 }
+static void *
+mach64vt4_init(const device_t *info)
+{
+    mach64_t *mach64 = mach64_common_init(info);
+    svga_t   *svga   = &mach64->svga;
+
+    svga->dac_hwcursor_draw = NULL;
+
+    svga->hwcursor.cur_ysize = 64;
+    svga->hwcursor.cur_xsize = 64;
+
+    video_inform(VIDEO_FLAG_TYPE_SPECIAL, &timing_mach64_pci);
+
+    mach64->pci                  = 1;
+    mach64->vlb                  = 0;
+    mach64->pci_id               = 0x5656;
+    mach64->config_chip_id       = 0x40005656;
+    mach64->dac_cntl             = 1 << 16; /*Internal 24-bit DAC*/
+    mach64->config_stat0         = 4;
+    mach64->use_block_decoded_io = 4;
+
+    ati_eeprom_load(&mach64->eeprom, "mach64vt4.nvr", 1);
+
+    rom_init(&mach64->bios_rom, BIOS_ROMVT4_PATH, 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
+
+    mem_mapping_disable(&mach64->bios_rom.mapping);
+
+    svga->vblank_start = mach64_vblank_start;
+
+    return mach64;
+}
 
 int
 mach64gx_available(void)
@@ -5090,6 +5123,11 @@ int
 mach64vt2_available(void)
 {
     return rom_present(BIOS_ROMVT2_PATH);
+}
+int
+mach64vt4_available(void)
+{
+    return rom_present(BIOS_ROMVT4_PATH);
 }
 
 void
@@ -5261,6 +5299,20 @@ const device_t mach64vt2_device = {
     .close         = mach64_close,
     .reset         = NULL,
     .available     = mach64vt2_available,
+    .speed_changed = mach64_speed_changed,
+    .force_redraw  = mach64_force_redraw,
+    .config        = mach64vt2_config
+};
+
+const device_t mach64vt4_device = {
+    .name          = "ATI Video Xpression+ (ATI Mach64VT4)",
+    .internal_name = "mach64vt4",
+    .flags         = DEVICE_PCI,
+    .local         = MACH64_VT4,
+    .init          = mach64vt4_init,
+    .close         = mach64_close,
+    .reset         = NULL,
+    .available     = mach64vt4_available,
     .speed_changed = mach64_speed_changed,
     .force_redraw  = mach64_force_redraw,
     .config        = mach64vt2_config
