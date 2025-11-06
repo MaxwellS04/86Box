@@ -970,6 +970,11 @@ extern const device_t  p54tp4xe_device;
 #endif
 extern int             machine_at_p54tp4xe_init(const machine_t *);
 extern int             machine_at_exp8551_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t vectra52_device;
+#endif
+extern int             machine_at_vectra52_init(const machine_t *);
+extern int             machine_at_vectra500mt_init(const machine_t *);
 extern int             machine_at_vectra54_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  thor_device;
@@ -1057,6 +1062,9 @@ extern int             machine_at_8500tvxa_init(const machine_t *);
 extern int             machine_at_presario2240_init(const machine_t *);
 extern int             machine_at_presario4500_init(const machine_t *);
 extern int             machine_at_dellhannibalp_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  p5vxb_device;
+#endif
 extern int             machine_at_p5vxb_init(const machine_t *);
 extern int             machine_at_p55va_init(const machine_t *);
 extern int             machine_at_gw2kte_init(const machine_t *);
@@ -1097,6 +1105,9 @@ extern int             machine_at_via809ds_init(const machine_t *);
 
 /* SiS 5571 */
 extern int             machine_at_cb52xsi_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  ms5146_device;
+#endif
 extern int             machine_at_ms5146_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  r534f_device;
@@ -1212,6 +1223,9 @@ extern int             machine_at_ms6119_init(const machine_t *);
 extern const device_t  ms6147_device;
 #endif
 extern int             machine_at_ms6147_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  p6sba_device;
+#endif
 extern int             machine_at_p6sba_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  s1846_device;
@@ -1431,6 +1445,10 @@ extern int             machine_xt_pravetz16s_cpu12p_init(const machine_t *);
 extern int             machine_xt_pb8810_init(const machine_t *);
 extern int             machine_xt_sansx16_init(const machine_t *);
 extern int             machine_xt_pcxt_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t  to16_device;
+#endif
+extern int             machine_xt_to16_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  vendex_device;
 #endif
