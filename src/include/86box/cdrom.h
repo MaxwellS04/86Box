@@ -162,7 +162,7 @@ static const struct cdrom_drive_types_s {
     { "HITACHI",  "GD-7500",          "A1  ", "hitachi_7500",   BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  4 } },
     { "HL-DT-ST", "CD-ROM GCR-8526B", "1.01", "hldtst_8526b",   BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  2 } },
     { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  4 } }, /* DVD version of GCR-8526B */
-    { "HL-DT-ST", "DVDRAM GSA-4160",  "A302", "hldtst_4160",    BUS_TYPE_IDE,  0, 40, 36, 0, 0, {  4,  2,  2,  2 } },
+    { "HL-DT-ST", "DVDRAM GSA-4160",  "A302", "hldtst_4160",    BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  2 } },
     { "HL-DT-ST", "DVDRAM GSA-H42L",  "SL01", "hldtst_h42l",    BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  5 } },
     { "KENWOOD",  "CD-ROM UCR-421",   "208E", "kenwood_421",    BUS_TYPE_IDE,  0, 72, 36, 0, 0, {  4,  2,  2,  4 } },
     { "LEOPTICS", "CD-ROM 24X",       "4.6C", "leoptics_24x",   BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } },
@@ -236,7 +236,7 @@ static const struct cdrom_drive_types_s {
     { "TEAC",     "CD-532EA",         "3.0A", "teac_532e",      BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  2 } },
     { "TEAC",     "CD-540E",          "2.0U", "teac_540e",      BUS_TYPE_IDE,  0, 40, 36, 0, 0, {  4,  2,  2,  2 } },
     { "TEAC",     "CD-P520E",         "2.0R", "teac_520e",      BUS_TYPE_IDE,  0, 52, 36, 0, 0, {  4,  2,  2,  4 } },
-    { "TEAC",     "DV-516D",          "????", "teac_516d",      BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
+    { "TEAC",     "DV-516D",          "????", "teac_516d",      BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  2 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "TOSHIBA",  "CD-ROM XM-5302TA", "0305", "toshiba_5302ta", BUS_TYPE_IDE,  0,  4, 96, 0, 0, {  0, -1, -1, -1 } },
     { "TOSHIBA",  "CD-ROM XM-1502B",  "RA70", "toshiba_1502b",  BUS_TYPE_IDE,  0, 10, 96, 0, 0, {  3,  2,  1, -1 } }, /* Slimline CD-ROM drive */
     { "TOSHIBA",  "CD-ROM XM-5702B",  "TA70", "toshiba_5702b",  BUS_TYPE_IDE,  0, 12, 96, 0, 0, {  3,  2,  1, -1 } },
