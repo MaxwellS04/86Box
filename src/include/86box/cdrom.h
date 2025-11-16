@@ -164,6 +164,7 @@ static const struct cdrom_drive_types_s {
     { "HL-DT-ST", "DVDROM GDR-8163B", "0L23", "hldtst_8163",    BUS_TYPE_IDE,  0, 52, 36, 0, 1, {  4,  2,  2,  4 } }, /* DVD version of GCR-8526B */
     { "HL-DT-ST", "DVDRAM GSA-4160",  "A302", "hldtst_4160",    BUS_TYPE_IDE,  0, 40, 36, 0, 1, {  4,  2,  2,  2 } },
     { "HL-DT-ST", "DVDRAM GSA-H42L",  "SL01", "hldtst_h42l",    BUS_TYPE_IDE,  0, 48, 36, 0, 1, {  4,  2,  2,  5 } },
+    { "HP",       "7200e",            "1.34", "hp_7200",        BUS_TYPE_IDE,  0,  6, 36, 0, 0, {  3,  0,  0,  0 } },
     { "KENWOOD",  "CD-ROM UCR-421",   "208E", "kenwood_421",    BUS_TYPE_IDE,  0, 72, 36, 0, 0, {  4,  2,  2,  4 } },
     { "LEOPTICS", "CD-ROM 24X",       "4.6C", "leoptics_24x",   BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8160B", "1.15", "lg_8160b",       BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  1, -1 } }, /* Later version of GoldStar CRD-8160B */
@@ -252,6 +253,7 @@ static const struct cdrom_drive_types_s {
     { "CHINON",   "CD-ROM CDS-431",   "H42 ", "chinon_431",     BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
     { "CHINON",   "CD-ROM CDX-435",   "M62 ", "chinon_435",     BUS_TYPE_SCSI, 1,  2, 36, 1, 0, { -1, -1, -1, -1 } },
     { "DEC",      "RRD45   (C) DEC",  "0436", "dec_45",         BUS_TYPE_SCSI, 1,  4, 36, 0, 0, { -1, -1, -1, -1 } },
+    { "GRUNDIG",  "CDR100",           "1.20", "grundig_100",    BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } }, /* Early version of Philips CDD2000 */
     { "MATSHITA", "CD-ROM CR-501",    "1.0b", "matshita_501",   BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
     { "MATSHITA", "CD-ROM CR-504",    "4.0i", "matshita_504",   BUS_TYPE_SCSI, 1,  4, 36, 0, 0, { -1, -1, -1, -1 } }, /* Also known as AppleCD 600i */
     { "MATSHITA", "CD-ROM CR-506",    "8.0h", "matshita_506",   BUS_TYPE_SCSI, 1,  8, 36, 0, 0, { -1, -1, -1, -1 } }, /* Also known as AppleCD 1200i */
@@ -262,10 +264,7 @@ static const struct cdrom_drive_types_s {
     { "NEC",      "CD-ROM DRIVE:77",  "1.06", "nec_77",         BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:211", "1.00", "nec_211",        BUS_TYPE_SCSI, 2,  3, 36, 0, 0, { -1, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:464", "1.05", "nec_464",        BUS_TYPE_SCSI, 2,  3, 36, 0, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the CDR-400. */
-    { "ShinaKen", "CD-ROM DM-3x1S",   "1.04", "shinaken_3x1s",  BUS_TYPE_SCSI, 1,  3, 36, 0, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the name. */
-    { "SONY",     "CD-ROM CDU-541",   "1.0i", "sony_541",       BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
-    { "SONY",     "CD-ROM CDU-561",   "1.9a", "sony_561",       BUS_TYPE_SCSI, 2,  2, 36, 1, 0, { -1, -1, -1, -1 } }, /* Also known as AppleCD 300 */
-    { "SONY",     "CD-ROM CDU-76S",   "1.00", "sony_76s",       BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } },
+    { "PHILIPS",  "CDD2000",          "1.26", "philips_2000",   BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PHILIPS",  "CDD2600",          "1.07", "philips_2600",   BUS_TYPE_SCSI, 2,  6, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PIONEER",  "CD-ROM DRM-604X",  "2403", "pioneer_604x",   BUS_TYPE_SCSI, 2,  4, 47, 0, 0, { -1, -1, -1, -1 } }, /* NOTE: The real thing is a CD changer drive! */
     { "PLEXTOR",  "CD-ROM PX-43CH",   "0204", "plextor_43ch",   BUS_TYPE_SCSI, 2,  4, 36, 1, 0, { -1, -1, -1, -1 } }, /* Caddy. */
@@ -273,6 +272,10 @@ static const struct cdrom_drive_types_s {
     { "PLEXTOR",  "CD-ROM PX-20TSi",  "0101", "plextor_20ts",   BUS_TYPE_SCSI, 1, 20, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-32TS",   "1.03", "plextor_32ts",   BUS_TYPE_SCSI, 2, 32, 36, 0, 0, { -1, -1, -1, -1 } },
     { "PLEXTOR",  "CD-ROM PX-40TS",   "1.14", "plextor_40ts",   BUS_TYPE_SCSI, 2, 40, 36, 0, 0, { -1, -1, -1, -1 } },
+    { "ShinaKen", "CD-ROM DM-3x1S",   "1.04", "shinaken_3x1s",  BUS_TYPE_SCSI, 1,  3, 36, 0, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the name. */
+    { "SONY",     "CD-ROM CDU-541",   "1.0i", "sony_541",       BUS_TYPE_SCSI, 1,  1, 36, 1, 0, { -1, -1, -1, -1 } },
+    { "SONY",     "CD-ROM CDU-561",   "1.9a", "sony_561",       BUS_TYPE_SCSI, 2,  2, 36, 1, 0, { -1, -1, -1, -1 } }, /* Also known as AppleCD 300 */
+    { "SONY",     "CD-ROM CDU-76S",   "1.00", "sony_76s",       BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD 50",            "1.00", "teac_50",        BUS_TYPE_SCSI, 2,  4, 36, 1, 0, { -1, -1, -1, -1 } }, /* The speed of the following two is guesswork based on the R55S. */
     { "TEAC",     "CD-ROM R55S",      "1.0R", "teac_55s",       BUS_TYPE_SCSI, 2,  4, 36, 0, 0, { -1, -1, -1, -1 } },
     { "TEAC",     "CD-516S",          "2.0H", "teac_516s",      BUS_TYPE_SCSI, 1, 16, 36, 0, 0, { -1, -1, -1, -1 } },
