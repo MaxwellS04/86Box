@@ -849,8 +849,8 @@ msgstr "Устройства PCap не найдены"
 msgid "Invalid PCap device"
 msgstr "Неверное устройство PCap"
 
-msgid "Generic Paddle Controller(s)"
-msgstr ""
+msgid "Generic paddle controller(s)"
+msgstr "Стандартный контроллер-колесо"
 
 msgid "2-axis, 1-button joystick(s)"
 msgstr "2-осевой, 1-кнопочный джойстик"
@@ -904,30 +904,30 @@ msgid "Gravis PC GamePad"
 msgstr "Gravis PC GamePad"
 
 msgid "2-button flight yoke"
-msgstr "2-кнопочный flight yoke"
+msgstr "2-кнопочный штурвал"
 
 msgid "3-button flight yoke"
-msgstr "3-кнопочный flight yoke"
+msgstr "3-кнопочный штурвал"
 
 msgid "4-button flight yoke"
-msgstr "4-кнопочный flight yoke"
+msgstr "4-кнопочный штурвал"
 
 msgid "2-button flight yoke with throttle"
-msgstr "2-кнопочный flight yoke с дросселем"
+msgstr "2-кнопочный штурвал с дросселем"
 
 msgid "3-button flight yoke with throttle"
-msgstr "3-кнопочный flight yoke с дросселем"
+msgstr "3-кнопочный штурвал с дросселем"
 
 msgid "4-button flight yoke with throttle"
-msgstr "4-кнопочный flight yoke с дросселем"
+msgstr "4-кнопочный штурвал с дросселем"
 
-msgid "Steering Wheel (3-axis, 2-button)"
+msgid "Steering wheel (3-axis, 2-button)"
 msgstr "Руль (3-осевой, 2-кнопочный)"
 
-msgid "Steering Wheel (3-axis, 3-button)"
+msgid "Steering wheel (3-axis, 3-button)"
 msgstr "Руль (3-осевой, 3-кнопочный)"
 
-msgid "Steering Wheel (3-axis, 4-button)"
+msgid "Steering wheel (3-axis, 4-button)"
 msgstr "Руль (3-осевой, 4-кнопочный)"
 
 msgid "CH Flightstick"
@@ -973,13 +973,13 @@ msgid "Thrustmaster Flight Control System"
 msgstr "Система управления полётом Thrustmaster"
 
 msgid "Thrustmaster FCS + Rudder Control System"
-msgstr "Thrustmaster FCS + Система управления рулем"
+msgstr "Thrustmaster FCS + Система управления рулём"
 
-msgid "Thrustmaster Formula T1/T2 with Adaptor"
-msgstr "Thrustmaster Formula T1/T2 with Adaptor"
+msgid "Thrustmaster Formula T1/T2 with adapter"
+msgstr "Thrustmaster Formula T1/T2 с адаптером"
 
-msgid "Thrustmaster Formula T1/T2 without Adaptor"
-msgstr "Thrustmaster Formula T1/T2 without Adaptor"
+msgid "Thrustmaster Formula T1/T2 without adapter"
+msgstr "Thrustmaster Formula T1/T2 без адаптера"
 
 msgid "None"
 msgstr "Нет"
@@ -1854,6 +1854,9 @@ msgstr "Адаптер:"
 msgid "VDE Socket:"
 msgstr "VDE сокет:"
 
+msgid "TAP Bridge Device:"
+msgstr "Устройство моста TAP:"
+
 msgid "86Box Unit Tester"
 msgstr "Модульный Тестер 86Box"
 
@@ -2218,7 +2221,7 @@ msgid "Enable Game port"
 msgstr "Включить игровой порт"
 
 msgid "Enable Adlib ports"
-msgstr "Включить порты Adlib"
+msgstr "Включить порты AdLib"
 
 msgid "SID Model"
 msgstr "Модель SID"
@@ -2249,6 +2252,18 @@ msgstr "IRQ WSS"
 
 msgid "WSS DMA"
 msgstr "DMA WSS"
+
+msgid "RTC IRQ"
+msgstr "IRQ RTC"
+
+msgid "RTC Port Address"
+msgstr "Адрес порта RTC"
+
+msgid "Onboard RTC"
+msgstr "Встроенный RTC"
+
+msgid "Not installed"
+msgstr "Не установлен"
 
 msgid "Enable OPL"
 msgstr "Включить OPL"
