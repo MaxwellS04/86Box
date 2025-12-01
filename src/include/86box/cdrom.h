@@ -169,7 +169,7 @@ static const struct cdrom_drive_types_s {
     { "LEOPTICS", "CD-ROM 24X",       "4.6C", "leoptics_24x",   BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8160B", "1.15", "lg_8160b",       BUS_TYPE_IDE,  0, 16, 36, 0, 0, {  4,  2,  1, -1 } }, /* Later version of GoldStar CRD-8160B */
     { "LG",       "CD-ROM CRD-8240B", "1.19", "lg_8240b",       BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  1, -1 } }, /* Later version of GoldStar CRD-8240B */
-    { "LG",       "CD-ROM CRN-8245B", "1.30", "lg_8245b",       BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2, -1 } }, /* Notebook CD-ROM drive */
+    { "LG",       "CD-ROM CRN-8245B", "1.30", "lg_8245b",       BUS_TYPE_IDE,  0, 24, 36, 0, 0, {  4,  2,  2, -1 } }, /* Notebook version of CRD-8240B */
     { "LG",       "CD-ROM CRD-8322B", "1.24", "lg_8322b",       BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2,  0 } },
     { "LG",       "CD-ROM CRD-8400C", "1.02", "lg_8400c",       BUS_TYPE_IDE,  0, 40, 36, 0, 0, {  4,  2,  2,  2 } },
     { "LG",       "CD-ROM CRD-8482B", "1.00", "lg_8482b",       BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } },
@@ -200,7 +200,6 @@ static const struct cdrom_drive_types_s {
     { "MITSUMI",  "CRMC-FX322M",      "????", "mitsumi_322m",   BUS_TYPE_IDE,  0, 32, 36, 0, 0, {  4,  2,  2, -1 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "MITSUMI",  "CR-480ATE",        "1.0E", "mitsumi_480ate", BUS_TYPE_IDE,  0, 40, 36, 0, 0, {  4,  2,  2,  0 } },
     { "MITSUMI",  "CRMC-FX4820T",     "D02A", "mitsumi_4820t",  BUS_TYPE_IDE,  0, 48, 36, 0, 0, {  4,  2,  2,  2 } },
-    { "MSI",      "MS-8216S",         "????", "msi_8216",       BUS_TYPE_IDE,  0, 16, 36, 0, 1, {  4,  2,  2,  2 } }, /* TODO: Find an IDENTIFY and/or INQUIRY dump. */
     { "NEC",      "CD-ROM DRIVE:260", "1.00", "nec_260_early",  BUS_TYPE_IDE,  1,  2, 36, 1, 0, {  0, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:260", "1.01", "nec_260",        BUS_TYPE_IDE,  1,  4, 36, 1, 0, {  0, -1, -1, -1 } },
     { "NEC",      "CD-ROM DRIVE:272", "3.02", "nec_272",        BUS_TYPE_IDE,  0,  4, 36, 0, 0, {  0, -1, -1, -1 } },
