@@ -27,6 +27,7 @@
 #include <86box/hdd.h>
 #include <86box/cdrom.h>
 #include <86box/video.h>
+#include <86box/hdd_audio.h>
 #include "cpu.h"
 
 #define HDD_OVERHEAD_TIME 50.0
@@ -38,7 +39,6 @@ hdd_init(void)
 {
     /* Clear all global data. */
     memset(hdd, 0x00, sizeof(hdd));
-
     return 0;
 }
 
@@ -196,6 +196,9 @@ hdd_seek_get_time(hard_disk_t *hdd, uint32_t dst_addr, uint8_t operation, uint8_
     }
 
     if (!max_seek_time || seek_time <= max_seek_time) {
+        if (new_cylinder != hdd->cur_cylinder)
+            hdd_audio_seek(hdd, new_cylinder);
+
         hdd->cur_addr     = dst_addr;
         hdd->cur_track    = new_track;
         hdd->cur_cylinder = new_cylinder;
@@ -310,7 +313,7 @@ hdd_timing_write(hard_disk_t *hdd, uint32_t addr, uint32_t len)
         }
     }
 
-    hdd->cache.write_start_time = tsc + (uint32_t) (seek_time * cpuclock / 1000000.0);
+    hdd->cache.write_start_time = tsc + (uint64_t) (seek_time * cpuclock / 1000000.0);
 
     return seek_time;
 }
@@ -380,7 +383,7 @@ update_lru:
 
     cache->ra_ongoing    = 1;
     cache->ra_segment    = active_seg->id;
-    cache->ra_start_time = tsc + (uint32_t) (seek_time * cpuclock / 1000000.0);
+    cache->ra_start_time = tsc + (uint64_t) (seek_time * cpuclock / 1000000.0);
 
     return seek_time;
 }
@@ -584,6 +587,14 @@ const char *
 hdd_preset_get_internal_name(int preset)
 {
     return hdd_speed_presets[preset].internal_name;
+}
+
+uint32_t
+hdd_preset_get_rpm(int preset)
+{
+    if (preset < 0 || preset >= hdd_preset_get_num())
+        return 0;
+    return hdd_speed_presets[preset].rpm;
 }
 
 int
