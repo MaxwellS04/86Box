@@ -170,6 +170,7 @@ main_thread(UNUSED(void *param))
 {
     uint32_t old_time;
     uint32_t new_time;
+
     int      drawits;
     int      frames;
 
@@ -193,8 +194,9 @@ main_thread(UNUSED(void *param))
 #endif
 
         old_time = new_time;
+        /* Both modes use the 1 ms quantum; spinning faster gives no throughput
+           benefit and starves the blit mutex. */
         if ((drawits > 0 || fast_forward) && !dopause) {
-            /* Yes, so do one frame now. */
             drawits -= force_10ms ? 10 : 1;
             if (drawits > 50 || fast_forward)
                 drawits = 0;
@@ -208,9 +210,9 @@ main_thread(UNUSED(void *param))
                 nvr_dosave = 0;
                 frames     = 0;
             }
-        }
-        else /* Just so we dont overload the host OS. */
+        } else {
             SDL_Delay(1);
+        }
 
         /* If needed, handle a screen resize. */
         if (atomic_load(&doresize_monitors[0]) && !video_fullscreen && !is_quit) {
@@ -387,8 +389,7 @@ main(int argc, char **argv)
                         // route everything else
                         flag_osd_open = osd_handle(event);
 
-                        if (flag_osd_open == 0)
-                        {
+                        if (flag_osd_open == 0) {
                             // close it
                             osd_close(event);
                         }
@@ -399,8 +400,7 @@ main(int argc, char **argv)
             }
             else
             {
-                switch (event.type)
-                {
+                switch (event.type) {
                     case SDL_QUIT:
                         exit_event = 1;
                         break;

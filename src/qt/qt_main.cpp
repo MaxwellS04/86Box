@@ -448,10 +448,12 @@ main_thread_fn()
     // title_update = 1;
     qint64 old_ns = elapsed_timer.nsecsElapsed();
     qint64 debt_ns;
+    qint64 next_slot_ns;   /* absolute next-call timestamp for cpu_uncapped rate limiting */
     const qint64 quantum_ns  = force_10ms ? 10000000LL : 1000000LL;
     const qint64 max_debt_ns = 50000000LL;
     frames                   = 0;
     debt_ns                  = 0;
+
     is_cpu_thread             = 1;
     while (!is_quit && cpu_thread_run) {
         /* See if it is time to run a frame of code. */
@@ -464,12 +466,11 @@ main_thread_fn()
         if (gdbstub_next_asap && (debt_ns < quantum_ns))
             debt_ns = quantum_ns;
 #endif
+        /* Both cpu_uncapped and normal mode use the 1 ms quantum to pace the
+           outer loop.  Spinning faster gives zero throughput benefit (cpu_exec
+           already receives elapsed_ns * rspeed cycles, so total cycles/sec is
+           the same regardless of call rate) and starves the blit mutex. */
         if (((debt_ns >= quantum_ns) || fast_forward) && !dopause) {
-            /*
-             * Pace with one pc_run() per scheduler pass.
-             * We intentionally avoid burst catch-up (multi-frame loop) because it can
-             * overshoot after dips and amplify <100/>100 speed oscillation.
-             */
 #ifdef USE_INSTRUMENT
             uint64_t start_time = elapsed_timer.nsecsElapsed();
 #endif
@@ -491,7 +492,8 @@ main_thread_fn()
                 frames     = 0;
             }
 
-            if (!fast_forward && debt_ns >= quantum_ns)
+            /* cpu_uncapped does not drain debt (no catch-up); normal mode does. */
+            if (!cpu_uncapped && !fast_forward && debt_ns >= quantum_ns)
                 debt_ns -= quantum_ns;
             else
                 debt_ns = 0;

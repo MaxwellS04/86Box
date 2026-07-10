@@ -50,6 +50,7 @@ if(DYNAREC)
     add_library(cgt OBJECT
         codegen_timing_486.c
         codegen_timing_686.c
+        codegen_timing_bentium5.c
         codegen_timing_common.c
         codegen_timing_k6.c
         codegen_timing_pentium.c

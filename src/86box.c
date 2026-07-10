@@ -1997,7 +1997,51 @@ pc_run(void)
 
     /* Run a block of code. */
     startblit();
-    cpu_exec((int32_t) cpu_s->rspeed / (force_10ms ? 100 : 1000));
+    if (cpu_uncapped) {
+        /* Wall-clock-driven virtual time: advance tsc based on real elapsed
+           time, not on how many instructions cpu_exec managed to run.
+           This decouples the PIT/RTC/audio timers from CPU throughput so
+           they always fire at real-world rates — exactly like real hardware
+           where the PIT crystal runs independently of CPU speed.  The CPU
+           simply executes fewer instructions between timer IRQs on a slow
+           host, which is identical to running the same software on a slower
+           real CPU. */
+        static uint64_t uncapped_last_ns = 0;
+        static int      uncapped_init    = 0;
+
+        struct timespec ts_now;
+        clock_gettime(CLOCK_MONOTONIC, &ts_now);
+        uint64_t now_ns = (uint64_t) ts_now.tv_sec * 1000000000ULL + (uint64_t) ts_now.tv_nsec;
+
+        if (!uncapped_init) {
+            uncapped_last_ns = now_ns;
+            uncapped_init    = 1;
+        }
+
+        uint64_t elapsed_ns = now_ns - uncapped_last_ns;
+        if (elapsed_ns > 50000000ULL)
+            elapsed_ns = 50000000ULL; /* cap at 50 ms after long pauses */
+        uncapped_last_ns = now_ns;
+
+        /* Give cpu_exec the standard fixed quantum (rspeed/1000) so the
+           correct number of instructions always runs between timer callbacks —
+           this is what keeps audio DMA buffers filled correctly.
+           The tsc_target uses nanosecond wall time so clocks stay accurate
+           even when the host is slow, without the CPU budget being affected. */
+        const int32_t fixed_cycles = (int32_t) cpu_s->rspeed / (force_10ms ? 100 : 1000);
+        uint64_t tsc_target = tsc + (uint64_t) ((double) cpu_s->rspeed * (double) elapsed_ns * 1e-9);
+
+        cpu_exec(fixed_cycles);
+
+        /* If the CPU fell short of the wall-clock target, push tsc forward
+           and fire any timers that are now due (PIT, RTC, DMA, etc.). */
+        if (tsc < tsc_target) {
+            tsc = tsc_target;
+            timer_process();
+        }
+    } else {
+        cpu_exec((int32_t) cpu_s->rspeed / (force_10ms ? 100 : 1000));
+    }
     ack_pause();
 #ifdef USE_GDBSTUB /* avoid a KBC FIFO overflow when CPU emulation is stalled */
     if (gdbstub_step == GDBSTUB_EXEC) {

@@ -41,12 +41,12 @@ typedef struct codeblock_t {
 #if defined(__aarch64__) || defined(_M_ARM64)
     /* ARM64-only: per-block retry counter used to delay NO_IMMEDIATES
       promotion until churn repeats, reducing premature slow-immediate mode. */
-    uint8_t  dirty_list_recompile_hits;
+    uint8_t dirty_list_recompile_hits;
     /* ARM64-only: tracks the most recent dirty-list epoch seen by this
       block so promotion can require a dense burst, not stale spaced-out hits. */
     uint16_t dirty_list_last_epoch;
 #endif
-    int      valid;
+    int valid;
 
     /*Pointers for codeblock tree, used to search for blocks when hash lookup
       fails.*/
@@ -73,7 +73,6 @@ extern codeblock_t *codeblock;
 extern uint16_t *codeblock_hash;
 
 extern uint8_t *block_write_data;
-
 
 /*Code block uses FPU*/
 #define CODEBLOCK_HAS_FPU 1
@@ -355,6 +354,7 @@ extern codegen_timing_t codegen_timing_winchip2;
 extern codegen_timing_t codegen_timing_k5;
 extern codegen_timing_t codegen_timing_k6;
 extern codegen_timing_t codegen_timing_p6;
+extern codegen_timing_t codegen_timing_bentium5;
 
 void codegen_timing_set(codegen_timing_t *timing);
 

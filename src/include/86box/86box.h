@@ -316,6 +316,11 @@ extern uint16_t get_last_addr(void);
 extern void sub_cycles(int c);
 extern void resub_cycles(int old_cycles);
 
+/* When 1 (Bentium5 uncapped mode), the emulation loop must not accumulate
+   catch-up debt: each pc_run() quantum stands alone so the VM degrades
+   smoothly on a slow host instead of stuttering. */
+extern int cpu_uncapped;
+
 extern void sub_cycles_vx0(int c);
 extern void resub_cycles_vx0(int old_cycles);
 
