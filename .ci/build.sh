@@ -994,8 +994,6 @@ mv "$prefix/src/mdsx."* archive_tmp/ || exit 99
 prefix="$cache_dir/libaaruformat"
 debug_args=
 grep -qiE "^CMAKE_BUILD_TYPE:[^=]+=Debug" build/CMakeCache.txt && debug_args=DEBUG=y
-# Do this temporarily.
-rm -rf $prefix
 if [ -e "$prefix/src/close.c" ]
 then
 	if ! check_buildtag libaaruformat
@@ -1023,7 +1021,15 @@ echo Now in $prefix/src
 cmake -B build -S .. --preset release -DAARU_BUILD_PACKAGE=ON
 ninja -j12 -C build
 status=0
-mv "build/libaaruformat.dll" $cwd_root/archive_tmp/ || status=1
+if is_windows
+then
+  mv "build/libaaruformat.dll" $cwd_root/archive_tmp/ || status=1
+elif is_mac
+then
+  mv "build/libaaruformat.dylib" $cwd_root/archive_tmp/ || status=1
+else
+  mv "build/libaaruformat.so" $cwd_root/archive_tmp/ || status=1
+fi
 rm -rf build
 if [ status == 1 ]
 then
