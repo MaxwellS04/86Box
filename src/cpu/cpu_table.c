@@ -7865,7 +7865,7 @@ const cpu_family_t cpu_families[] = {
     {
         .package       = CPU_PKG_SLOT1,
         .manufacturer  = "Intel",
-        .name          = "Bentium",
+        .name          = "Bentium (Katmai)",
         .internal_name = "bentium5_slot1",
         .cpus          = (const CPU[]) {
             {
@@ -8107,6 +8107,23 @@ const cpu_family_t cpu_families[] = {
                 .atclk_div          = 96
             },
             {
+                .name               = "850",
+                .cpu_type           = CPU_BENTIUM5,
+                .fpus               = fpus_internal,
+                .rspeed             = 850000000,
+                .multi              = 8.0,
+                .voltage            = 1800,
+                .edx_reset          = 0x686,
+                .cpuid_model        = 0x686,
+                .cyrix_id           = 0,
+                .cpu_flags          = CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC,
+                .mem_read_cycles    = 1,
+                .mem_write_cycles   = 1,
+                .cache_read_cycles  = 1,
+                .cache_write_cycles = 1,
+                .atclk_div          = 96
+            },
+            {
                 .name               = "900",
                 .cpu_type           = CPU_BENTIUM5,
                 .fpus               = fpus_internal,
@@ -8122,6 +8139,23 @@ const cpu_family_t cpu_families[] = {
                 .cache_read_cycles  = 1,
                 .cache_write_cycles = 1,
                 .atclk_div          = 108
+            },
+            {
+                .name               = "950",
+                .cpu_type           = CPU_BENTIUM5,
+                .fpus               = fpus_internal,
+                .rspeed             = 950000000,
+                .multi              = 8.0,
+                .voltage            = 1800,
+                .edx_reset          = 0x686,
+                .cpuid_model        = 0x686,
+                .cyrix_id           = 0,
+                .cpu_flags          = CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC,
+                .mem_read_cycles    = 1,
+                .mem_write_cycles   = 1,
+                .cache_read_cycles  = 1,
+                .cache_write_cycles = 1,
+                .atclk_div          = 96
             },
             {
                 .name               = "1000",
@@ -8146,7 +8180,7 @@ const cpu_family_t cpu_families[] = {
     {
         .package       = CPU_PKG_SOCKET370,
         .manufacturer  = "Intel",
-        .name          = "Bentium 370",
+        .name          = "Bentium (Mendocino)",
         .internal_name = "bentium5_socket370",
         .cpus          = (const CPU[]) {
             {
@@ -8388,6 +8422,23 @@ const cpu_family_t cpu_families[] = {
                 .atclk_div          = 96
             },
             {
+                .name               = "850",
+                .cpu_type           = CPU_BENTIUM5,
+                .fpus               = fpus_internal,
+                .rspeed             = 850000000,
+                .multi              = 8.0,
+                .voltage            = 1800,
+                .edx_reset          = 0x686,
+                .cpuid_model        = 0x686,
+                .cyrix_id           = 0,
+                .cpu_flags          = CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC,
+                .mem_read_cycles    = 1,
+                .mem_write_cycles   = 1,
+                .cache_read_cycles  = 1,
+                .cache_write_cycles = 1,
+                .atclk_div          = 96
+            },
+            {
                 .name               = "900",
                 .cpu_type           = CPU_BENTIUM5,
                 .fpus               = fpus_internal,
@@ -8403,6 +8454,23 @@ const cpu_family_t cpu_families[] = {
                 .cache_read_cycles  = 1,
                 .cache_write_cycles = 1,
                 .atclk_div          = 108
+            },
+            {
+                .name               = "950",
+                .cpu_type           = CPU_BENTIUM5,
+                .fpus               = fpus_internal,
+                .rspeed             = 950000000,
+                .multi              = 8.0,
+                .voltage            = 1800,
+                .edx_reset          = 0x686,
+                .cpuid_model        = 0x686,
+                .cyrix_id           = 0,
+                .cpu_flags          = CPU_SUPPORTS_DYNAREC | CPU_REQUIRES_DYNAREC,
+                .mem_read_cycles    = 1,
+                .mem_write_cycles   = 1,
+                .cache_read_cycles  = 1,
+                .cache_write_cycles = 1,
+                .atclk_div          = 96
             },
             {
                 .name               = "1000",
