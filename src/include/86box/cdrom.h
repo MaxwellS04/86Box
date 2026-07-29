@@ -33,6 +33,8 @@
 #define CD_STATUS_HAS_AUDIO         0xc
 #define CD_STATUS_MASK              0x1f
 
+#define CD_SECTOR_FLAG_SCRAMBLED    0x80000000
+
 /* Medium changed flag. */
 #define CD_STATUS_TRANSITION     0x40
 #define CD_STATUS_MEDIUM_CHANGED 0x80
@@ -511,7 +513,7 @@ typedef struct cdrom {
 
 extern cdrom_t cdrom[CDROM_NUM];
 
-#define MSFtoLBA(m, s, f)  ((((m * 60) + s) * 75) + f)
+#define MSFtoLBA(m, s, f)  (((((m) * 60) + (s)) * 75) + (f))
 
 static __inline int
 bin2bcd(int x)
