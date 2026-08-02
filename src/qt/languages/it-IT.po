@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2026-05-29 19:36+0000\n"
-"Last-Translator: OBattler <oubattler@gmail.com>\n"
+"PO-Revision-Date: 2026-07-29 10:19+0000\n"
+"Last-Translator: Alexander Babikov <lemondrops358@gmail.com>\n"
 "Language-Team: Italian <https://weblate.86box.net/projects/86box/86box/it/>\n"
 "Language: it-IT\n"
 "MIME-Version: 1.0\n"
@@ -68,11 +68,14 @@ msgstr "Re&nderizzatore"
 msgid "&Qt (Software)"
 msgstr "&Qt (Software)"
 
-msgid "Open&GL (3.0 Core)"
-msgstr "Open&GL (3.0 Core)"
+msgid "Open&GL"
+msgstr "Open&GL"
 
-msgid "&VNC"
-msgstr "&VNC"
+msgid "&Vulkan"
+msgstr "&Vulkan"
+
+msgid "V&NC"
+msgstr "V&NC"
 
 msgid "Specify &dimensions…"
 msgstr "Specifica dim&ensioni…"
@@ -2973,6 +2976,9 @@ msgstr "Chiedi conferma prima di riavviare"
 msgid "Ask for confirmation before quitting"
 msgstr "Chiedi conferma prima di uscire"
 
+msgid "Precache CHD files into memory"
+msgstr ""
+
 msgid "Options"
 msgstr "Opzioni"
 
@@ -2986,6 +2992,9 @@ msgid "Failed to initialize Vulkan renderer."
 msgstr "Impossibile inizializzare il renderizzatore Vulkan."
 
 msgid "Failed to create Vulkan 1.3 instance."
+msgstr ""
+
+msgid "No usable Vulkan physical devices found."
 msgstr ""
 
 msgid "No Vulkan-capable physical devices found."
@@ -3034,7 +3043,7 @@ msgid "Shader Configuration"
 msgstr "Configurazione shader"
 
 msgid "GPU:"
-msgstr ""
+msgstr "GPU:"
 
 msgid "Add"
 msgstr "Aggiungi"

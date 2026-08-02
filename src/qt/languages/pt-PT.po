@@ -67,11 +67,14 @@ msgstr "&Renderizador"
 msgid "&Qt (Software)"
 msgstr "&Qt (Software)"
 
-msgid "Open&GL (3.0 Core)"
-msgstr "Open&GL (Núcleo 3.0)"
+msgid "Open&GL"
+msgstr "Open&GL"
 
-msgid "&VNC"
-msgstr "&VNC"
+msgid "&Vulkan"
+msgstr "&Vulkan"
+
+msgid "V&NC"
+msgstr "V&NC"
 
 msgid "Specify &dimensions…"
 msgstr "&Especificar dimensões…"
@@ -2922,6 +2925,9 @@ msgstr "Pedir confirmação antes da reinicialização completa"
 msgid "Ask for confirmation before quitting"
 msgstr "Pedir confirmação antes de sair"
 
+msgid "Precache CHD files into memory"
+msgstr ""
+
 msgid "Options"
 msgstr "Opções"
 
@@ -2935,6 +2941,9 @@ msgid "Failed to initialize Vulkan renderer."
 msgstr "Falha na inicialização do renderizador Vulkan."
 
 msgid "Failed to create Vulkan 1.3 instance."
+msgstr ""
+
+msgid "No usable Vulkan physical devices found."
 msgstr ""
 
 msgid "No Vulkan-capable physical devices found."

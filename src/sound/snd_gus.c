@@ -1,3 +1,49 @@
+/*
+ * 86Box    A hypervisor and IBM PC system emulator that specializes in
+ *          running old operating systems and software designed for IBM
+ *          PC systems and compatibles from 1981 through fairly recent
+ *          system designs based on the PCI bus.
+ *
+ *          This file is part of the 86Box distribution.
+ *
+ *          Gravis UltraSound emulation.
+ *
+ * Authors: Sarah Walker, <https://pcem-emulator.co.uk/>
+ *          Miran Grca, <mgrca8@gmail.com>
+ *          win2kgamer
+ *
+ *          Copyright 2010-2020 Sarah Walker.
+ *          Copyright 2016-2025 Miran Grca.
+ *          Copyright      2026 win2kgamer
+ */
+
+/*
+ * Known issues:
+ * - MegaEM 2.x will sometimes hang when playing audio (this is known to
+ *   occur in Hoyle Classic Card games when speech plays and in the
+ *   TIE Fighter setup utility when playing music). This is due to
+ *   the DMA Terminal Count IRQ status bit not being cleared by the
+ *   program. The documented method of clearing this bit is to
+ *   read the DMA Control register (index 41h) but there may be an
+ *   unknown mechanism that automatically clears this bit that MegaEM
+ *   relies on.
+ * - MegaEM 3.x has nonfunctional SoundBlaster emulation and appears to
+ *   rely on undocumented hardware behavior. This manifests as silent
+ *   digital audio in MegaEM 3.03 and as an IRQ conflict error on MegaEM
+ *   3.04 and later.
+ */
+
+/*
+ * TODO:
+ * - Find any alternate methods real GUS cards use to clear the DMA TC
+ *   IRQ status bit.
+ * - Find the undocumented hardware behavior MegaEM 3.x relies on for emulating
+ *   a SoundBlaster.
+ * - Implement the 16-bit recording daughterboard for the GUS Classic: this has
+ *   a CS4231 codec and can be jumpered for the following addresses: 530h, 604h,
+ *   E80h or F40h. IRQ (3/4/5/6/7/9) and DMA (1/2/3) are also jumpered.
+ */
+
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -23,6 +69,8 @@
 #include <86box/snd_sb_dsp.h>
 #include <86box/plat_fallthrough.h>
 #include <86box/plat_unused.h>
+#include <86box/hdc.h>
+#include <86box/hdc_ide.h>
 #include <86box/log.h>
 
 #ifdef ENABLE_GUS_LOG
@@ -727,6 +775,11 @@ gus_write(uint16_t addr, uint8_t val, void *priv)
                                 gameport_remap(gus->gameport, 0x0);
                             else if ((val & 0x4) && !(gus->jumper & 0x4))
                                 gameport_remap(gus->gameport, 0x201);
+                        } else if ((gus->type == GUS_EXTREME) || (gus->type == GUS_VIPERMAX)) {
+                            if (!(val & 0x4) && (gus->jumper & 0x4))
+                                gameport_remap(gus->gameport, 0x0);
+                            else if ((val & 0x4) && !(gus->jumper & 0x4))
+                                gameport_remap(gus->gameport, 0x201);
                         }
 
                         gus->jumper = val;
@@ -801,9 +854,6 @@ gus_write(uint16_t addr, uint8_t val, void *priv)
                         break;
                 }
                 break;
-            } else if (gus->type == GUS_EXTREME) {
-                ess_mixer_write(gus->ess->ess_dsp_addr + 4, val, gus->ess);
-                break;
             }
             fallthrough;
         case 0x706:
@@ -827,8 +877,7 @@ gus_write(uint16_t addr, uint8_t val, void *priv)
                                       ad1848_write, NULL, NULL, &gus->ad1848);
                     }
                 }
-            } else if (gus->type == GUS_EXTREME)
-                ess_mixer_write(gus->ess->ess_dsp_addr + 5, val, gus->ess);
+            }
             break;
 
         default:
@@ -876,7 +925,8 @@ gus_read(uint16_t addr, void *priv)
 
         case 0x206: /*IRQ status*/
             val = gus->irqstatus & ~0x10;
-            if (gus->ad_status & 0x19)
+            /* Handling for undocumented NMI status bit, needed by SBOS */
+            if (((gus->ad_status & 0x18) && (gus->sb_ctrl & 0x20)) || ((gus->ad_status & 0x01) && (gus->sb_ctrl & 0x02)))
                 val |= 0x10;
             gus_log(gus->log, "GUS read: port = %04X, val = %02X\n", addr, val);
             return val;
@@ -1036,7 +1086,7 @@ gus_read(uint16_t addr, void *priv)
             else if (gus->type == GUS_VIPERMAX)
                 val = 0x50; /* Synergy Vipermax */
             else if (gus->type == GUS_EXTREME)
-                val = 0x70; /* GUS Extreme */
+                val = 0x50; /* GUS Extreme */
             else
                 val = 0xff; /* Pre 3.7 - no mixer */
             break;
@@ -1767,7 +1817,6 @@ gus_extreme_init(UNUSED(const device_t *info))
     int     c;
     double  out     = 1.0;
     gus_t  *gus     = calloc(1, sizeof(gus_t));
-    uint8_t gus_ram = device_get_config_int("gus_ram");
 
     gus->log = log_open("GUS");
 
@@ -1803,15 +1852,16 @@ gus_extreme_init(UNUSED(const device_t *info))
     mpu401_init(gus->ess->mpu, 0, -1, M_UART, device_get_config_int("receive_input401"));
     sb_dsp_set_mpu(&gus->ess->dsp, gus->ess->mpu);
 
-    gus->ess->gameport      = gameport_add(&gameport_200_device);
-    gus->ess->gameport_addr = 0x200;
-
     gus->ess->ess_readseq_state = 0;
     gus->ess->ess_dsp_addr      = 0;
     ess_rsk_reset(gus->ess);
 
     /* Init GF1 section */
-    gus->gus_end_ram = 1 << (18 + gus_ram);
+    if (info->local != GUS_EXTREME) {
+        uint8_t gus_ram = device_get_config_int("gus_ram");
+        gus->gus_end_ram = 1 << (18 + gus_ram);
+    } else
+        gus->gus_end_ram = 1 << 20;
     gus->ram         = (uint8_t *) calloc(1, gus->gus_end_ram);
 
     for (c = 0; c < 32; c++) {
@@ -1845,12 +1895,24 @@ gus_extreme_init(UNUSED(const device_t *info))
 
     sound_add_handler(gus_extreme_get_buffer, gus);
 
+    gus->gameport = gameport_add(&gameport_pnp_1io_device);
+    gameport_remap(gus->gameport, 0x201);
+
     /* GUS Extreme base I/O relocation is done via ES1688 GPO and joystick port writes */
     io_sethandler(0x227, 0x0001, NULL, NULL, NULL, gus_reloc_write, NULL, NULL, gus);
     io_sethandler(0x237, 0x0001, NULL, NULL, NULL, gus_reloc_write, NULL, NULL, gus);
     io_sethandler(0x247, 0x0001, NULL, NULL, NULL, gus_reloc_write, NULL, NULL, gus);
     io_sethandler(0x257, 0x0001, NULL, NULL, NULL, gus_reloc_write, NULL, NULL, gus);
     io_sethandler(0x201, 0x0001, NULL, NULL, NULL, gus_reloc_write, NULL, NULL, gus);
+
+    /* Secondary IDE Channel */
+    if (device_get_config_int("enable_ide")) {
+        device_add(&ide_isa_sec_device);
+        ide_set_base(1, 0x170);
+        ide_set_side(1, 0x376);
+        ide_set_irq(1, 0xf);
+        other_ide_present++;
+    }
 
     return gus;
 }
@@ -2102,13 +2164,13 @@ static const device_config_t gus_ace_config[] = {
 // clang-format off
 };
 
-static const device_config_t gus_extreme_config[] = {
+static const device_config_t gus_vipermax_config[] = {
     {
         .name           = "gus_ram",
         .description    = "Memory size",
         .type           = CONFIG_SELECTION,
         .default_string = NULL,
-        .default_int    = 2,
+        .default_int    = 1,
         .file_filter    = NULL,
         .spinner        = { 0 },
         .selection      = {
@@ -2116,6 +2178,54 @@ static const device_config_t gus_extreme_config[] = {
             { .description = "1 MB",   .value = 2 },
             { NULL                                }
         },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "enable_ide",
+        .description    = "Enable IDE (Secondary Channel)",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "receive_input",
+        .description    = "Receive MIDI input",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "receive_input401",
+        .description    = "Receive MIDI input (MPU-401)",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+static const device_config_t gus_extreme_config[] = {
+    {
+        .name           = "enable_ide",
+        .description    = "Enable IDE (Secondary Channel)",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
         .bios           = { { 0 } }
     },
     {
@@ -2226,5 +2336,5 @@ const device_t gus_vipermax_device = {
     .speed_changed = gus_speed_changed,
     .force_redraw  = NULL,
     .alias         = "Synergy UltraSound VIP/Extreme",
-    .config        = gus_extreme_config
+    .config        = gus_vipermax_config
 };

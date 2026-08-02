@@ -67,11 +67,14 @@ msgstr "Re&nderer"
 msgid "&Qt (Software)"
 msgstr "&Qt (Programvare)"
 
-msgid "Open&GL (3.0 Core)"
-msgstr "Open&GL (3.0 Core)"
+msgid "Open&GL"
+msgstr "Open&GL"
 
-msgid "&VNC"
-msgstr "&VNC"
+msgid "&Vulkan"
+msgstr "&Vulkan"
+
+msgid "V&NC"
+msgstr "V&NC"
 
 msgid "Specify &dimensions…"
 msgstr "Angi &dimensjoner…"
@@ -2920,6 +2923,9 @@ msgstr "Be om bekreftelse før hard reset"
 msgid "Ask for confirmation before quitting"
 msgstr "Be om bekreftelse før avslutning"
 
+msgid "Precache CHD files into memory"
+msgstr ""
+
 msgid "Options"
 msgstr "Alternativer"
 
@@ -2933,6 +2939,9 @@ msgid "Failed to initialize Vulkan renderer."
 msgstr "Kunne ikke initialisere Vulkan-gjengiver."
 
 msgid "Failed to create Vulkan 1.3 instance."
+msgstr ""
+
+msgid "No usable Vulkan physical devices found."
 msgstr ""
 
 msgid "No Vulkan-capable physical devices found."

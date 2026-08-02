@@ -66,11 +66,14 @@ msgstr "렌더러(&N)"
 msgid "&Qt (Software)"
 msgstr "Qt (소프트웨어)(&Q)"
 
-msgid "Open&GL (3.0 Core)"
-msgstr "OpenGL (3.0 Core)(&G)"
+msgid "Open&GL"
+msgstr "OpenGL(&G)"
 
-msgid "&VNC"
-msgstr "VNC(&V)"
+msgid "&Vulkan"
+msgstr "Vulkan(&V)"
+
+msgid "V&NC"
+msgstr "VNC(&N)"
 
 msgid "Specify &dimensions…"
 msgstr "창 크기 지정하기(&D)…"
@@ -2981,6 +2984,9 @@ msgstr "강제 초기화 전에 확인 요청"
 msgid "Ask for confirmation before quitting"
 msgstr "종료 전 확인 요청"
 
+msgid "Precache CHD files into memory"
+msgstr ""
+
 msgid "Options"
 msgstr "옵션"
 
@@ -2994,6 +3000,9 @@ msgid "Failed to initialize Vulkan renderer."
 msgstr "Vulkan 렌더러 초기화 실패."
 
 msgid "Failed to create Vulkan 1.3 instance."
+msgstr ""
+
+msgid "No usable Vulkan physical devices found."
 msgstr ""
 
 msgid "No Vulkan-capable physical devices found."

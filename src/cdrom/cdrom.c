@@ -1809,7 +1809,7 @@ cdrom_audio_track_search_pioneer(cdrom_t *dev, const uint32_t pos, const uint8_t
 {
     uint8_t  ret  = 0;
 
-    if (dev->cd_status &= CD_STATUS_HAS_AUDIO) {
+    if (dev->cd_status & CD_STATUS_HAS_AUDIO) {
         const int f    = bcd2bin((pos >> 24) & 0xff);
         const int s    = bcd2bin((pos >> 16) & 0xff);
         const int m    = bcd2bin((pos >> 8) & 0xff);
@@ -2321,15 +2321,12 @@ cdrom_get_track_buffer(cdrom_t *dev, uint8_t *buf)
     buf[8] = 0x00;
 }
 
-void
-cdrom_get_q(cdrom_t *dev, uint8_t *buf, int *curtoctrk, uint8_t mode)
+int
+cdrom_get_q(cdrom_t *dev, uint8_t *buf, int curtoctrk, uint8_t mode)
 {
-    int               num;
+    int               num = 0;
     uint8_t           rti[65536]  = { 0 };
     raw_track_info_t *t        = (raw_track_info_t *) rti;
-    int               first = 0;
-    int               last = 0;
-    memset(buf, 0x00, 10);
 
     if (!mode) {    
         const subchannel_t *subc = &dev->cached_subc;
@@ -2345,56 +2342,31 @@ cdrom_get_q(cdrom_t *dev, uint8_t *buf, int *curtoctrk, uint8_t mode)
         buf[7] = subc->abs_m;
         buf[8] = subc->abs_s;
         buf[9] = subc->abs_f;
-        return;
+        return curtoctrk;
     }
 
     dev->ops->get_raw_track_info(dev->local, &num, rti);
-    // Find out current session.
-    uint32_t cur_lba = dev->seek_pos;
-    uint32_t cur_sess = 1;
 
-    for (int i = 0; i < num; i++) {
-        if (t[i].point == 0xb0) {
-            uint32_t next_sess_start = MSFtoLBA(t[i].m, t[i].s, t[i].f) - 150;
-            if (cur_lba >= next_sess_start) {
-                cur_sess++;
-            }
-        }
-    }
+    if (curtoctrk < 0)
+        curtoctrk = 0;
 
-    for (int i = 0; i < num; i++)
-        if ((t[i].session == cur_sess) && (t[i].point >= 1) && (t[i].point <= 99)) {
-            first = t[i].point;
-            break;
-        }
-
-    for (int i = (num - 1); i >= 0; i--)
-        if ((t[i].session == cur_sess) && (t[i].point >= 1) && (t[i].point <= 99)) {
-            last  = t[i].point;
-            break;
-        }
-
-    if (*curtoctrk < first)
-        *curtoctrk = first;
-
-    buf[0] = (t[*curtoctrk].adr_ctl >> 4) | ((t[*curtoctrk].adr_ctl & 0xf) << 4);
+    buf[0] = (t[curtoctrk].adr_ctl >> 4) | ((t[curtoctrk].adr_ctl & 0xf) << 4);
     buf[1] = 0;
-    buf[2] = t[*curtoctrk].point;
-    buf[3] = bin2bcd(t[*curtoctrk].m);
-    buf[4] = bin2bcd(t[*curtoctrk].s);
-    buf[5] = bin2bcd(t[*curtoctrk].f);
-    buf[6] = t[*curtoctrk].zero;
-    buf[7] = bin2bcd(t[*curtoctrk].pm);
-    buf[8] = bin2bcd(t[*curtoctrk].ps);
-    buf[9] = bin2bcd(t[*curtoctrk].pf);
+    buf[2] = (t[curtoctrk].point > 99)? t[curtoctrk].point : bin2bcd(t[curtoctrk].point);
+    buf[3] = bin2bcd(t[curtoctrk].m);
+    buf[4] = bin2bcd(t[curtoctrk].s);
+    buf[5] = bin2bcd(t[curtoctrk].f);
+    buf[6] = bin2bcd(t[curtoctrk].zero);
+    buf[7] = bin2bcd(t[curtoctrk].pm);
+    buf[8] = bin2bcd(t[curtoctrk].ps);
+    buf[9] = bin2bcd(t[curtoctrk].pf);
 
-    if (*curtoctrk > last) {
-        *curtoctrk = first;
-    } else {
-        (void)*curtoctrk++;
-    }
+    curtoctrk++;
 
-    return;
+    if (curtoctrk >= num)
+        curtoctrk = 0;
+
+    return curtoctrk;
 }
 
 uint8_t

@@ -1488,8 +1488,10 @@ extern const device_t  ps1_hdc_device;
 
 /* m_ps2_isa.c */
 #ifdef EMU_DEVICE_H
+extern const device_t  ps2_m25_device;
 extern const device_t  ps2_m30_286_device;
 #endif
+extern int             machine_ps2_m25_init(const machine_t *);
 extern int             machine_ps2_m30_286_init(const machine_t *);
 
 /* m_ps2_mca.c */
@@ -1542,6 +1544,7 @@ extern int             machine_ibmpc82_init(const machine_t *);
 extern const device_t  ibmxt_device;
 #endif
 extern int             machine_ibmxt_init(const machine_t *);
+extern int             machine_xt_ibm3270pc_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t  ibmxt86_device;
 #endif

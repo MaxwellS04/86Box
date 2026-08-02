@@ -60,10 +60,13 @@ msgstr ""
 msgid "&Qt (Software)"
 msgstr ""
 
-msgid "Open&GL (3.0 Core)"
+msgid "Open&GL"
 msgstr ""
 
-msgid "&VNC"
+msgid "&Vulkan"
+msgstr ""
+
+msgid "V&NC"
 msgstr ""
 
 msgid "Specify &dimensions…"
@@ -2903,6 +2906,9 @@ msgstr ""
 msgid "Ask for confirmation before quitting"
 msgstr ""
 
+msgid "Precache CHD files into memory"
+msgstr ""
+
 msgid "Options"
 msgstr ""
 
@@ -2916,6 +2922,9 @@ msgid "Failed to initialize Vulkan renderer."
 msgstr ""
 
 msgid "Failed to create Vulkan 1.3 instance."
+msgstr ""
+
+msgid "No usable Vulkan physical devices found."
 msgstr ""
 
 msgid "No Vulkan-capable physical devices found."

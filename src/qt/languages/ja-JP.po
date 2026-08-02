@@ -67,11 +67,14 @@ msgstr "レンダラー(&N)"
 msgid "&Qt (Software)"
 msgstr "Qt (ソフトウェア)(&Q)"
 
-msgid "Open&GL (3.0 Core)"
-msgstr "OpenGL (3.0 Core)(&G)"
+msgid "Open&GL"
+msgstr "OpenGL(&G)"
 
-msgid "&VNC"
-msgstr "VNC(&V)"
+msgid "&Vulkan"
+msgstr "Vulkan(&V)"
+
+msgid "V&NC"
+msgstr "VNC(&N)"
 
 msgid "Specify &dimensions…"
 msgstr "ディメンションを指定(&D)…"
@@ -2915,6 +2918,9 @@ msgstr "ハードリセットを行う前に確認を求めます"
 msgid "Ask for confirmation before quitting"
 msgstr "終了する前に確認を求めます"
 
+msgid "Precache CHD files into memory"
+msgstr ""
+
 msgid "Options"
 msgstr "オプション"
 
@@ -2928,6 +2934,9 @@ msgid "Failed to initialize Vulkan renderer."
 msgstr "Vulkanレンダラーの初期化に失敗しました。"
 
 msgid "Failed to create Vulkan 1.3 instance."
+msgstr ""
+
+msgid "No usable Vulkan physical devices found."
 msgstr ""
 
 msgid "No Vulkan-capable physical devices found."
