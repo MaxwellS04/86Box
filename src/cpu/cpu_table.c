@@ -7312,7 +7312,7 @@ const cpu_family_t cpu_families[] = {
     {
         .package       = CPU_PKG_SLOT1,
         .manufacturer  = "Intel",
-        .name          = "Bentium (Katmai)",
+        .name          = "Bentium 5 (Katmai)",
         .internal_name = "bentium5_slot1",
         .cpus          = (const CPU[]) {
             {
@@ -8180,7 +8180,7 @@ const cpu_family_t cpu_families[] = {
     {
         .package       = CPU_PKG_SOCKET370,
         .manufacturer  = "Intel",
-        .name          = "Bentium (Coppermine)",
+        .name          = "Bentium 5 (Coppermine)",
         .internal_name = "bentium5_socket370",
         .cpus          = (const CPU[]) {
             {
