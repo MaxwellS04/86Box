@@ -1,4 +1,8 @@
+#ifdef USE_SDL2_LIB
 #include <SDL.h>
+#else
+#include <SDL3/SDL.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -266,7 +270,7 @@ path_get_dirname(char *dest, const char *path)
 void
 plat_get_exe_name(char *s, int size)
 {
-    char *basepath = SDL_GetBasePath();
+    const char *basepath = SDL_GetBasePath();
 
     snprintf(s, size, "%s%s", basepath, basepath[strlen(basepath) - 1] == '/' ? EMU_NAME : "/" EMU_NAME);
 }

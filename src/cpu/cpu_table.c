@@ -7568,7 +7568,7 @@ const cpu_family_t cpu_families[] = {
                 .mem_write_cycles   = 1,
                 .cache_read_cycles  = 1,
                 .cache_write_cycles = 1,
-                .atclk_div          = 96
+                .atclk_div          = 102
             },
             {
                 .name               = "900",
@@ -7602,7 +7602,7 @@ const cpu_family_t cpu_families[] = {
                 .mem_write_cycles   = 1,
                 .cache_read_cycles  = 1,
                 .cache_write_cycles = 1,
-                .atclk_div          = 96
+                .atclk_div          = 114
             },
             {
                 .name               = "1000",
@@ -8436,7 +8436,7 @@ const cpu_family_t cpu_families[] = {
                 .mem_write_cycles   = 1,
                 .cache_read_cycles  = 1,
                 .cache_write_cycles = 1,
-                .atclk_div          = 96
+                .atclk_div          = 102
             },
             {
                 .name               = "900",
@@ -8470,7 +8470,7 @@ const cpu_family_t cpu_families[] = {
                 .mem_write_cycles   = 1,
                 .cache_read_cycles  = 1,
                 .cache_write_cycles = 1,
-                .atclk_div          = 96
+                .atclk_div          = 114
             },
             {
                 .name               = "1000",
