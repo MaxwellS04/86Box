@@ -810,8 +810,11 @@ gus_write(uint16_t addr, uint8_t val, void *priv)
                         gus_log(gus->log, "GUS DMA changed: New DMA1 = %i, New DMA2 = %i\n", gus->dma, gus->dma2);
                         gus_log(gus->log, "GUS DMA register val = %02X\n", val);
 
-                        if (gus->type == GUS_MAX)
+                        if (gus->type == GUS_MAX) {
                             ad1848_setdma(&gus->ad1848, gus->dma2);
+                            if (gus->dma2 != gus->dma)
+                                ad1848_setdma2(&gus->ad1848, gus->dma);
+                        }
 
                         /* Bit 7 of this register fires/clears the secondary IRQ when in combine IRQs mode */
                         if (val & 0x80)
@@ -1929,6 +1932,10 @@ gus_extreme_init(UNUSED(const device_t *info))
     sound_add_handler(sb_get_buffer_ess, gus->ess);
     music_add_handler(sb_get_music_buffer_ess, gus->ess);
     sound_set_cd_audio_filter(ess_filter_cd_audio, gus->ess);
+
+    /* Filter is always enabled on ES1688 */
+    gus->ess->mixer_ess.input_filter = 1;
+    gus->ess->mixer_ess.output_filter = 1;
 
     if (device_get_config_int("receive_input"))
         midi_in_handler(1, sb_dsp_input_msg, sb_dsp_input_sysex, &gus->ess->dsp);

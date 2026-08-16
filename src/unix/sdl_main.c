@@ -199,6 +199,9 @@ main_thread(UNUSED(void *param))
     int      drawits;
     int      frames;
 
+    
+    is_cpu_thread = 1;
+
 #ifdef USE_SDL2_LIB
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 #else
@@ -447,7 +450,7 @@ main(int argc, char **argv)
             else
             {
                 switch (event.type) {
-                    case SDL_QUIT:
+                    case SDL_EVENT_QUIT:
                         exit_event = 1;
                         break;
                     case SDL_EVENT_MOUSE_WHEEL:
