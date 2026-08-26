@@ -1,30 +1,34 @@
-#define REP_OPS(size, CNT_REG, SRC_REG, DEST_REG)                                                                 \
-    static int opREP_INSB_##size(UNUSED(uint32_t fetchdat))                                                       \
+#define REP_OPS_286(size, CNT_REG, SRC_REG, DEST_REG)                                                             \
+    static int opREP_INSB_286_##size(UNUSED(uint32_t fetchdat))                                                   \
     {                                                                                                             \
         int reads = 0, writes = 0, total_cycles = 0;                                                              \
+        uint16_t ins_addr;                                                                                        \
                                                                                                                   \
         addr64 = 0x00000000;                                                                                      \
                                                                                                                   \
         if (CNT_REG > 0) {                                                                                        \
             uint8_t temp;                                                                                         \
                                                                                                                   \
-            check_io_perm(DX, 1);                                                                                 \
-                                                                                                                  \
-            SEG_CHECK_WRITE(&cpu_state.seg_es);                                                                   \
-            CHECK_WRITE(&cpu_state.seg_es, DEST_REG, DEST_REG);                                                   \
-            high_page = 0;                                                                                        \
-            do_mmut_wb(es, DEST_REG, &addr64);                                                                    \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-                                                                                                                  \
-            temp = inb(DX);                                                                                       \
-            writememb_n(es, DEST_REG, addr64, temp);                                                              \
-                                                                                                                  \
+            ins_addr = DEST_REG;                                                                                  \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 DEST_REG--;                                                                                       \
             else                                                                                                  \
                 DEST_REG++;                                                                                       \
+                                                                                                                  \
+            check_io_perm(DX, 1);                                                                                 \
+                                                                                                                  \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_WRITE(&cpu_state.seg_es);                                                                   \
+            CHECK_WRITE(&cpu_state.seg_es, ins_addr, ins_addr);                                                   \
+            high_page = 0;                                                                                        \
+            do_mmut_wb(es, ins_addr, &addr64);                                                                    \
+            if (cpu_state.abrt)                                                                                   \
+                return 1;                                                                                         \
+                                                                                                                  \
+            temp = inb(DX);                                                                                       \
+            writememb_n(es, ins_addr, addr64, temp);                                                              \
+                                                                                                                  \
             cycles -= 15;                                                                                         \
             reads++;                                                                                              \
             writes++;                                                                                             \
@@ -38,32 +42,36 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_INSW_##size(UNUSED(uint32_t fetchdat))                                                       \
+    static int opREP_INSW_286_##size(UNUSED(uint32_t fetchdat))                                                   \
     {                                                                                                             \
         int reads = 0, writes = 0, total_cycles = 0;                                                              \
+        uint16_t ins_addr;                                                                                        \
                                                                                                                   \
         addr64a[0] = addr64a[1] = 0x00000000;                                                                     \
                                                                                                                   \
         if (CNT_REG > 0) {                                                                                        \
             uint16_t temp;                                                                                        \
                                                                                                                   \
-            check_io_perm(DX, 2);                                                                                 \
-                                                                                                                  \
-            SEG_CHECK_WRITE(&cpu_state.seg_es);                                                                   \
-            CHECK_WRITE(&cpu_state.seg_es, DEST_REG, DEST_REG + 1UL);                                             \
-            high_page = 0;                                                                                        \
-            do_mmut_ww(es, DEST_REG, addr64a);                                                                    \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-                                                                                                                  \
-            temp = inw(DX);                                                                                       \
-            writememw_n(es, DEST_REG, addr64a, temp);                                                             \
-                                                                                                                  \
+            ins_addr = DEST_REG;                                                                                  \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 DEST_REG -= 2;                                                                                    \
             else                                                                                                  \
                 DEST_REG += 2;                                                                                    \
+                                                                                                                  \
+            check_io_perm(DX, 2);                                                                                 \
+                                                                                                                  \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_WRITE(&cpu_state.seg_es);                                                                   \
+            CHECK_WRITE(&cpu_state.seg_es, ins_addr, ins_addr + 1UL);                                             \
+            high_page = 0;                                                                                        \
+            do_mmut_ww(es, ins_addr, addr64a);                                                                    \
+            if (cpu_state.abrt)                                                                                   \
+                return 1;                                                                                         \
+                                                                                                                  \
+            temp = inw(DX);                                                                                       \
+            writememw_n(es, ins_addr, addr64a, temp);                                                             \
+                                                                                                                  \
             cycles -= 15;                                                                                         \
             reads++;                                                                                              \
             writes++;                                                                                             \
@@ -77,71 +85,35 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_INSL_##size(UNUSED(uint32_t fetchdat))                                                       \
+                                                                                                                  \
+    static int opREP_OUTSB_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, writes = 0, total_cycles = 0;                                                              \
-                                                                                                                  \
-        addr64a[0] = addr64a[1] = addr64a[2] = addr64a[3] = 0x00000000;                                           \
-                                                                                                                  \
-        if (CNT_REG > 0) {                                                                                        \
-            uint32_t temp;                                                                                        \
-                                                                                                                  \
-            check_io_perm(DX, 4);                                                                                 \
-                                                                                                                  \
-            SEG_CHECK_WRITE(&cpu_state.seg_es);                                                                   \
-            CHECK_WRITE(&cpu_state.seg_es, DEST_REG, DEST_REG + 3UL);                                             \
-            high_page = 0;                                                                                        \
-            do_mmut_wl(es, DEST_REG, addr64a);                                                                    \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-                                                                                                                  \
-            temp = inl(DX);                                                                                       \
-            writememl_n(es, DEST_REG, addr64a, temp);                                                             \
-                                                                                                                  \
-            if (cpu_state.flags & D_FLAG)                                                                         \
-                DEST_REG -= 4;                                                                                    \
-            else                                                                                                  \
-                DEST_REG += 4;                                                                                    \
-            CNT_REG--;                                                                                            \
-            cycles -= 15;                                                                                         \
-            reads++;                                                                                              \
-            writes++;                                                                                             \
-            total_cycles += 15;                                                                                   \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, 0, reads, 0, writes, 0);                                                \
-        if (CNT_REG > 0) {                                                                                        \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }                                                                                                             \
-                                                                                                                  \
-    static int opREP_OUTSB_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int reads = 0, writes = 0, total_cycles = 0;                                                              \
+        uint16_t ins_addr;                                                                                        \
                                                                                                                   \
         addr64 = 0x00000000;                                                                                      \
                                                                                                                   \
         if (CNT_REG > 0) {                                                                                        \
             uint8_t temp;                                                                                         \
                                                                                                                   \
-            SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
-            CHECK_READ(cpu_state.ea_seg, SRC_REG, SRC_REG);                                                       \
-            high_page = 0;                                                                                        \
-            do_mmut_rb(cpu_state.ea_seg->base, SRC_REG, &addr64);                                                 \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-            check_io_perm(DX, 1);                                                                                 \
-                                                                                                                  \
-            temp = readmemb_n(cpu_state.ea_seg->base, SRC_REG, addr64);                                           \
-            outb(DX, temp);                                                                                       \
-                                                                                                                  \
+            ins_addr = SRC_REG;                                                                                   \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 SRC_REG--;                                                                                        \
             else                                                                                                  \
                 SRC_REG++;                                                                                        \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
+            CHECK_READ(cpu_state.ea_seg, ins_addr, ins_addr);                                                     \
+            high_page = 0;                                                                                        \
+            do_mmut_rb(cpu_state.ea_seg->base, ins_addr, &addr64);                                                \
+            if (cpu_state.abrt)                                                                                   \
+                return 1;                                                                                         \
+            check_io_perm(DX, 1);                                                                                 \
+                                                                                                                  \
+            temp = readmemb_n(cpu_state.ea_seg->base, ins_addr, addr64);                                          \
+            outb(DX, temp);                                                                                       \
+                                                                                                                  \
             cycles -= 14;                                                                                         \
             reads++;                                                                                              \
             writes++;                                                                                             \
@@ -155,31 +127,34 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_OUTSW_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_OUTSW_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, writes = 0, total_cycles = 0;                                                              \
+        uint16_t ins_addr;                                                                                        \
                                                                                                                   \
         addr64a[0] = addr64a[1] = 0x00000000;                                                                     \
                                                                                                                   \
         if (CNT_REG > 0) {                                                                                        \
             uint16_t temp;                                                                                        \
                                                                                                                   \
-            SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
-            CHECK_READ(cpu_state.ea_seg, SRC_REG, SRC_REG + 1UL);                                                 \
-            high_page = 0;                                                                                        \
-            do_mmut_rw(cpu_state.ea_seg->base, SRC_REG, addr64a);                                                 \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-            check_io_perm(DX, 2);                                                                                 \
-                                                                                                                  \
-            temp = readmemw_n(cpu_state.ea_seg->base, SRC_REG, addr64a);                                          \
-            outw(DX, temp);                                                                                       \
-                                                                                                                  \
+            ins_addr = SRC_REG;                                                                                   \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 SRC_REG -= 2;                                                                                     \
             else                                                                                                  \
                 SRC_REG += 2;                                                                                     \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
+            CHECK_READ(cpu_state.ea_seg, ins_addr, ins_addr + 1UL);                                               \
+            high_page = 0;                                                                                        \
+            do_mmut_rw(cpu_state.ea_seg->base, ins_addr, addr64a);                                                \
+            if (cpu_state.abrt)                                                                                   \
+                return 1;                                                                                         \
+            check_io_perm(DX, 2);                                                                                 \
+                                                                                                                  \
+            temp = readmemw_n(cpu_state.ea_seg->base, ins_addr, addr64a);                                         \
+            outw(DX, temp);                                                                                       \
+                                                                                                                  \
             cycles -= 14;                                                                                         \
             reads++;                                                                                              \
             writes++;                                                                                             \
@@ -193,80 +168,48 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_OUTSL_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int reads = 0, writes = 0, total_cycles = 0;                                                              \
                                                                                                                   \
-        addr64a[0] = addr64a[1] = addr64a[2] = addr64a[3] = 0x00000000;                                           \
-                                                                                                                  \
-        if (CNT_REG > 0) {                                                                                        \
-            uint32_t temp;                                                                                        \
-                                                                                                                  \
-            SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
-            CHECK_READ(cpu_state.ea_seg, SRC_REG, SRC_REG + 3UL);                                                 \
-            high_page = 0;                                                                                        \
-            do_mmut_rl(cpu_state.ea_seg->base, SRC_REG, addr64a);                                                 \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-            check_io_perm(DX, 4);                                                                                 \
-                                                                                                                  \
-            temp = readmeml_n(cpu_state.ea_seg->base, SRC_REG, addr64a);                                          \
-            outl(DX, temp);                                                                                       \
-                                                                                                                  \
-            if (cpu_state.flags & D_FLAG)                                                                         \
-                SRC_REG -= 4;                                                                                     \
-            else                                                                                                  \
-                SRC_REG += 4;                                                                                     \
-            CNT_REG--;                                                                                            \
-            cycles -= 14;                                                                                         \
-            reads++;                                                                                              \
-            writes++;                                                                                             \
-            total_cycles += 14;                                                                                   \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, 0, reads, 0, writes, 0);                                                \
-        if (CNT_REG > 0) {                                                                                        \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }                                                                                                             \
-                                                                                                                  \
-    static int opREP_MOVSB_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_MOVSB_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, writes = 0, total_cycles = 0;                                                              \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr, ins_addr_2;                                                                            \
         addr64 = addr64_2 = 0x00000000;                                                                           \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         while (CNT_REG > 0) {                                                                                     \
             uint8_t temp;                                                                                         \
                                                                                                                   \
+            ins_addr = SRC_REG;                                                                                   \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                SRC_REG--;                                                                                        \
+            else                                                                                                  \
+                SRC_REG++;                                                                                        \
+                                                                                                                  \
             SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
-            CHECK_READ_REP(cpu_state.ea_seg, SRC_REG, SRC_REG);                                                   \
+            CHECK_READ_REP(cpu_state.ea_seg, ins_addr, ins_addr);                                                 \
             high_page = 0;                                                                                        \
-            do_mmut_rb(cpu_state.ea_seg->base, SRC_REG, &addr64);                                                 \
+            do_mmut_rb(cpu_state.ea_seg->base, ins_addr, &addr64);                                                \
             if (cpu_state.abrt)                                                                                   \
                 break;                                                                                            \
+                                                                                                                  \
+            ins_addr_2 = DEST_REG;                                                                                \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                DEST_REG--;                                                                                       \
+            else                                                                                                  \
+                DEST_REG++;                                                                                       \
+            CNT_REG--;                                                                                            \
                                                                                                                   \
             SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
-            CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);                                               \
+            CHECK_WRITE_REP(&cpu_state.seg_es, ins_addr_2, ins_addr_2);                                           \
             high_page = 0;                                                                                        \
-            do_mmut_wb(es, DEST_REG, &addr64_2);                                                                  \
+            do_mmut_wb(es, ins_addr_2, &addr64_2);                                                                \
             if (cpu_state.abrt)                                                                                   \
                 break;                                                                                            \
                                                                                                                   \
-            temp = readmemb_n(cpu_state.ea_seg->base, SRC_REG, addr64);                                           \
-            writememb_n(es, DEST_REG, addr64_2, temp);                                                            \
+            temp = readmemb_n(cpu_state.ea_seg->base, ins_addr, addr64);                                          \
+            writememb_n(es, ins_addr_2, addr64_2, temp);                                                          \
                                                                                                                   \
-            if (cpu_state.flags & D_FLAG) {                                                                       \
-                DEST_REG--;                                                                                       \
-                SRC_REG--;                                                                                        \
-            } else {                                                                                              \
-                DEST_REG++;                                                                                       \
-                SRC_REG++;                                                                                        \
-            }                                                                                                     \
-            CNT_REG--;                                                                                            \
             cycles -= is486 ? 3 : 4;                                                                              \
             reads++;                                                                                              \
             writes++;                                                                                             \
@@ -282,10 +225,11 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_MOVSW_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_MOVSW_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, writes = 0, total_cycles = 0;                                                              \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr, ins_addr_2;                                                                            \
         addr64a[0] = addr64a[1] = 0x00000000;                                                                     \
         addr64a_2[0] = addr64a_2[1] = 0x00000000;                                                                 \
         if (trap)                                                                                                 \
@@ -293,82 +237,36 @@
         while (CNT_REG > 0) {                                                                                     \
             uint16_t temp;                                                                                        \
                                                                                                                   \
-            SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
-            CHECK_READ_REP(cpu_state.ea_seg, SRC_REG, SRC_REG + 1UL);                                             \
-            high_page = 0;                                                                                        \
-            do_mmut_rw(cpu_state.ea_seg->base, SRC_REG, addr64a);                                                 \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
-            CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG + 1UL);                                         \
-            high_page = 0;                                                                                        \
-            do_mmut_ww(es, DEST_REG, addr64a_2);                                                                  \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            temp = readmemw_n(cpu_state.ea_seg->base, SRC_REG, addr64a);                                          \
-            writememw_n(es, DEST_REG, addr64a_2, temp);                                                           \
-                                                                                                                  \
-            if (cpu_state.flags & D_FLAG) {                                                                       \
-                DEST_REG -= 2;                                                                                    \
+            ins_addr = SRC_REG;                                                                                   \
+            if (cpu_state.flags & D_FLAG)                                                                         \
                 SRC_REG -= 2;                                                                                     \
-            } else {                                                                                              \
-                DEST_REG += 2;                                                                                    \
+            else                                                                                                  \
                 SRC_REG += 2;                                                                                     \
-            }                                                                                                     \
-            CNT_REG--;                                                                                            \
-            cycles -= is486 ? 3 : 4;                                                                              \
-            reads++;                                                                                              \
-            writes++;                                                                                             \
-            total_cycles += is486 ? 3 : 4;                                                                        \
-            if (cycles < cycles_end)                                                                              \
-                break;                                                                                            \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, reads, 0, writes, 0, 0);                                                \
-        if (CNT_REG > 0) {                                                                                        \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }                                                                                                             \
-    static int opREP_MOVSL_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int reads = 0, writes = 0, total_cycles = 0;                                                              \
-        int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
-        addr64a[0] = addr64a[1] = addr64a[2] = addr64a[3] = 0x00000000;                                           \
-        addr64a_2[0] = addr64a_2[1] = addr64a_2[2] = addr64a_2[3] = 0x00000000;                                   \
-        if (trap)                                                                                                 \
-            cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
-        while (CNT_REG > 0) {                                                                                     \
-            uint32_t temp;                                                                                        \
                                                                                                                   \
             SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
-            CHECK_READ_REP(cpu_state.ea_seg, SRC_REG, SRC_REG + 3UL);                                             \
+            CHECK_READ_REP(cpu_state.ea_seg, ins_addr, ins_addr + 1UL);                                           \
             high_page = 0;                                                                                        \
-            do_mmut_rl(cpu_state.ea_seg->base, SRC_REG, addr64a);                                                 \
+            do_mmut_rw(cpu_state.ea_seg->base, ins_addr, addr64a);                                                \
             if (cpu_state.abrt)                                                                                   \
                 break;                                                                                            \
+                                                                                                                  \
+            ins_addr_2 = DEST_REG;                                                                                \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                DEST_REG -= 2;                                                                                    \
+            else                                                                                                  \
+                DEST_REG += 2;                                                                                    \
+            CNT_REG--;                                                                                            \
                                                                                                                   \
             SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
-            CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG + 3UL);                                         \
+            CHECK_WRITE_REP(&cpu_state.seg_es, ins_addr_2, ins_addr_2 + 1UL);                                     \
             high_page = 0;                                                                                        \
-            do_mmut_wl(es, DEST_REG, addr64a_2);                                                                  \
+            do_mmut_ww(es, ins_addr_2, addr64a_2);                                                                \
             if (cpu_state.abrt)                                                                                   \
                 break;                                                                                            \
                                                                                                                   \
-            temp = readmeml_n(cpu_state.ea_seg->base, SRC_REG, addr64a);                                          \
-            writememl_n(es, DEST_REG, addr64a_2, temp);                                                           \
+            temp = readmemw_n(cpu_state.ea_seg->base, ins_addr, addr64a);                                         \
+            writememw_n(es, ins_addr_2, addr64a_2, temp);                                                         \
                                                                                                                   \
-            if (cpu_state.flags & D_FLAG) {                                                                       \
-                DEST_REG -= 4;                                                                                    \
-                SRC_REG -= 4;                                                                                     \
-            } else {                                                                                              \
-                DEST_REG += 4;                                                                                    \
-                SRC_REG += 4;                                                                                     \
-            }                                                                                                     \
-            CNT_REG--;                                                                                            \
             cycles -= is486 ? 3 : 4;                                                                              \
             reads++;                                                                                              \
             writes++;                                                                                             \
@@ -385,25 +283,27 @@
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
                                                                                                                   \
-    static int opREP_STOSB_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_STOSB_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int writes = 0, total_cycles = 0;                                                                         \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr;                                                                                        \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         while (CNT_REG > 0) {                                                                                     \
-                                                                                                                  \
-            SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
-            CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);                                               \
-            writememb(es, DEST_REG, AL);                                                                          \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
+            ins_addr = DEST_REG;                                                                                  \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 DEST_REG--;                                                                                       \
             else                                                                                                  \
                 DEST_REG++;                                                                                       \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
+            CHECK_WRITE_REP(&cpu_state.seg_es, ins_addr, ins_addr);                                               \
+            writememb(es, ins_addr, AL);                                                                          \
+            if (cpu_state.abrt)                                                                                   \
+                break;                                                                                            \
+                                                                                                                  \
             cycles -= is486 ? 4 : 5;                                                                              \
             writes++;                                                                                             \
             total_cycles += is486 ? 4 : 5;                                                                        \
@@ -418,25 +318,27 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_STOSW_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_STOSW_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int writes = 0, total_cycles = 0;                                                                         \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr;                                                                                        \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         while (CNT_REG > 0) {                                                                                     \
-                                                                                                                  \
-            SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
-            CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG + 1UL);                                         \
-            writememw(es, DEST_REG, AX);                                                                          \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
+            ins_addr = DEST_REG;                                                                                  \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 DEST_REG -= 2;                                                                                    \
             else                                                                                                  \
                 DEST_REG += 2;                                                                                    \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
+            CHECK_WRITE_REP(&cpu_state.seg_es, ins_addr, ins_addr + 1UL);                                         \
+            writememw(es, ins_addr, AX);                                                                          \
+            if (cpu_state.abrt)                                                                                   \
+                break;                                                                                            \
+                                                                                                                  \
             cycles -= is486 ? 4 : 5;                                                                              \
             writes++;                                                                                             \
             total_cycles += is486 ? 4 : 5;                                                                        \
@@ -451,60 +353,30 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_STOSL_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int writes = 0, total_cycles = 0;                                                                         \
-        int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
-        if (trap)                                                                                                 \
-            cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
-        while (CNT_REG > 0) {                                                                                     \
                                                                                                                   \
-            SEG_CHECK_WRITE_REP(&cpu_state.seg_es);                                                               \
-            CHECK_WRITE_REP(&cpu_state.seg_es, DEST_REG, DEST_REG + 3UL);                                         \
-            writememl(es, DEST_REG, EAX);                                                                         \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            if (cpu_state.flags & D_FLAG)                                                                         \
-                DEST_REG -= 4;                                                                                    \
-            else                                                                                                  \
-                DEST_REG += 4;                                                                                    \
-            CNT_REG--;                                                                                            \
-            cycles -= is486 ? 4 : 5;                                                                              \
-            writes++;                                                                                             \
-            total_cycles += is486 ? 4 : 5;                                                                        \
-            if (cycles < cycles_end)                                                                              \
-                break;                                                                                            \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, 0, 0, 0, writes, 0);                                                    \
-        if (CNT_REG > 0) {                                                                                        \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }                                                                                                             \
-                                                                                                                  \
-    static int opREP_LODSB_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_LODSB_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, total_cycles = 0;                                                                          \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr;                                                                                        \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         while (CNT_REG > 0) {                                                                                     \
-            SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
-            CHECK_READ_REP(cpu_state.ea_seg, SRC_REG, SRC_REG);                                                   \
-            uint8_t new_AL = readmemb(cpu_state.ea_seg->base, SRC_REG);                                           \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            AL = new_AL;                                                                                          \
-                                                                                                                  \
+            ins_addr = SRC_REG;                                                                                   \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 SRC_REG--;                                                                                        \
             else                                                                                                  \
                 SRC_REG++;                                                                                        \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
+            CHECK_READ_REP(cpu_state.ea_seg, ins_addr, ins_addr);                                                 \
+            uint8_t new_AL = readmemb(cpu_state.ea_seg->base, ins_addr);                                          \
+            if (cpu_state.abrt)                                                                                   \
+                break;                                                                                            \
+                                                                                                                  \
+            AL = new_AL;                                                                                          \
+                                                                                                                  \
             cycles -= is486 ? 4 : 5;                                                                              \
             reads++;                                                                                              \
             total_cycles += is486 ? 4 : 5;                                                                        \
@@ -519,26 +391,29 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_LODSW_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_LODSW_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, total_cycles = 0;                                                                          \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr;                                                                                        \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         while (CNT_REG > 0) {                                                                                     \
-            SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
-            CHECK_READ_REP(cpu_state.ea_seg, SRC_REG, SRC_REG + 1UL);                                             \
-            uint16_t new_AX = readmemw(cpu_state.ea_seg->base, SRC_REG);                                          \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            AX = new_AX;                                                                                          \
-                                                                                                                  \
+            ins_addr = SRC_REG;                                                                                   \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 SRC_REG -= 2;                                                                                     \
             else                                                                                                  \
                 SRC_REG += 2;                                                                                     \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
+            CHECK_READ_REP(cpu_state.ea_seg, ins_addr, ins_addr + 1UL);                                           \
+            uint16_t new_AX = readmemw(cpu_state.ea_seg->base, ins_addr);                                         \
+            if (cpu_state.abrt)                                                                                   \
+                break;                                                                                            \
+                                                                                                                  \
+            AX = new_AX;                                                                                          \
+                                                                                                                  \
             cycles -= is486 ? 4 : 5;                                                                              \
             reads++;                                                                                              \
             total_cycles += is486 ? 4 : 5;                                                                        \
@@ -553,78 +428,50 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_LODSL_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int reads = 0, total_cycles = 0;                                                                          \
-        int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
-        if (trap)                                                                                                 \
-            cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
-        while (CNT_REG > 0) {                                                                                     \
-            SEG_CHECK_READ_REP(cpu_state.ea_seg);                                                                 \
-            CHECK_READ_REP(cpu_state.ea_seg, SRC_REG, SRC_REG + 3UL);                                             \
-            uint32_t new_EAX = readmeml(cpu_state.ea_seg->base, SRC_REG);                                         \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            EAX = new_EAX;                                                                                        \
-                                                                                                                  \
-            if (cpu_state.flags & D_FLAG)                                                                         \
-                SRC_REG -= 4;                                                                                     \
-            else                                                                                                  \
-                SRC_REG += 4;                                                                                     \
-            CNT_REG--;                                                                                            \
-            cycles -= is486 ? 4 : 5;                                                                              \
-            reads++;                                                                                              \
-            total_cycles += is486 ? 4 : 5;                                                                        \
-            if (cycles < cycles_end)                                                                              \
-                break;                                                                                            \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, 0, reads, 0, 0, 0);                                                     \
-        if (CNT_REG > 0) {                                                                                        \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }
 
-#define REP_OPS_CMPS_SCAS(size, CNT_REG, SRC_REG, DEST_REG, FV)                                                   \
-    static int opREP_CMPSB_##size(UNUSED(uint32_t fetchdat))                                                      \
+#define REP_OPS_CMPS_SCAS_286(size, CNT_REG, SRC_REG, DEST_REG, FV)                                               \
+    static int opREP_CMPSB_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, total_cycles = 0, tempz;                                                                   \
+        uint16_t ins_addr, ins_addr_2;                                                                            \
         addr64 = addr64_2 = 0x00000000;                                                                           \
                                                                                                                   \
         tempz = FV;                                                                                               \
         if ((CNT_REG > 0) && (FV == tempz)) {                                                                     \
             uint8_t temp, temp2;                                                                                  \
                                                                                                                   \
+            ins_addr = DEST_REG;                                                                                  \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                DEST_REG--;                                                                                       \
+            else                                                                                                  \
+                DEST_REG++;                                                                                       \
+                                                                                                                  \
             SEG_CHECK_READ(&cpu_state.seg_es);                                                                    \
-            CHECK_READ(&cpu_state.seg_es, DEST_REG, DEST_REG);                                                    \
+            CHECK_READ(&cpu_state.seg_es, ins_addr, ins_addr);                                                    \
             high_page = 0;                                                                                        \
-            do_mmut_rb(es, DEST_REG, &addr64);                                                                    \
+            do_mmut_rb(es, ins_addr, &addr64);                                                                    \
             if (cpu_state.abrt)                                                                                   \
                 return 1;                                                                                         \
+                                                                                                                  \
+            ins_addr_2 = SRC_REG;                                                                                 \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                SRC_REG--;                                                                                        \
+            else                                                                                                  \
+                SRC_REG++;                                                                                        \
+            CNT_REG--;                                                                                            \
                                                                                                                   \
             SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
-            CHECK_READ(cpu_state.ea_seg, SRC_REG, SRC_REG);                                                       \
+            CHECK_READ(cpu_state.ea_seg, ins_addr_2, ins_addr_2);                                                 \
             high_page = 0;                                                                                        \
-            do_mmut_rb2(cpu_state.ea_seg->base, SRC_REG, &addr64_2);                                              \
+            do_mmut_rb2(cpu_state.ea_seg->base, ins_addr_2, &addr64_2);                                           \
             if (cpu_state.abrt)                                                                                   \
                 return 1;                                                                                         \
                                                                                                                   \
-            temp = readmemb_n(es, DEST_REG, addr64);                                                              \
+            temp = readmemb_n(es, ins_addr, addr64);                                                              \
             is_compare = 1;                                                                                       \
-            temp2 = readmemb_n2(cpu_state.ea_seg->base, SRC_REG, addr64_2);                                       \
+            temp2 = readmemb_n2(cpu_state.ea_seg->base, ins_addr_2, addr64_2);                                    \
             is_compare = 0;                                                                                       \
                                                                                                                   \
-            if (cpu_state.flags & D_FLAG) {                                                                       \
-                DEST_REG--;                                                                                       \
-                SRC_REG--;                                                                                        \
-            } else {                                                                                              \
-                DEST_REG++;                                                                                       \
-                SRC_REG++;                                                                                        \
-            }                                                                                                     \
-            CNT_REG--;                                                                                            \
             cycles -= is486 ? 7 : 9;                                                                              \
             reads += 2;                                                                                           \
             total_cycles += is486 ? 7 : 9;                                                                        \
@@ -639,9 +486,10 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_CMPSW_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_CMPSW_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, total_cycles = 0, tempz;                                                                   \
+        uint16_t ins_addr, ins_addr_2;                                                                            \
         addr64a[0] = addr64a[1] = 0x00000000;                                                                     \
         addr64a_2[0] = addr64a_2[1] = 0x00000000;                                                                 \
                                                                                                                   \
@@ -649,33 +497,38 @@
         if ((CNT_REG > 0) && (FV == tempz)) {                                                                     \
             uint16_t temp, temp2;                                                                                 \
                                                                                                                   \
+            ins_addr = DEST_REG;                                                                                  \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                DEST_REG -= 2;                                                                                    \
+            else                                                                                                  \
+                DEST_REG += 2;                                                                                    \
+                                                                                                                  \
             SEG_CHECK_READ(&cpu_state.seg_es);                                                                    \
-            CHECK_READ(&cpu_state.seg_es, DEST_REG, DEST_REG + 1UL);                                              \
+            CHECK_READ(&cpu_state.seg_es, ins_addr, ins_addr + 1UL);                                              \
             high_page = 0;                                                                                        \
-            do_mmut_rw(es, DEST_REG, addr64a);                                                                    \
+            do_mmut_rw(es, ins_addr, addr64a);                                                                    \
             if (cpu_state.abrt)                                                                                   \
                 return 1;                                                                                         \
+                                                                                                                  \
+            ins_addr_2 = SRC_REG;                                                                                 \
+            if (cpu_state.flags & D_FLAG)                                                                         \
+                SRC_REG -= 2;                                                                                     \
+            else                                                                                                  \
+                SRC_REG += 2;                                                                                     \
+            CNT_REG--;                                                                                            \
                                                                                                                   \
             SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
-            CHECK_READ(cpu_state.ea_seg, SRC_REG, SRC_REG + 1UL);                                                 \
+            CHECK_READ(cpu_state.ea_seg, ins_addr_2, ins_addr_2 + 1UL);                                           \
             high_page = 0;                                                                                        \
-            do_mmut_rw2(cpu_state.ea_seg->base, SRC_REG, addr64a_2);                                              \
+            do_mmut_rw2(cpu_state.ea_seg->base, ins_addr_2, addr64a_2);                                           \
             if (cpu_state.abrt)                                                                                   \
                 return 1;                                                                                         \
                                                                                                                   \
-            temp = readmemw_n(es, DEST_REG, addr64a);                                                             \
+            temp = readmemw_n(es, ins_addr, addr64a);                                                             \
             is_compare = 1;                                                                                       \
-            temp2 = readmemw_n2(cpu_state.ea_seg->base, SRC_REG, addr64a_2);                                      \
+            temp2 = readmemw_n2(cpu_state.ea_seg->base, ins_addr_2, addr64a_2);                                   \
             is_compare = 0;                                                                                       \
                                                                                                                   \
-            if (cpu_state.flags & D_FLAG) {                                                                       \
-                DEST_REG -= 2;                                                                                    \
-                SRC_REG -= 2;                                                                                     \
-            } else {                                                                                              \
-                DEST_REG += 2;                                                                                    \
-                SRC_REG += 2;                                                                                     \
-            }                                                                                                     \
-            CNT_REG--;                                                                                            \
             cycles -= is486 ? 7 : 9;                                                                              \
             reads += 2;                                                                                           \
             total_cycles += is486 ? 7 : 9;                                                                        \
@@ -690,79 +543,31 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_CMPSL_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int reads = 0, total_cycles = 0, tempz;                                                                   \
-        addr64a[0] = addr64a[1] = addr64a[2] = addr64a[3] = 0x00000000;                                           \
-        addr64a_2[0] = addr64a_2[1] = addr64a_2[2] = addr64a_2[3] = 0x00000000;                                   \
                                                                                                                   \
-        tempz = FV;                                                                                               \
-        if ((CNT_REG > 0) && (FV == tempz)) {                                                                     \
-            uint32_t temp, temp2;                                                                                 \
-                                                                                                                  \
-            SEG_CHECK_READ(&cpu_state.seg_es);                                                                    \
-            CHECK_READ(&cpu_state.seg_es, DEST_REG, DEST_REG + 3UL);                                              \
-            high_page = 0;                                                                                        \
-            do_mmut_rl(es, DEST_REG, addr64a);                                                                    \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-                                                                                                                  \
-            SEG_CHECK_READ(cpu_state.ea_seg);                                                                     \
-            CHECK_READ(cpu_state.ea_seg, SRC_REG, SRC_REG + 3UL);                                                 \
-            high_page = 0;                                                                                        \
-            do_mmut_rl2(cpu_state.ea_seg->base, SRC_REG, addr64a_2);                                              \
-            if (cpu_state.abrt)                                                                                   \
-                return 1;                                                                                         \
-                                                                                                                  \
-            temp = readmeml_n(es, DEST_REG, addr64a);                                                             \
-            is_compare = 1;                                                                                       \
-            temp2 = readmeml_n2(cpu_state.ea_seg->base, SRC_REG, addr64a_2);                                      \
-            is_compare = 0;                                                                                       \
-                                                                                                                  \
-            if (cpu_state.flags & D_FLAG) {                                                                       \
-                DEST_REG -= 4;                                                                                    \
-                SRC_REG -= 4;                                                                                     \
-            } else {                                                                                              \
-                DEST_REG += 4;                                                                                    \
-                SRC_REG += 4;                                                                                     \
-            }                                                                                                     \
-            CNT_REG--;                                                                                            \
-            cycles -= is486 ? 7 : 9;                                                                              \
-            reads += 2;                                                                                           \
-            total_cycles += is486 ? 7 : 9;                                                                        \
-            setsub32(temp2, temp);                                                                                \
-            tempz = (ZF_SET()) ? 1 : 0;                                                                           \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, 0, reads, 0, 0, 0);                                                     \
-        if ((CNT_REG > 0) && (FV == tempz)) {                                                                     \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }                                                                                                             \
-                                                                                                                  \
-    static int opREP_SCASB_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_SCASB_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, total_cycles = 0, tempz;                                                                   \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr;                                                                                        \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         tempz = FV;                                                                                               \
         while ((CNT_REG > 0) && (FV == tempz)) {                                                                  \
-            SEG_CHECK_READ_REP(&cpu_state.seg_es);                                                                \
-            CHECK_READ_REP(&cpu_state.seg_es, DEST_REG, DEST_REG);                                                \
-            uint8_t temp = readmemb(es, DEST_REG);                                                                \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            setsub8(AL, temp);                                                                                    \
-            tempz = (ZF_SET()) ? 1 : 0;                                                                           \
+            ins_addr = DEST_REG;                                                                                  \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 DEST_REG--;                                                                                       \
             else                                                                                                  \
                 DEST_REG++;                                                                                       \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_READ_REP(&cpu_state.seg_es);                                                                \
+            CHECK_READ_REP(&cpu_state.seg_es, ins_addr, ins_addr);                                                \
+            uint8_t temp = readmemb(es, ins_addr);                                                                \
+            if (cpu_state.abrt)                                                                                   \
+                break;                                                                                            \
+                                                                                                                  \
+            setsub8(AL, temp);                                                                                    \
+            tempz = (ZF_SET()) ? 1 : 0;                                                                           \
             cycles -= is486 ? 5 : 8;                                                                              \
             reads++;                                                                                              \
             total_cycles += is486 ? 5 : 8;                                                                        \
@@ -777,27 +582,30 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_SCASW_##size(UNUSED(uint32_t fetchdat))                                                      \
+    static int opREP_SCASW_286_##size(UNUSED(uint32_t fetchdat))                                                  \
     {                                                                                                             \
         int reads = 0, total_cycles = 0, tempz;                                                                   \
         int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
+        uint16_t ins_addr;                                                                                        \
         if (trap)                                                                                                 \
             cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
         tempz = FV;                                                                                               \
         while ((CNT_REG > 0) && (FV == tempz)) {                                                                  \
-            SEG_CHECK_READ_REP(&cpu_state.seg_es);                                                                \
-            CHECK_READ_REP(&cpu_state.seg_es, DEST_REG, DEST_REG + 1UL);                                          \
-            uint16_t temp = readmemw(es, DEST_REG);                                                               \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            setsub16(AX, temp);                                                                                   \
-            tempz = (ZF_SET()) ? 1 : 0;                                                                           \
+            ins_addr = DEST_REG;                                                                                  \
             if (cpu_state.flags & D_FLAG)                                                                         \
                 DEST_REG -= 2;                                                                                    \
             else                                                                                                  \
                 DEST_REG += 2;                                                                                    \
             CNT_REG--;                                                                                            \
+                                                                                                                  \
+            SEG_CHECK_READ_REP(&cpu_state.seg_es);                                                                \
+            CHECK_READ_REP(&cpu_state.seg_es, ins_addr, ins_addr + 1UL);                                          \
+            uint16_t temp = readmemw(es, ins_addr);                                                               \
+            if (cpu_state.abrt)                                                                                   \
+                break;                                                                                            \
+                                                                                                                  \
+            setsub16(AX, temp);                                                                                   \
+            tempz = (ZF_SET()) ? 1 : 0;                                                                           \
             cycles -= is486 ? 5 : 8;                                                                              \
             reads++;                                                                                              \
             total_cycles += is486 ? 5 : 8;                                                                        \
@@ -812,76 +620,7 @@
         }                                                                                                         \
         return cpu_state.abrt;                                                                                    \
     }                                                                                                             \
-    static int opREP_SCASL_##size(UNUSED(uint32_t fetchdat))                                                      \
-    {                                                                                                             \
-        int reads = 0, total_cycles = 0, tempz;                                                                   \
-        int cycles_end = cycles - ((is386 && cpu_use_dynarec) ? 1000 : 100);                                      \
-        if (trap)                                                                                                 \
-            cycles_end = cycles + 1; /*Force the instruction to end after only one iteration when trap flag set*/ \
-        tempz = FV;                                                                                               \
-        while ((CNT_REG > 0) && (FV == tempz)) {                                                                  \
-            SEG_CHECK_READ_REP(&cpu_state.seg_es);                                                                \
-            CHECK_READ_REP(&cpu_state.seg_es, DEST_REG, DEST_REG + 3UL);                                          \
-            uint32_t temp = readmeml(es, DEST_REG);                                                               \
-            if (cpu_state.abrt)                                                                                   \
-                break;                                                                                            \
-                                                                                                                  \
-            setsub32(EAX, temp);                                                                                  \
-            tempz = (ZF_SET()) ? 1 : 0;                                                                           \
-            if (cpu_state.flags & D_FLAG)                                                                         \
-                DEST_REG -= 4;                                                                                    \
-            else                                                                                                  \
-                DEST_REG += 4;                                                                                    \
-            CNT_REG--;                                                                                            \
-            cycles -= is486 ? 5 : 8;                                                                              \
-            reads++;                                                                                              \
-            total_cycles += is486 ? 5 : 8;                                                                        \
-            if (cycles < cycles_end)                                                                              \
-                break;                                                                                            \
-        }                                                                                                         \
-        PREFETCH_RUN(total_cycles, 1, -1, 0, reads, 0, 0, 0);                                                     \
-        if ((CNT_REG > 0) && (FV == tempz)) {                                                                     \
-            CPU_BLOCK_END();                                                                                      \
-            cpu_state.pc = cpu_state.oldpc;                                                                       \
-            return 1;                                                                                             \
-        }                                                                                                         \
-        return cpu_state.abrt;                                                                                    \
-    }
 
-REP_OPS(a16, CX, SI, DI)
-REP_OPS(a32, ECX, ESI, EDI)
-REP_OPS_CMPS_SCAS(a16_NE, CX, SI, DI, 0)
-REP_OPS_CMPS_SCAS(a16_E, CX, SI, DI, 1)
-REP_OPS_CMPS_SCAS(a32_NE, ECX, ESI, EDI, 0)
-REP_OPS_CMPS_SCAS(a32_E, ECX, ESI, EDI, 1)
-
-static int
-opREPNE(uint32_t fetchdat)
-{
-    fetchdat = fastreadl_fetch(cs + cpu_state.pc);
-    if (cpu_state.abrt)
-        return 1;
-    cpu_state.pc++;
-
-    CLOCK_CYCLES(2);
-    PREFETCH_PREFIX();
-    rep_op = fetchdat & 0xff;
-    if (x86_2386_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
-        return x86_2386_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-    return x86_2386_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-}
-static int
-opREPE(uint32_t fetchdat)
-{
-    fetchdat = fastreadl_fetch(cs + cpu_state.pc);
-    if (cpu_state.abrt)
-        return 1;
-    cpu_state.pc++;
-
-    CLOCK_CYCLES(2);
-    PREFETCH_PREFIX();
-    rep_op = fetchdat & 0xff;
-    if (x86_2386_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
-        return x86_2386_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-    return x86_2386_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-}
+REP_OPS_286(a16, CX, SI, DI)
+REP_OPS_CMPS_SCAS_286(a16_NE, CX, SI, DI, 0)
+REP_OPS_CMPS_SCAS_286(a16_E, CX, SI, DI, 1)
