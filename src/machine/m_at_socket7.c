@@ -342,6 +342,9 @@ machine_at_cu430hx_init(const machine_t *model)
     if ((sound_card_current[0] == SOUND_INTERNAL) && machine_get_snd_device(machine)->available())
         machine_snd = device_add(machine_get_snd_device(machine));
 
+    if ((net_cards_conf[0].device_num == NET_INTERNAL) && machine_get_net_device(machine))
+        device_add(machine_get_net_device(machine));
+
     device_add(&i430hx_device);
     device_add(&piix3_device);
     device_add_params(&pc87306_device, (void *) PCX730X_AMI);
@@ -1405,6 +1408,9 @@ machine_at_nupro592_init(const machine_t *model)
     hwm_values.fans[2]         = 0; /* unused */
     /* -5V is not reported by the BIOS, but leave it set */
 
+    if ((net_cards_conf[0].device_num == NET_INTERNAL) && machine_get_net_device(machine))
+        device_add(machine_get_net_device(machine));
+
     return ret;
 }
 
@@ -1939,7 +1945,7 @@ static const device_config_t an430tx_config[] = {
             },
             {
                 .name          = "PhoenixBIOS 4.0 Release 6.0 - Revision P09-0006 (Packard Bell PB79x)",
-                .internal_name = "an430tx",
+                .internal_name = "pb79x",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 5,
                 .local         = 0,
@@ -1947,6 +1953,17 @@ static const device_config_t an430tx_config[] = {
                 .files         = { "roms/machines/an430tx/ANP0911A.BIO", "roms/machines/an430tx/ANP0911A.BI1",
                                    "roms/machines/an430tx/ANP0911A.BI2", "roms/machines/an430tx/ANP0911A.BI3",
                                    "roms/machines/an430tx/ANP0911A.RCV", "" }
+            },
+            {
+                .name          = "PhoenixBIOS 4.0 Release 6.0 - Revision P10-0095",
+                .internal_name = "an430tx",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 5,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/an430tx/P10-0095.BIO", "roms/machines/an430tx/P10-0095.BI1",
+                                   "roms/machines/an430tx/P10-0095.BI2", "roms/machines/an430tx/P10-0095.BI3",
+                                   "roms/machines/an430tx/P10-0095.RCV", "" }
             },
             { .files_no = 0 }
         }
