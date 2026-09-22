@@ -155,7 +155,6 @@ machine_at_plato_init(const machine_t *model)
 {
     int         ret = 0;
     const char *fn;
-    const char *fn2;
 
     /* No ROMs available */
     if (!device_available(model->device))
@@ -163,8 +162,7 @@ machine_at_plato_init(const machine_t *model)
 
     device_context(model->device);
     fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
-    fn2 = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 1);
-    ret = bios_load_linear_combined(fn, fn2, 0x1d000, 128);
+    ret = bios_load_intel(fn, NULL, 131072, 1);
     device_context_restore();
 
     machine_at_premiere_common_init(model, PCI_CAN_SWITCH_TYPE);
@@ -552,9 +550,8 @@ machine_at_morrison32_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined("roms/machines/morrison32/1011BT0L.BIO",
-                                    "roms/machines/morrison32/1011BT0L.BI1",
-                                    0x20000, 128);
+    ret = bios_load_intel("roms/machines/morrison32/1011BT0L.BIO", NULL,
+                          131072, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -764,7 +761,6 @@ machine_at_zappa_init(const machine_t *model)
 {
     int         ret = 0;
     const char *fn;
-    const char *fn2;
 
     /* No ROMs available */
     if (!device_available(model->device))
@@ -772,8 +768,7 @@ machine_at_zappa_init(const machine_t *model)
 
     device_context(model->device);
     fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
-    fn2 = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 1);
-    ret = bios_load_linear_combined(fn, fn2, 0x20000, 128);
+    ret = bios_load_intel(fn, NULL, 131072, 1);
     device_context_restore();
 
     machine_at_common_init(model);
@@ -877,6 +872,38 @@ machine_at_powermatev_init(const machine_t *model)
     device_add(&piix_device);
     device_add_params(&fdc37c6xx_device, (void *) FDC37C665);
     device_add(&intel_flash_bxt_device);
+
+    return ret;
+}
+
+int
+machine_at_pb570_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_intel("roms/machines/pb570/1007BY0R.BIO", NULL,
+                           131072, 1);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_VIDEO,       4, 0, 0, 0);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,      3, 2, 1, 4);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 3, 2, 4);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      2, 1, 3, 4);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    device_add(&i430fx_device);
+    device_add(&piix_device);
+    device_add_params(&pc87306_device, (void *) PCX730X_AMI);
+    device_add(&intel_flash_bxt_ami_device);
 
     return ret;
 }

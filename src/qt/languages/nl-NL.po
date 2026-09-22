@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-08-22 20:53+0000\n"
+"PO-Revision-Date: 2026-09-01 17:51+0000\n"
 "Last-Translator: sharkbyte16 <mjacobs74@protonmail.com>\n"
 "Language-Team: Dutch <https://weblate.86box.net/projects/86box/86box/nl/>\n"
 "Language: nl-NL\n"
@@ -80,6 +80,9 @@ msgstr "&Afmetingen opgeven…"
 
 msgid "Force &4:3 display ratio"
 msgstr "Forceer &4:3 beeldverhouding"
+
+msgid "Force &%1:%2 display ratio"
+msgstr "Forceer &%1:%2 beeldverhouding"
 
 msgid "&Window scale factor"
 msgstr "&Venster schaalfactor"
@@ -427,7 +430,7 @@ msgid "Dynamic recompiler"
 msgstr "Dynamische recompiler"
 
 msgid "Accurate FPU environment on the dynamic recompiler"
-msgstr ""
+msgstr "Nauwkeurige FPU-omgeving voor de dynamische recompiler"
 
 msgid "CPU frame size"
 msgstr "CPU framegrootte"
@@ -733,10 +736,10 @@ msgid "Removable disks:"
 msgstr "Verwisselbare schijven:"
 
 msgid "Tape drives"
-msgstr "Band-schijfstations"
+msgstr "Tapestations"
 
 msgid "Tape drives:"
-msgstr "Band-schijfstations:"
+msgstr "Tapestations:"
 
 msgid "ISA RTC:"
 msgstr "ISA RTC:"
@@ -1490,16 +1493,18 @@ msgid "ACP&I shutdown"
 msgstr "ACP&I-uitschakeling"
 
 msgid "Power off"
-msgstr ""
+msgstr "Uitschakelen"
 
 msgid "Power &off…"
-msgstr ""
+msgstr "&Uitschakelen…"
 
 msgid "Power &off"
-msgstr ""
+msgstr "&Uitschakelen"
 
 msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
 msgstr ""
+"Het uitschakelen van de geëmuleerde machine kan leiden tot gegevensverlies. "
+"Weet je zeker dat je door wilt gaan?"
 
 msgid "Hard disk (%1)"
 msgstr "Harde schijf (%1)"
@@ -2917,8 +2922,14 @@ msgstr "[Generiek] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Generiek] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Generiek] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Generiek] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Generiek] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Generiek] 1996 (5400 RPM)"
@@ -2931,6 +2942,9 @@ msgstr "[Generiek] 1998 (5400 RPM)"
 
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Generiek] 2000 (7200 RPM)"
+
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Generiek] 2004 (10000 RPM)"
 
 msgid "IBM 8514/A clone"
 msgstr "IBM 8514/A-kloon"
@@ -2982,6 +2996,15 @@ msgstr "Model"
 
 msgid "Model:"
 msgstr "Model:"
+
+msgid "Brand:"
+msgstr ""
+
+msgid "Revision:"
+msgstr ""
+
+msgid "[Generic HDD] Device Configuration"
+msgstr ""
 
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Initialisatie van de Vulkan-renderer is mislukt."

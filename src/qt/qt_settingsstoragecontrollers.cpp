@@ -30,7 +30,6 @@ extern "C" {
 #include <86box/scsi_device.h>
 #include <86box/cassette.h>
 #include <86box/fdd.h>
-#include <86box/fdd_tape.h>
 }
 
 #include "qt_deviceconfig.hpp"
@@ -49,16 +48,19 @@ SettingsStorageControllers::SettingsStorageControllers(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::SettingsStorageControllers)
 {
+    inMachineChange = true;
     ui->setupUi(this);
 
     for (uint8_t i = 0; i < HDC_MAX; ++i) {
         scHD[i]       = new SettingsCompleter(findChild<QComboBox *>(QString("comboBoxHD%1").arg(i + 1)), nullptr);
         hdc_cfg_changed[i] = 0;
+        hdcCurrent[i] = hdc_current[i];
     }
 
     for (uint8_t i = 0; i < SCSI_CARD_MAX; ++i) {
         scSCSI[i]     = new SettingsCompleter(findChild<QComboBox *>(QString("comboBoxSCSI%1").arg(i + 1)), nullptr);
         scsi_card_cfg_changed[i] = 0;
+        scsiCardCurrent[i] = scsi_card_current[i];
     }
 
     scFD          = new SettingsCompleter(ui->comboBoxFD, nullptr);
@@ -67,8 +69,8 @@ SettingsStorageControllers::SettingsStorageControllers(QWidget *parent)
     fdc_cfg_changed             = 0;
     cdrom_interface_cfg_changed = 0;
 
-    ui->fileFieldFloppyTape->setFilter(tr("Tape images") % util::DlgFilter({ "img", "tape", "qic" }) % tr("All files") % util::DlgFilter({ "*" }, true));
-    ui->fileFieldFloppyTape->setFileName(QString::fromUtf8(fdd_tape_fn));
+    fdcCurrent[0]         = fdc_current[0];
+    cdromInterfaceCurrent = cdrom_interface_current;
 
     onCurrentMachineChanged(machine);
 }
@@ -110,10 +112,6 @@ SettingsStorageControllers::changed()
     has_changed |= cdrom_interface_cfg_changed;
     has_changed |= (cassette_enable         != (ui->checkBoxCassette->isChecked() ? 1 : 0));
 
-    has_changed |= (fdd_tape_enabled        != (ui->checkBoxFloppyTape->isChecked() ? 1 : 0));
-    has_changed |= (fdd_tape_unit           != ui->comboBoxFloppyTapeUnit->currentData().toInt());
-    has_changed |= (QString::fromUtf8(fdd_tape_fn) != ui->fileFieldFloppyTape->fileName());
-
     return has_changed ? (SETTINGS_CHANGED | SETTINGS_REQUIRE_HARD_RESET) : 0;
 }
 
@@ -142,18 +140,12 @@ SettingsStorageControllers::save(int soft)
     fdc_current[0]          = ui->comboBoxFD->currentData().toInt();
     cdrom_interface_current = ui->comboBoxCDInterface->currentData().toInt();
     cassette_enable         = ui->checkBoxCassette->isChecked() ? 1 : 0;
-
-    fdd_tape_enabled        = ui->checkBoxFloppyTape->isChecked() ? 1 : 0;
-    fdd_tape_unit           = ui->comboBoxFloppyTapeUnit->currentData().toInt();
-
-    const QByteArray tapeFn = ui->fileFieldFloppyTape->fileName().toUtf8();
-    memset(fdd_tape_fn, 0x00, sizeof(fdd_tape_fn));
-    strncpy(fdd_tape_fn, tapeFn.constData(), sizeof(fdd_tape_fn) - 1);
 }
 
 void
 SettingsStorageControllers::onCurrentMachineChanged(int machineId)
 {
+    inMachineChange = true;
     this->machineId = machineId;
 
     for (uint8_t i = 0; i < HDC_MAX; ++i)
@@ -191,7 +183,7 @@ SettingsStorageControllers::onCurrentMachineChanged(int machineId)
             if (device_is_valid(fdc_dev, machineId)) {
                 int row = Models::AddEntry(model, name, c);
                 scFD->addDevice(nullptr, name);
-                if (c == fdc_current[0]) {
+                if (c == fdcCurrent[0]) {
                     selectedRow = row - removeRows;
                 }
             }
@@ -226,7 +218,7 @@ SettingsStorageControllers::onCurrentMachineChanged(int machineId)
             if (device_is_valid(cdrom_interface_dev, machineId)) {
                 int row = Models::AddEntry(model, name, c);
                 scCDInterface->addDevice(nullptr, name);
-                if (c == cdrom_interface_current) {
+                if (c == cdromInterfaceCurrent) {
                     selectedRow = row - removeRows;
                 }
             }
@@ -268,7 +260,7 @@ SettingsStorageControllers::onCurrentMachineChanged(int machineId)
                     int row = Models::AddEntry(hd_models[i], name, c);
                     scHD[i]->addDevice(nullptr, name);
 
-                    if (c == hdc_current[i])
+                    if (c == hdcCurrent[i])
                         hd_selectedRows[i] = row - hd_removeRows_[i];
                 }
             }
@@ -310,7 +302,7 @@ SettingsStorageControllers::onCurrentMachineChanged(int machineId)
                     int row = Models::AddEntry(models[i], name, c);
                     scSCSI[i]->addDevice(nullptr, name);
 
-                    if (c == scsi_card_current[i])
+                    if (c == scsiCardCurrent[i])
                         selectedRows[i] = row - removeRows_[i];
                 }
             }
@@ -334,34 +326,18 @@ SettingsStorageControllers::onCurrentMachineChanged(int machineId)
         ui->checkBoxCassette->setEnabled(false);
     }
 
-    /* Floppy tape drive */
-    auto *tapeModel = ui->comboBoxFloppyTapeUnit->model();
-    tapeModel->removeRows(0, tapeModel->rowCount());
+    cdromInterfaceCurrent = ui->comboBoxCDInterface->currentData().toInt();
+    fdcCurrent[0]         = ui->comboBoxFD->currentData().toInt();
+    hdcCurrent[0]         = ui->comboBoxHD1->currentData().toInt();
+    hdcCurrent[1]         = ui->comboBoxHD2->currentData().toInt();
+    hdcCurrent[2]         = ui->comboBoxHD3->currentData().toInt();
+    hdcCurrent[3]         = ui->comboBoxHD4->currentData().toInt();
+    scsiCardCurrent[0]    = ui->comboBoxSCSI1->currentData().toInt();
+    scsiCardCurrent[1]    = ui->comboBoxSCSI2->currentData().toInt();
+    scsiCardCurrent[2]    = ui->comboBoxSCSI3->currentData().toInt();
+    scsiCardCurrent[3]    = ui->comboBoxSCSI4->currentData().toInt();
 
-    int tapeSelectedRow = 0;
-    for (int i = 0; i < FDD_NUM; ++i) {
-        const int row = Models::AddEntry(tapeModel, tr("Drive %1:").arg(QChar('A' + i)), i);
-        if (i == fdd_tape_unit)
-            tapeSelectedRow = row;
-    }
-
-    ui->checkBoxFloppyTape->setChecked(fdd_tape_enabled > 0);
-    ui->comboBoxFloppyTapeUnit->setCurrentIndex(-1);
-    ui->comboBoxFloppyTapeUnit->setCurrentIndex(tapeSelectedRow);
-    ui->fileFieldFloppyTape->setFileName(QString::fromUtf8(fdd_tape_fn));
-
-    on_checkBoxFloppyTape_stateChanged(ui->checkBoxFloppyTape->isChecked() ? Qt::Checked : Qt::Unchecked);
-}
-
-void
-SettingsStorageControllers::on_checkBoxFloppyTape_stateChanged(int state)
-{
-    const bool enabled = (state != Qt::Unchecked);
-
-    ui->labelFloppyTapeUnit->setEnabled(enabled);
-    ui->comboBoxFloppyTapeUnit->setEnabled(enabled);
-    ui->labelFloppyTapeFile->setEnabled(enabled);
-    ui->fileFieldFloppyTape->setEnabled(enabled);
+    inMachineChange = false;
 }
 
 void
@@ -371,6 +347,8 @@ SettingsStorageControllers::on_comboBoxFD_currentIndexChanged(int index)
         return;
 
     ui->pushButtonFD->setEnabled(fdc_card_has_config(ui->comboBoxFD->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        fdcCurrent[0] = ui->comboBoxFD->currentData().toInt();
 }
 
 void
@@ -380,6 +358,8 @@ SettingsStorageControllers::on_comboBoxHD1_currentIndexChanged(int index)
         return;
 
     ui->pushButtonHD1->setEnabled(hdc_has_config(ui->comboBoxHD1->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        hdcCurrent[0] = ui->comboBoxHD1->currentData().toInt();
 }
 
 void
@@ -389,6 +369,8 @@ SettingsStorageControllers::on_comboBoxHD2_currentIndexChanged(int index)
         return;
 
     ui->pushButtonHD2->setEnabled(hdc_has_config(ui->comboBoxHD2->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        hdcCurrent[1] = ui->comboBoxHD2->currentData().toInt();
 }
 
 void
@@ -398,6 +380,8 @@ SettingsStorageControllers::on_comboBoxHD3_currentIndexChanged(int index)
         return;
 
     ui->pushButtonHD3->setEnabled(hdc_has_config(ui->comboBoxHD3->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        hdcCurrent[2] = ui->comboBoxHD3->currentData().toInt();
 }
 
 void
@@ -407,6 +391,8 @@ SettingsStorageControllers::on_comboBoxHD4_currentIndexChanged(int index)
         return;
 
     ui->pushButtonHD4->setEnabled(hdc_has_config(ui->comboBoxHD4->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        hdcCurrent[3] = ui->comboBoxHD4->currentData().toInt();
 }
 
 void
@@ -416,6 +402,8 @@ SettingsStorageControllers::on_comboBoxCDInterface_currentIndexChanged(int index
         return;
 
     ui->pushButtonCDInterface->setEnabled(cdrom_interface_has_config(ui->comboBoxCDInterface->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        cdromInterfaceCurrent = ui->comboBoxCDInterface->currentData().toInt();
 }
 
 void
@@ -461,6 +449,8 @@ SettingsStorageControllers::on_comboBoxSCSI1_currentIndexChanged(int index)
         return;
 
     ui->pushButtonSCSI1->setEnabled(scsi_card_has_config(ui->comboBoxSCSI1->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        scsiCardCurrent[0] = ui->comboBoxSCSI1->currentData().toInt();
 }
 
 void
@@ -470,6 +460,8 @@ SettingsStorageControllers::on_comboBoxSCSI2_currentIndexChanged(int index)
         return;
 
     ui->pushButtonSCSI2->setEnabled(scsi_card_has_config(ui->comboBoxSCSI2->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        scsiCardCurrent[1] = ui->comboBoxSCSI2->currentData().toInt();
 }
 
 void
@@ -479,6 +471,8 @@ SettingsStorageControllers::on_comboBoxSCSI3_currentIndexChanged(int index)
         return;
 
     ui->pushButtonSCSI3->setEnabled(scsi_card_has_config(ui->comboBoxSCSI3->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        scsiCardCurrent[2] = ui->comboBoxSCSI2->currentData().toInt();
 }
 
 void
@@ -488,6 +482,8 @@ SettingsStorageControllers::on_comboBoxSCSI4_currentIndexChanged(int index)
         return;
 
     ui->pushButtonSCSI4->setEnabled(scsi_card_has_config(ui->comboBoxSCSI4->currentData().toInt()) > 0);
+    if (!inMachineChange)
+        scsiCardCurrent[3] = ui->comboBoxSCSI2->currentData().toInt();
 }
 
 void

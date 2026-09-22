@@ -26,9 +26,12 @@ extern "C" {
 #include <wchar.h>
 #define HAVE_STDARG_H
 #include <86box/86box.h>
+#include <86box/machine.h>
 #include <86box/timer.h>
 #include <86box/fdd.h>
 #include <86box/cdrom.h>
+#include <86box/scsi_device.h>
+#include <86box/scsi_tape.h>
 #include <86box/fdd_audio.h>
 }
 
@@ -75,6 +78,7 @@ SettingsFloppyCDROM::setCDROMBus(QAbstractItemModel *model, const QModelIndex &i
         case CDROM_BUS_SCSI:
         case CDROM_BUS_MITSUMI:
         case CDROM_BUS_MKE:
+        case CDROM_BUS_LPT:
             icon = cdrom_is_dvd(type) ? dvdrom_icon : cdrom_icon;
             break;
     }
@@ -163,6 +167,7 @@ SettingsFloppyCDROM::SettingsFloppyCDROM(QWidget *parent)
 #else
         ifa[i] = 0;
 #endif
+        Harddrives::busTrackClass->device_track(fdd_get_type(i) ? 1 : 0, DEV_FDD, TAPE_BUS_FDC, i);
     }
 
     for (int i = 0; i < model->columnCount(); i++)
@@ -228,6 +233,8 @@ SettingsFloppyCDROM::SettingsFloppyCDROM(QWidget *parent)
             Harddrives::busTrackClass->device_track(1, DEV_CDROM, cdrom[i].bus_type, cdrom[i].scsi_device_id);
         else if (cdrom[i].bus_type == CDROM_BUS_MITSUMI)
             Harddrives::busTrackClass->device_track(1, DEV_CDROM, cdrom[i].bus_type, 0);
+        else if (cdrom[i].bus_type == CDROM_BUS_LPT)
+            Harddrives::busTrackClass->device_track(1, DEV_CDROM, cdrom[i].bus_type, cdrom[i].res);
         inc[i] = cdrom[i].no_check;
     }
     for (int i = 0; i < model->columnCount(); i++)
@@ -248,7 +255,11 @@ SettingsFloppyCDROM::SettingsFloppyCDROM(QWidget *parent)
     int      eligibleRows    = 0;
     scCDROMType->removeRows();
     while (cdrom_drive_types[j].bus_type != BUS_TYPE_NONE) {
-        if (((bus_type == CDROM_BUS_MKE) || (bus_type == CDROM_BUS_ATAPI) || (bus_type == CDROM_BUS_SCSI)) && ((cdrom_drive_types[j].bus_type == bus_type) || ((cdrom_drive_types[j].bus_type == BUS_TYPE_BOTH) && (bus_type != BUS_TYPE_MKE)))) {
+        if (((bus_type == CDROM_BUS_MKE) || (bus_type == CDROM_BUS_ATAPI) || (bus_type == CDROM_BUS_SCSI) ||
+             (bus_type == CDROM_BUS_LPT)) &&
+            ((cdrom_drive_types[j].bus_type == bus_type) ||
+             ((cdrom_drive_types[j].bus_type == BUS_TYPE_SCSI) && (bus_type == CDROM_BUS_LPT)) ||
+             ((cdrom_drive_types[j].bus_type == BUS_TYPE_BOTH) && (bus_type != BUS_TYPE_MKE)))) {
             QString name = CDROMName(j);
             Models::AddEntry(modelType, name, j);
             scCDROMType->addDevice(nullptr, name);
@@ -262,6 +273,7 @@ SettingsFloppyCDROM::SettingsFloppyCDROM(QWidget *parent)
     ui->comboBoxCDROMType->setEnabled(eligibleRows > 1);
     ui->comboBoxCDROMType->setCurrentIndex(-1);
     ui->comboBoxCDROMType->setCurrentIndex(selectedTypeRow);
+    onCurrentMachineChanged(machine);
 }
 
 SettingsFloppyCDROM::~SettingsFloppyCDROM()
@@ -270,6 +282,26 @@ SettingsFloppyCDROM::~SettingsFloppyCDROM()
     delete scFloppyType;
 
     delete ui;
+}
+
+void
+SettingsFloppyCDROM::onCurrentMachineChanged(int machineId)
+{
+    const bool fixed = machines[machineId].init == machine_ibm5140_init;
+    auto *model = ui->treeViewFloppy->model();
+    ui->comboBoxFloppyType->setEnabled(!fixed);
+    ui->checkBoxTurboTimings->setEnabled(!fixed);
+    for (int i = 0; i < FDD_NUM; i++) {
+        ui->treeViewFloppy->setRowHidden(i, QModelIndex(), fixed && i >= 2);
+        if (fixed) {
+            const auto idx = model->index(i, 0);
+            setFloppyType(model, idx, i < 2 ? fdd_get_from_internal_name((char *) "35_2dd") : 0);
+            model->setData(idx.siblingAtColumn(1), tr("Off"));
+        }
+    }
+    if (fixed)
+        ui->treeViewFloppy->setCurrentIndex(model->index(0, 0));
+    onFloppyRowChanged(ui->treeViewFloppy->currentIndex());
 }
 
 int
@@ -452,7 +484,11 @@ SettingsFloppyCDROM::onCDROMRowChanged(const QModelIndex &current)
     int      eligibleRows    = 0;
     scCDROMType->removeRows();
     while (cdrom_drive_types[j].bus_type != BUS_TYPE_NONE) {
-        if (((bus == CDROM_BUS_MKE) || (bus == CDROM_BUS_ATAPI) || (bus == CDROM_BUS_SCSI)) && ((cdrom_drive_types[j].bus_type == bus) || ((cdrom_drive_types[j].bus_type == BUS_TYPE_BOTH) && (bus != BUS_TYPE_MKE)))) {
+        if (((bus == CDROM_BUS_MKE) || (bus == CDROM_BUS_ATAPI) || (bus == CDROM_BUS_SCSI) ||
+             (bus == CDROM_BUS_LPT)) &&
+            ((cdrom_drive_types[j].bus_type == bus) ||
+             ((cdrom_drive_types[j].bus_type == BUS_TYPE_SCSI) && (bus == CDROM_BUS_LPT)) ||
+             ((cdrom_drive_types[j].bus_type == BUS_TYPE_BOTH) && (bus != BUS_TYPE_MKE)))) {
             QString name = CDROMName(j);
             Models::AddEntry(modelType, name, j);
             scCDROMType->addDevice(nullptr, name);
@@ -498,7 +534,9 @@ SettingsFloppyCDROM::on_comboBoxFloppyType_activated(int index)
 {
     auto currentIndex = ui->treeViewFloppy->selectionModel()->currentIndex();
     auto typeIndex    = currentIndex.siblingAtColumn(0);
+    Harddrives::busTrackClass->device_track(0, DEV_FDD, TAPE_BUS_FDC, currentIndex.row());
     setFloppyType(ui->treeViewFloppy->model(), typeIndex, index);
+    Harddrives::busTrackClass->device_track(index ? 1 : 0, DEV_FDD, TAPE_BUS_FDC, currentIndex.row());
     ui->treeViewFloppy->resizeColumnToContents(0);
 
     // Trigger row changed to rebuild audio profile list
@@ -564,6 +602,8 @@ SettingsFloppyCDROM::on_comboBoxBus_activated(int)
         ui->comboBoxChannel->setCurrentIndex(Harddrives::busTrackClass->next_free_ide_channel());
     else if (bus_type == CDROM_BUS_SCSI)
         ui->comboBoxChannel->setCurrentIndex(Harddrives::busTrackClass->next_free_scsi_id());
+    else if (bus_type == CDROM_BUS_LPT)
+        ui->comboBoxChannel->setCurrentIndex(Harddrives::busTrackClass->next_free_lpt_port());
     else if (bus_type == CDROM_BUS_MITSUMI)
         ui->comboBoxChannel->setCurrentIndex(0);
 
@@ -581,7 +621,11 @@ SettingsFloppyCDROM::on_comboBoxBus_activated(int)
     int      eligibleRows    = 0;
     scCDROMType->removeRows();
     while (cdrom_drive_types[j].bus_type != BUS_TYPE_NONE) {
-        if (((bus_type == CDROM_BUS_MKE) || (bus_type == CDROM_BUS_ATAPI) || (bus_type == CDROM_BUS_SCSI)) && ((cdrom_drive_types[j].bus_type == bus_type) || ((cdrom_drive_types[j].bus_type == BUS_TYPE_BOTH) && (bus_type != BUS_TYPE_MKE)))) {
+        if (((bus_type == CDROM_BUS_MKE) || (bus_type == CDROM_BUS_ATAPI) || (bus_type == CDROM_BUS_SCSI) ||
+             (bus_type == CDROM_BUS_LPT)) &&
+            ((cdrom_drive_types[j].bus_type == bus_type) ||
+             ((cdrom_drive_types[j].bus_type == BUS_TYPE_SCSI) && (bus_type == CDROM_BUS_LPT)) ||
+             ((cdrom_drive_types[j].bus_type == BUS_TYPE_BOTH) && (bus_type != BUS_TYPE_MKE)))) {
             QString name = CDROMName(j);
             Models::AddEntry(modelType, name, j);
             scCDROMType->addDevice(nullptr, name);
@@ -606,8 +650,8 @@ SettingsFloppyCDROM::on_comboBoxBus_activated(int)
         ui->comboBoxSpeed->setEnabled(bus_type != CDROM_BUS_DISABLED);
     } else {
         ui->comboBoxSpeed->setEnabled(false);
-        if (bus_type == CDROM_BUS_MITSUMI) // temp hack
-            speed = 0;
+        if (bus_type == CDROM_BUS_MITSUMI)
+            speed = 2;
     }
     ui->comboBoxSpeed->setCurrentIndex(speed == 0 ? 7 : speed - 1);
     setCDROMSpeed(ui->treeViewCDROM->model(),

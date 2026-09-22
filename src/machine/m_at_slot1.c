@@ -488,8 +488,8 @@ static const device_config_t al440lx_config[] = {
                 .files_no      = 5,
                 .local         = 0,
                 .size          = 262144,
-                .files         = { "roms/machines/al440lx/P07-0024.BIO", "roms/machines/al440lx/P07-0024.bi1",
-                                   "roms/machines/al440lx/P07-0024.bi2", "roms/machines/al440lx/P07-0024.bi3",
+                .files         = { "roms/machines/al440lx/P07-0024.BIO", "roms/machines/al440lx/P07-0024.BI1",
+                                   "roms/machines/al440lx/P07-0024.BI2", "roms/machines/al440lx/P07-0024.BI3",
                                    "roms/machines/al440lx/P07-0024.RCV", "" }
             },
             {
@@ -550,16 +550,16 @@ int
 machine_at_al440lx_init(const machine_t *model)
 {
     int ret = 0;
-    const char* fn[5];
+    const char* fn[2];
 
     /* No ROMs available */
     if (!device_available(model->device))
         return ret;
 
     device_context(model->device);
-    for (int i = 0; i < 5; i++)
-        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i);
-    ret = bios_load_linear_combined2_ex(fn[0], fn[1], fn[2], fn[3], fn[4], 0x3a000, 160);
+    for (int i = 0; i < 2; i++)
+        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i * 4);
+    ret = bios_load_intel(fn[0], fn[1], 262144, 0);
     device_context_restore();
 
     machine_at_common_init(model);
@@ -709,7 +709,7 @@ static const device_config_t ms6117_config[] = {
                 .files_no      = 1,
                 .local         = 0,
                 .size          = 131072,
-                .files         = { "roms/machines/ms6117/w617v115.BIN", "" }
+                .files         = { "roms/machines/ms6117/w617v115.bin", "" }
             },
             { .files_no = 0 }
         }
@@ -918,7 +918,7 @@ machine_at_in440ex_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
     pci_register_slot(0x0D, PCI_CARD_VIDEO,       3, 4, 1, 2);
-    pci_register_slot(0x11, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x11, PCI_CARD_SOUND,       2, 3, 4, 1);
     pci_register_slot(0x13, PCI_CARD_NORMAL,      1, 2, 3, 4);
 
     device_add(&i440ex_device);
@@ -930,6 +930,9 @@ machine_at_in440ex_init(const machine_t *model)
         device_add(&sst_flash_29ee020_device); /* guess */
     else
         device_add(&amd_flash_29f020a_device);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
 
     spd_register(SPD_TYPE_SDRAM, 0x3, 256);
 
@@ -1018,7 +1021,7 @@ machine_at_in440exd_init(const machine_t *model)
     pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
     pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
     pci_register_slot(0x0D, PCI_CARD_VIDEO,       3, 4, 1, 2);
-    pci_register_slot(0x11, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x11, PCI_CARD_SOUND,       2, 3, 4, 1);
     pci_register_slot(0x13, PCI_CARD_NORMAL,      1, 2, 3, 4);
 
     device_add(&i440ex_device);
@@ -1027,6 +1030,99 @@ machine_at_in440exd_init(const machine_t *model)
     device_add(&amd_flash_29f020a_device);
 
     spd_register(SPD_TYPE_SDRAM, 0x3, 256);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
+
+static const device_config_t optiplexe1_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "BIOS Version",
+        .type           = CONFIG_BIOS,
+        .default_string = "optiplexe1",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "Phoenix ROM BIOS PLUS 1.10 - Revision A03",
+                .internal_name = "optiplexe1_a03",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/optiplexe1/A03.ROM", "" }
+            },
+            {
+                .name          = "Phoenix ROM BIOS PLUS 1.10 - Revision A04",
+                .internal_name = "optiplexe1",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/optiplexe1/DELL.ROM", "" }
+            },
+            { .files_no = 0 }
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t optiplexe1_device = {
+    .name          = "Dell OptiPlex E1",
+    .internal_name = "optiplexe1",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = optiplexe1_config
+};
+
+int
+machine_at_optiplexe1_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
+    device_context_restore();
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NETWORK,     4, 0, 0, 0); /* not yet emulated */
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 1, 3, 4);
+    pci_register_slot(0x0F, PCI_CARD_BRIDGE,      0, 0, 0, 0);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(machine_get_snd_device(machine));
+
+    device_add(&i440ex_device);
+    device_add(&piix4e_device);
+    machine_at_optiplex_21152_init();
+    device_add_params(&pc87309_device, (void *) (PCX730X_PHOENIX_42 | PC87309_PC87309));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
 
     return ret;
 }
@@ -1148,7 +1244,7 @@ machine_at_como_init(const machine_t *model)
 
     device_add(&i440ex_device);
     device_add(&piix4e_device);
-    device_add_params(&fdc37m60x_device, (void *) (FDC37XXX2 | FDC37C93X_NO_NVR | FDC37XXXX_370));
+    device_add_params(&fdc37mx0x_device, (void *) (FDC37M60X | FDC37XXX2 | FDC37C93X_NO_NVR | FDC37XXXX_370));
     device_add(&intel_flash_bxt_device);
     device_add(&lm78_device);
 
@@ -1428,7 +1524,7 @@ static const device_config_t bx6_config[] = {
                 .files_no      = 1,
                 .local         = 0,
                 .size          = 131072,
-                .files         = { "roms/machines/bx6/BX6_CW.bin", "" }
+                .files         = { "roms/machines/bx6/BX6_CW.BIN", "" }
             },
             {
                 .name          = "AwardBIOS v4.51PG - Revision GQ",
@@ -1437,7 +1533,7 @@ static const device_config_t bx6_config[] = {
                 .files_no      = 1,
                 .local         = 0,
                 .size          = 131072,
-                .files         = { "roms/machines/bx6/BX6_GQ.bin", "" }
+                .files         = { "roms/machines/bx6/BX6_GQ.BIN", "" }
             },
             {
                 .name          = "AwardBIOS v4.51PG - Revision JL",
@@ -1446,7 +1542,7 @@ static const device_config_t bx6_config[] = {
                 .files_no      = 1,
                 .local         = 0,
                 .size          = 131072,
-                .files         = { "roms/machines/bx6/BX6_JL.bin", "" }
+                .files         = { "roms/machines/bx6/BX6_JL.BIN", "" }
             },
             {
                 .name          = "AwardBIOS v4.51PG - Revision QS",
@@ -1685,6 +1781,133 @@ machine_at_ax6bc_init(const machine_t *model)
     return ret;
 }
 
+static const device_config_t optiplexgx1_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "BIOS Version",
+        .type           = CONFIG_BIOS,
+        .default_string = "optiplexgx1",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "Phoenix ROM BIOS PLUS 1.10 - Revision A09",
+                .internal_name = "optiplexgx1_a09",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/optiplexgx1/A09.ROM", "" }
+            },
+            {
+                .name          = "Phoenix ROM BIOS PLUS 1.10 - Revision A10",
+                .internal_name = "optiplexgx1",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 262144,
+                .files         = { "roms/machines/optiplexgx1/DELL.ROM", "" }
+            },
+            { .files_no = 0 }
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t optiplexgx1_device = {
+    .name          = "Dell OptiPlex GX1",
+    .internal_name = "optiplexgx1",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = optiplexgx1_config
+};
+
+int
+machine_at_optiplexgx1_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000c0000, 262144, 0);
+    device_context_restore();
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 4);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
+    pci_register_slot(0x11, PCI_CARD_NETWORK,     4, 0, 0, 0); /* not yet emulated */
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      3, 4, 2, 1);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      2, 1, 3, 4);
+    pci_register_slot(0x0F, PCI_CARD_BRIDGE,      0, 0, 0, 0);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(machine_get_snd_device(machine));
+
+    device_add(&i440bx_device);
+    device_add(&piix4e_device);
+    machine_at_optiplex_21152_init();
+    device_add_params(&pc87309_device, (void *) (PCX730X_PHOENIX_42 | PC87309_PC87309));
+    device_add(&intel_flash_bxt_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
+
+    return ret;
+}
+
+int
+machine_at_ergox365_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ergox365/M63v115.rom",
+                           0x00080000, 524288, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x14, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x10, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_NETWORK,     3, 0, 0, 0);
+
+    device_add(&i440bx_device);
+    device_add(&piix4e_device);
+    device_add_params(&fdc37c67x_device, (void *) (FDC37XXX5 | FDC37XXXX_370));
+    device_add(&sst_flash_39sf040_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
+
+    if ((net_cards_conf[0].device_num == NET_INTERNAL) && machine_get_net_device(machine))
+        device_add(machine_get_net_device(machine));
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
+
 static const device_config_t ga686_config[] = {
     // clang-format off
     {
@@ -1782,6 +2005,38 @@ machine_at_ga686_init(const machine_t *model)
     hwm_values.temperatures[2] = 0;  /* unused */
     hwm_values.fans[1]         = 0;  /* unused */
     hwm_values.fans[2]         = 0;  /* unused */
+
+    return ret;
+}
+
+int
+machine_at_se440bx2_init(const machine_t *model)
+{
+    const int ret = bios_load_intel("roms/machines/se440bx2/P17-0024.BIO",
+                                    "roms/machines/se440bx2/P17-0024.RCV",
+                                    524288, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x0D, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x0E, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x0F, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x10, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x0C, PCI_CARD_SOUND,       3, 0, 0, 0);
+    pci_register_slot(0x07, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+    pci_register_slot(0x01, PCI_CARD_AGPBRIDGE,   1, 2, 3, 4);
+
+    device_add(&i440bx_device);
+    device_add(&piix4e_device);
+    device_add_params(&fdc37mx0x_device, (void *) (FDC37M70X | FDC37XXX7 | FDC37C93X_NO_NVR | FDC37XXXX_370));
+    device_add(&intel_flash_e28f0xx_device);
+    spd_register(SPD_TYPE_SDRAM, 0x7, 256);
+    device_add(&lm78_al440lx_device); /* Probably NOT the correct HWM, but it works! */
 
     return ret;
 }
@@ -2269,7 +2524,7 @@ machine_at_vei8_init(const machine_t *model)
 
     device_add(&i440zx_device);
     device_add(&piix4e_device);
-    device_add_params(&fdc37m60x_device, (void *) (FDC37XXX2 | FDC37XXXX_370));
+    device_add_params(&fdc37mx0x_device, (void *) (FDC37M60X | FDC37XXX2 | FDC37XXXX_370));
     device_add(ics9xxx_get(ICS9250_08));
     device_add(&sst_flash_39sf020_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 512);
@@ -2400,6 +2655,9 @@ machine_at_ficka6130_init(const machine_t *model)
     device_add_params(&w83877_device, (void *) (W83877TF | W83877_3F0));
     device_add(&sst_flash_29ee020_device);
     spd_register(SPD_TYPE_SDRAM, 0x7, 256);
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
 
     return ret;
 }

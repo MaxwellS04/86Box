@@ -260,9 +260,8 @@ machine_at_opti560l_init(const machine_t *model)
 
     pci_init(PCI_CONFIG_TYPE_2);
     pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
-    pci_register_slot(0x03, PCI_CARD_NORMAL,      4, 4, 3, 3);
-    pci_register_slot(0x07, PCI_CARD_NORMAL,      1, 4, 3, 2);
-    pci_register_slot(0x08, PCI_CARD_NORMAL,      2, 1, 3, 4);
+    pci_register_slot(0x03, PCI_CARD_VIDEO, 3, 3, 3, 3);
+    pci_register_slot(0x07, PCI_CARD_NORMAL, 1, 4, 3, 2);
     pci_register_slot(0x02, PCI_CARD_SOUTHBRIDGE, 0, 0, 0, 0);
 
     device_add(&i430lx_device);
@@ -270,6 +269,9 @@ machine_at_opti560l_init(const machine_t *model)
     device_add(&sio_zb_device);
     device_add_params(&i82091aa_device, (void *) I82091AA_022);
     device_add(&intel_flash_bxt_ami_device);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(&gd5430_onboard_pci_device);
 
     return ret;
 }
@@ -319,9 +321,8 @@ machine_at_valuepointp60_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined("roms/machines/valuepointp60/1006AV0M.BIO",
-                                    "roms/machines/valuepointp60/1006AV0M.BI1",
-                                    0x1d000, 128);
+    ret = bios_load_intel("roms/machines/valuepointp60/1006AV0M.BIO", NULL,
+                          131072, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -416,7 +417,6 @@ machine_at_batman_init(const machine_t *model)
 {
     int         ret = 0;
     const char *fn;
-    const char *fn2;
 
     /* No ROMs available */
     if (!device_available(model->device))
@@ -427,10 +427,8 @@ machine_at_batman_init(const machine_t *model)
     fn          = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
     if (is_dell)
         ret = bios_load_linear_inverted(fn, 0x000e0000, 131072, 0);
-    else {
-        fn2 = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 1);
-        ret = bios_load_linear_combined(fn, fn2, 0x1c000, 128);
-    }
+    else
+        ret = bios_load_intel(fn, NULL, 131072, 1);
     device_context_restore();
 
     machine_at_common_init(model);
@@ -488,9 +486,8 @@ machine_at_revenge_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined("roms/machines/revenge/1013af2_.bio",
-                                    "roms/machines/revenge/1013af2_.bi1",
-                                    0x1c000, 128);
+    ret = bios_load_intel("roms/machines/revenge/1013af2_.bio", NULL,
+                          131072, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -538,9 +535,8 @@ machine_at_pb520r_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined("roms/machines/pb520r/1009bc0r.bio",
-                                    "roms/machines/pb520r/1009bc0r.bi1",
-                                    0x1d000, 128);
+    ret = bios_load_intel("roms/machines/pb520r/1009bc0r.bio", NULL,
+                          131072, 1);
 
     if (bios_only || !ret)
         return ret;

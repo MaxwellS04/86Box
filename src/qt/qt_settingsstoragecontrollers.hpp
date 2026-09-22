@@ -47,8 +47,6 @@ private slots:
     void on_comboBoxSCSI4_currentIndexChanged(int index);
     void on_pushButtonSCSI4_clicked();
 
-    void on_checkBoxFloppyTape_stateChanged(int state);
-
 private:
     Ui::SettingsStorageControllers *ui;
     int                             machineId = 0;
@@ -62,6 +60,13 @@ private:
     SettingsCompleter *scHD[4];
     SettingsCompleter *scCDInterface;
     SettingsCompleter *scSCSI[4];
+
+    int hdcCurrent[4];
+    int scsiCardCurrent[4];
+    int fdcCurrent[2];
+    int cdromInterfaceCurrent;
+
+    bool inMachineChange;
 };
 
 #endif // QT_SETTINGSSTORAGECONTROLLERS_HPP

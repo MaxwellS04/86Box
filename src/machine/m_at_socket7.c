@@ -179,13 +179,9 @@ machine_at_rubyusb_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined2("roms/machines/rubyusb/1005DL0L.BIO",
-                                     "roms/machines/rubyusb/1005DL0L.BI1",
-                                     "roms/machines/rubyusb/1005DL0L.BI2",
-                                     "roms/machines/rubyusb/1005DL0L.BI3",
-                                     "roms/machines/rubyusb/1005DL0L.RCV",
-                                     /*NULL,*/
-                                     0x3a000, 128);
+    ret = bios_load_intel("roms/machines/rubyusb/1005DL0L.BIO",
+                          "roms/machines/rubyusb/1005DL0L.RCV",
+                          262144, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -314,16 +310,16 @@ int
 machine_at_cu430hx_init(const machine_t *model)
 {
     int         ret = 0;
-    const char *fn[5];
+    const char *fn[2];
 
     /* No ROMs available */
     if (!device_available(model->device))
         return ret;
 
     device_context(model->device);
-    for (int i = 0; i < 5; i++)
-        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i);
-    ret = bios_load_linear_combined2(fn[0], fn[1], fn[2], fn[3], fn[4], 0x3a000, 128);
+    for (int i = 0; i < 2; i++)
+        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i * 4);
+    ret = bios_load_intel(fn[0], fn[1], 262144, 1);
     device_context_restore();
 
     machine_at_common_init(model);
@@ -454,16 +450,16 @@ int
 machine_at_tc430hx_init(const machine_t *model)
 {
     int         ret = 0;
-    const char *fn[5];
+    const char *fn[2];
 
     /* No ROMs available */
     if (!device_available(model->device))
         return ret;
 
     device_context(model->device);
-    for (int i = 0; i < 5; i++)
-        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i);
-    ret = bios_load_linear_combined2(fn[0], fn[1], fn[2], fn[3], fn[4], 0x3a000, 128);
+    for (int i = 0; i < 2; i++)
+        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i * 4);
+    ret = bios_load_intel(fn[0], fn[1], 262144, 1);
     device_context_restore();
 
     machine_at_common_init(model);
@@ -616,12 +612,9 @@ machine_at_pcv90_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined2("roms/machines/pcv90/1010DD04.BIO",
-                                     "roms/machines/pcv90/1010DD04.BI1",
-                                     "roms/machines/pcv90/1010DD04.BI2",
-                                     "roms/machines/pcv90/1010DD04.BI3",
-                                     "roms/machines/pcv90/1010DD04.RCV",
-                                     0x3a000, 128);
+    ret = bios_load_intel("roms/machines/pcv90/1010DD04.BIO",
+                          "roms/machines/pcv90/1010DD04.RCV",
+                          262144, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -874,12 +867,9 @@ machine_at_dellhannibalp_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined2("roms/machines/dellhannibalp/1003DY0J.BIO",
-                                     "roms/machines/dellhannibalp/1003DY0J.BI1",
-                                     "roms/machines/dellhannibalp/1003DY0J.BI2",
-                                     "roms/machines/dellhannibalp/1003DY0J.BI3",
-                                     "roms/machines/dellhannibalp/1003DY0J.RCV",
-                                     0x3a000, 128);
+    ret = bios_load_intel("roms/machines/dellhannibalp/1003DY0J.BIO",
+                          "roms/machines/dellhannibalp/1003DY0J.RCV",
+                          262144, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -1022,12 +1012,9 @@ machine_at_gw2kte_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined2("roms/machines/gw2kte/1008CY1T.BIO",
-                                     "roms/machines/gw2kte/1008CY1T.BI1",
-                                     "roms/machines/gw2kte/1008CY1T.BI2",
-                                     "roms/machines/gw2kte/1008CY1T.BI3",
-                                     "roms/machines/gw2kte/1008CY1T.RCV",
-                                     0x3a000, 128);
+    ret = bios_load_intel("roms/machines/gw2kte/1008CY1T.BIO",
+                          "roms/machines/gw2kte/1008CY1T.RCV",
+                          262144, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -1180,12 +1167,9 @@ machine_at_pb680_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear_combined2("roms/machines/pb680/1012DN0R.BIO",
-                                     "roms/machines/pb680/1012DN0R.BI1",
-                                     "roms/machines/pb680/1012DN0R.BI2",
-                                     "roms/machines/pb680/1012DN0R.BI3",
-                                     "roms/machines/pb680/1012DN0R.RCV",
-                                     0x3a000, 128);
+    ret = bios_load_intel("roms/machines/pb680/1012DN0R.BIO",
+                          "roms/machines/pb680/1012DN0R.RCV",
+                          262144, 1);
 
     if (bios_only || !ret)
         return ret;
@@ -1556,6 +1540,92 @@ machine_at_txp4x_init(const machine_t *model)
        Either way, doesn't hurt to have it as an option in the emulator. */
     if (sound_card_current[0] == SOUND_INTERNAL)
         machine_snd = device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
+
+static const device_config_t awardeval_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "BIOS Version",
+        .type           = CONFIG_BIOS,
+        .default_string = "awardeval",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "AwardBIOS v4.51PG (v6.00PG Beta) - Revision 11/21/97",
+                .internal_name = "awardeval_112197",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 131072,
+                .files         = { "roms/machines/awardeval/2a59ie39.bin", "" }
+            },
+            {
+                .name          = "AwardBIOS v4.51PG (v6.00PG Beta) - Revision 01/11/98",
+                .internal_name = "awardeval",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 131072,
+                .files         = { "roms/machines/awardeval/test.bin", "" }
+            },
+            { .files_no = 0 }
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t awardeval_device = {
+    .name          = "AwardBIOS v6.00PG Beta Evaluation Board",
+    .internal_name = "awardeval",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = awardeval_config
+};
+
+int
+machine_at_awardeval_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000e0000, 131072, 0);
+    device_context_restore();
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x00, PCI_CARD_NORTHBRIDGE, 0, 0, 0, 0);
+    pci_register_slot(0x11, PCI_CARD_NORMAL,      1, 2, 3, 4);
+    pci_register_slot(0x12, PCI_CARD_NORMAL,      2, 3, 4, 1);
+    pci_register_slot(0x13, PCI_CARD_NORMAL,      3, 4, 1, 2);
+    pci_register_slot(0x14, PCI_CARD_NORMAL,      4, 1, 2, 3);
+    pci_register_slot(0x01, PCI_CARD_SOUTHBRIDGE, 1, 2, 3, 4);
+
+    device_add(&i430tx_device);
+    device_add(&piix4_device);
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+    device_add_params(&w83877_device, (void *) (W83877F | W83877_3F0));
+    device_add(&sst_flash_29ee010_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 128);
 
     return ret;
 }
@@ -1990,16 +2060,16 @@ int
 machine_at_an430tx_init(const machine_t *model)
 {
     int ret = 0;
-    const char* fn[5];
+    const char* fn[2];
 
     /* No ROMs available */
     if (!device_available(model->device))
         return ret;
 
     device_context(model->device);
-    for (int i = 0; i < 5; i++)
-        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i);
-    ret = bios_load_linear_combined2(fn[0], fn[1], fn[2], fn[3], fn[4], 0x3a000, 160);
+    for (int i = 0; i < 2; i++)
+        fn[i] = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), i * 4);
+    ret = bios_load_intel(fn[0], fn[1], 262144, 1);
     device_context_restore();
 
     machine_at_common_init(model);
@@ -2708,6 +2778,35 @@ machine_at_m560_init(const machine_t *model)
 
     device_add(&ali1531_device);
     device_add(&ali1543_device); /* -5 */
+    device_add(&sst_flash_29ee010_device);
+    spd_register(SPD_TYPE_SDRAM, 0x3, 256);
+
+    return ret;
+}
+
+/* Utron UT85C50x */
+int
+machine_at_m558_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/m558/5581108S.ROM",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    pci_init(PCI_CONFIG_TYPE_1);
+    pci_register_slot(0x05, PCI_CARD_NORTHBRIDGE,     0, 0, 0, 0);
+    pci_register_slot(0x08, PCI_CARD_NORMAL,          2, 3, 4, 1);
+    pci_register_slot(0x09, PCI_CARD_NORMAL,          3, 4, 1, 2);
+    pci_register_slot(0x0A, PCI_CARD_NORMAL,          4, 1, 2, 3);
+    pci_register_slot(0x0B, PCI_CARD_NORMAL,          1, 2, 3, 4);
+    
+    device_add(&ut85c50x_device);
+    device_add_params(&um866x_device, (void *) UM8663BF); //Actual super I/O is UM8670F
     device_add(&sst_flash_29ee010_device);
     spd_register(SPD_TYPE_SDRAM, 0x3, 256);
 

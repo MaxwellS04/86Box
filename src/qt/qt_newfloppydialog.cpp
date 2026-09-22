@@ -70,6 +70,8 @@ static const QStringList rdiskTypes = {
     "ZIP 250",
     "Jaz 1 GB",
     "Jaz 2 GB",
+    "SyJet 1.5 GB",
+    "SparQ 1.0 GB",
 #if 0
     "ZIP 750",
     "LS-120",
@@ -836,6 +838,16 @@ NewFloppyDialog::createTapeSectorImage(const QString &filename, UNUSED(int8_t di
     }
     QDataStream stream(&file);
     stream.setByteOrder(QDataStream::LittleEndian);
+
+    if (disk_size >= 7) {
+        /* QIC-117 floppy-tape / Ditto cartridges: the cores create and
+           format their own blank images (a zero-length file), so keep
+           the cartridge byte-identical to an auto-created one. */
+        pbar.setMaximum(1);
+        fileProgress(1);
+        return true;
+    }
+
     stream << (uint32_t) TAPE_SIMH_EOD;
     pbar.setMaximum(1);
     fileProgress(1);

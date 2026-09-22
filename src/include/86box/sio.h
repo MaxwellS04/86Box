@@ -20,6 +20,9 @@ extern const device_t acc3221_device;
 
 /* Acer / ALi */
 extern const device_t ali5113_device;
+
+#define ALI5123_370 0x00100
+
 extern const device_t ali5123_device;
 
 /* Chips & Technologies */
@@ -60,6 +63,10 @@ extern const device_t fdc37c669_device;
 #define FDC37C93X_APM        0x00030
 #define FDC37C93X_CHIP_ID    0x000ff
 
+#define FDC37M60X            0x00047
+#define FDC37M70X            0x00042
+#define FDC37XXXX_CHIP_ID    0x000ff
+
 #define FDC37XXX1            0x00100    /* Compaq KBC firmware and configuration registers on GPIO ports. */
 #define FDC37XXX2            0x00200    /* AMI '5' Megakey KBC firmware. */
 #define FDC37XXX3            0x00300    /* IBM KBC firmware. */
@@ -72,7 +79,9 @@ extern const device_t fdc37c669_device;
 
 extern const device_t fdc37c93x_device;
 
-extern const device_t fdc37m60x_device;
+extern void    fdc37mx0x_watchdog_reset_ext(int origin);
+
+extern const device_t fdc37mx0x_device;
 
 extern const device_t fdc37c67x_device;
 
@@ -194,6 +203,9 @@ extern const device_t w837x7_device;
 #define W83877_250           0x00004
 
 extern const device_t w83877_device;
+
+/* Reset the IN530's W83877TF through its board-level master reset path. */
+extern void w83877_in530_master_reset(void);
 
 #define W83977F             0x977100
 #define W83977TF            0x977300

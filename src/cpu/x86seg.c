@@ -1230,13 +1230,16 @@ loadcscall(uint16_t seg)
                     }
                     break;
 
-                case 0x0100: /* 286 Task gate */
-                case 0x0900: /* 386 Task gate */
+                case 0x0100: /* 286 TSS */
+                case 0x0900: /* 386 TSS */
 #ifdef USE_NEW_DYNAREC
                     cpu_state.pc = old_pc;
 #else
                     cpu_state.pc = oxpc;
 #endif
+                    /* A task switch links the tasks through the TSS back-link and NT,
+                       it does not push a return address on the new task's stack. */
+                    cgate_task   = 1;
                     cpl_override = 1;
                     op_taskswitch286(seg, segdat, segdat[2] & 0x0800);
                     cpl_override = 0;
@@ -1837,6 +1840,7 @@ pmodeiret(int is32)
     uint16_t      segs[4];
     uint32_t      tempflags;
     uint32_t      flagmask;
+    uint16_t      eflagmask;
     uint32_t      newpc;
     uint32_t      newsp;
     uint32_t      addr;
@@ -1910,6 +1914,14 @@ pmodeiret(int is32)
         flagmask &= ~0x3000;
     if (IOPL < CPL)
         flagmask &= ~0x200;
+    /* Per RETURN-TO-{SAME,OUTER}-PRIVILEGE-LEVEL, a 32-bit IRET loads RF, AC
+       and ID at any CPL and loads VIF and VIP only at CPL 0. VM is never
+       loaded here: entry to V86 mode is the separate CPL 0 path below. Like
+       flagmask above, this is decided by the CPL of the IRET itself, before
+       CS is reloaded. */
+    eflagmask = RF_FLAG | AC_FLAG | VID_FLAG;
+    if (CPL == 0)
+        eflagmask |= VIF_FLAG | VIP_FLAG;
     if (is32) {
         newpc     = POPL();
         seg       = POPL();
@@ -1918,7 +1930,7 @@ pmodeiret(int is32)
             ESP = oldsp;
             return;
         }
-        if (is386 && ((tempflags >> 16) & VM_FLAG)) {
+        if (is386 && (CPL == 0) && ((tempflags >> 16) & VM_FLAG)) {
             newsp   = POPL();
             newss   = POPL();
             segs[0] = POPL();
@@ -2145,7 +2157,8 @@ pmodeiret(int is32)
     cpu_state.pc    = newpc;
     cpu_state.flags = (cpu_state.flags & ~flagmask) | (tempflags & flagmask & 0xffd5) | 2;
     if (is32)
-        cpu_state.eflags = tempflags >> 16;
+        cpu_state.eflags = (cpu_state.eflags & (uint16_t) ~eflagmask) |
+                           ((tempflags >> 16) & eflagmask);
 }
 
 void
