@@ -90,6 +90,7 @@ static const NETWORK_CARD net_cards[] = {
     /* ISA */
     { &threec501_device           },
     { &threec503_device           },
+    { &threec509b_device          },
     { &ne1000_compat_device       },
     { &ne2000_compat_8bit_device  },
     { &ne1000_device              },
@@ -98,20 +99,20 @@ static const NETWORK_CARD net_cards[] = {
     { &wd8003e_device             },
     { &wd8003eb_device            },
     { &wd8013ebt_device           },
-    /* EISA */
-    { &threec592_device           },
-    { &threec597_device           },
     /* COM */
     { &modem_device               },
     /* LPT */
-    { &pe3_device                 },
     { &plip_device                },
+    { &pe3_device                 },
     /* ISA16 */
     { &pcnet_am79c960_device      },
     { &pcnet_am79c961_device      },
     { &de220p_device              },
     { &ne2000_compat_device       },
     { &pcnet_am79c960_eb_device   },
+    /* EISA */
+    { &threec592_device           },
+    { &threec597_device           },
     /* MCA */
     { &ibm_ethernet_efe5_device   },
     { &ibm_ethernet_efd5_device   },
