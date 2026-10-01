@@ -68,6 +68,8 @@
 #include <wchar.h>
 #define HAVE_STDARG_H
 #include <86box/86box.h>
+#include <86box/ini.h>
+#include <86box/config.h>
 #include <86box/io.h>
 #include <86box/mem.h>
 #include <86box/rom.h>
@@ -243,6 +245,9 @@ aic_log(const char *tag, const char *fmt, ...)
 #define BOARD_2742W       11 /* one wide channel, floppy controller */
 #define BOARD_2744W       12 /* one wide differential channel */
 #define AIC_BOARD_EISA(b) ((b) >= BOARD_2740)
+/* A card entry that covers several models takes the board from its Model
+   option (and, for the 274x, its floppy jumper) instead of from .local. */
+#define BOARD_FROM_CONFIG 0xff
 #define AIC_BOARD_TWIN(b) (((b) == BOARD_2740T) || ((b) == BOARD_2742T))
 #define AIC_BOARD_WIDE(b) (((b) == BOARD_2740W) || ((b) == BOARD_2742W) || ((b) == BOARD_2744W))
 #define AIC_BOARD_DIFF(b) (((b) == BOARD_2744W) || ((b) == BOARD_2944UW))
@@ -521,6 +526,35 @@ static const aic_chip_t aic_chip_788x = {
    takes the two for one family and goes by the device ID for the rest:
    Linux's feature table makes the AIC-7880 the AIC-7870 plus AHC_ULTRA
    and nothing else. */
+static const aic_chip_t aic_chip_7870;
+
+/* The part a board is built on. */
+static const aic_chip_t *
+aic_board_chip(int board)
+{
+    if (AIC_BOARD_EISA(board))
+        return &aic_chip_7770;
+    else if ((board == BOARD_2940) || (board == BOARD_2940W))
+        return &aic_chip_7870;
+
+    return &aic_chip_788x;
+}
+
+/* A part with SELBUSB has channel B, a bus of its own whether or not the
+   board brings it out (see aic_init()). */
+static uint32_t
+aic_scsi_buses(const device_t *dev)
+{
+    int board = dev->local & 0xff;
+
+    /* An entry covering several models has the model in its options, the
+       current configuration context here. */
+    if (board == BOARD_FROM_CONFIG)
+        board = device_get_config_int("model");
+
+    return (aic_board_chip(board)->sblkctl_mask & SELBUSB) ? 2 : 1;
+}
+
 static const aic_chip_t aic_chip_7870 = {
     .name          = "AIC-7870",
     .scb_pages     = SCB_COUNT,
@@ -1162,7 +1196,10 @@ aic_scsi_int(aic7xxx_t *dev)
            asks for cannot be refused. */
         dev->seqctl &= ~PAUSEDIS;
         aic_raise(dev, SCSIINT);
-    } else if (dev->intstat & SCSIINT) {
+    } else if ((dev->intstat & SCSIINT) && !(dev->chip->clrint_mask & CLRSCSIINT)) {
+        /* The PCI parts latch SCSIINT until CLRSCSIINT is written
+           (AIC-7870 data book, INTSTAT). Only the AIC-7770 follows the
+           underlying SCSI status without a separate interrupt latch. */
         /* And it goes away again on its own. SCSIINT is not a latch the
            host clears: the data book gives it as set "if the corresponding
            interrupt is enabled in SIMODE0 or SIMODE1", which is why the
@@ -1329,6 +1366,14 @@ aic_set_sstat0(aic7xxx_t *dev, uint8_t bits)
     aic_scsi_int(dev);
 }
 
+/* DMA owns the SCSI handshake while either SCSI-side enable is set,
+   even if firmware leaves SPIOEN enabled (SXFRCTL0, both data books). */
+static int
+aic_pio_enabled(const aic7xxx_t *dev)
+{
+    return (dev->sxfrctl0 & SPIOEN) && !(dev->dfcntrl & (SCSIEN | SDMAEN));
+}
+
 /* ---- the SCSI bus ------------------------------------------------------- */
 
 /* REQINIT follows REQ, and PHASECHG latches a phase that is not the one
@@ -1374,7 +1419,7 @@ aic_bus_changed(aic7xxx_t *dev)
        ARROW.MPD -- starts its command DMA, reads SSTAT0, finds SDONE
        standing on a SPIORDY left over from the last message byte, and
        cancels the transfer it just started. */
-    if (req && !dev->req_seen && (dev->sxfrctl0 & SPIOEN) && !(dev->dfcntrl & (SCSIEN | SDMAEN)))
+    if (req && !dev->req_seen && aic_pio_enabled(dev))
         aic_set_sstat0(dev, SPIORDY);
     dev->req_seen = req;
 
@@ -1695,9 +1740,12 @@ aic_tgt_next(aic7xxx_t *dev)
 
     if (!c->executed) {
         aic_cmd_execute(dev, c);
-        /* A target with work to do and permission to go away takes it,
-           once, so that reselection gets exercised. */
-        if (c->disc_ok && !c->waited && (c->data_len > 0)) {
+        /* Reads have already completed in the backend and their data is
+           private to this command. Keep data-out commands connected until
+           phase1 completes: the backend has only one current CDB, transfer
+           buffer and sector position per target. Disconnecting here lets
+           another queued command overwrite that state before the write. */
+        if (c->data_in && c->disc_ok && !c->waited && (c->data_len > 0)) {
             /* SAVE DATA POINTERS, then DISCONNECT. A target sends both,
                in that order, and the sequencer needs the first: it is
                what tells the program to write the transfer's address and
@@ -2176,6 +2224,8 @@ aic_reselect_try(aic7xxx_t *dev)
 static void
 aic_scsi_reset_bus(aic7xxx_t *dev)
 {
+    uint8_t bus = aic_cur_bus(dev);
+
     aic_log(dev->tag, "[%.3f ms] scsi bus reset\n", aic_now_us() / 1000.0);
     /* A bus reset is where a driver starts over, and where the trace
        should too: the bounded traces above were spent on the option
@@ -2183,37 +2233,40 @@ aic_scsi_reset_bus(aic7xxx_t *dev)
        driver's own first command went unrecorded. */
     dev->busl_reads = dev->sig_logs = dev->scb_dumps = 0;
     for (uint8_t i = 0; i < AIC_CMDS; i++) {
-        if (dev->cmds[i].used)
+        if (dev->cmds[i].used && (!dev->twin || (dev->cmds[i].bus == bus)))
             aic_cmd_free(dev, &dev->cmds[i]);
     }
-    dev->cur       = NULL;
-    dev->bus_state = BUS_FREE;
-    dev->tgt_req   = 0;
-    dev->selecting = 0;
-    dev->req_wait  = 0;
-    dev->atn       = 0;
-    dev->datl_full = 0;
+    /* A twin-channel AIC-7770 has independent reset signals. A reset on
+       the selected bus must not cancel work on the other physical bus. */
+    if (!dev->twin || (dev->cur_ch == dev->cell_live)) {
+        dev->cur       = NULL;
+        dev->bus_state = BUS_FREE;
+        dev->tgt_req   = 0;
+        dev->req_wait  = 0;
+        dev->atn       = 0;
+        dev->datl_full = 0;
+        timer_stop(&dev->tgt_timer);
+        timer_stop(&dev->req_timer);
+    }
+    if (!dev->twin || (dev->sel_ch == dev->cell_live)) {
+        dev->selecting = 0;
+        timer_stop(&dev->sel_timer);
+    }
     /* A reset clears SCSISIGO and everything in SCSISEQ but the bit that
        is causing it. */
     dev->scsisigo = 0;
-    /* "All bits except SCSIRSTO are cleared by SCSI Bus Reset" -- on
-       both cells, not only the one the file is looking at. Leaving the
-       other bank's ENSELO standing had the next bus-free restart a
-       selection from it with whatever SCSIID it last held. */
+    /* Without a second physical bus, clear the unused bank as well so
+       an old probe there cannot restart a selection after reset. */
     dev->scsiseq &= SCSIRSTO;
     dev->sstat0 &= ~(SELDO | SELDI | SELINGO);
     for (uint8_t ch = 0; ch < 2; ch++) {
-        if (ch != dev->cell_live) {
+        if (!dev->twin && (ch != dev->cell_live)) {
             dev->cell_save[ch].scsiseq &= SCSIRSTO;
             dev->cell_save[ch].sstat0 &= (uint8_t) ~(SELDO | SELDI | SELINGO);
         }
     }
-    timer_stop(&dev->sel_timer);
-    timer_stop(&dev->tgt_timer);
-    timer_stop(&dev->req_timer);
-
     for (uint8_t i = 0; i < (dev->wide ? 16 : 8); i++)
-        scsi_device_reset(&scsi_devices[aic_cur_bus(dev)][i]);
+        scsi_device_reset(&scsi_devices[bus][i]);
 
     if (dev->chip->own_reset_seen)
         aic_set_sstat1(dev, SCSIRSTI);
@@ -2505,7 +2558,7 @@ aic_pio_counted(aic7xxx_t *dev)
 static void
 aic_pio_out(aic7xxx_t *dev)
 {
-    if (!dev->datl_full || !(dev->sxfrctl0 & SPIOEN))
+    if (!dev->datl_full || !aic_pio_enabled(dev))
         return;
     if ((dev->bus_state != BUS_BUSY) || !dev->tgt_req || (dev->tgt_phase & IOI))
         return;
@@ -2653,7 +2706,7 @@ aic_read(aic7xxx_t *dev, uint8_t addr, int seq)
                             seq ? "seq" : "host", ret,
                             aic_phase_name(dev->tgt_phase), dev->msgin_pos, dev->msgin_len,
                             !!(dev->sxfrctl0 & SPIOEN),
-                            (dev->sxfrctl0 & SPIOEN) ? "acked" : "NOT acked");
+                            aic_pio_enabled(dev) ? "acked" : "NOT acked");
                 }
                 /* The handshake is automatic PIO's, and SPIOEN is what
                    turns that on: "The individual PIO transfers are
@@ -2668,7 +2721,7 @@ aic_read(aic7xxx_t *dev, uint8_t addr, int seq)
                    An earlier pass removed this gate on the strength of
                    the SCSIDATL description alone; the SPIOEN text is the
                    more specific and it puts the gate back. */
-                if (dev->sxfrctl0 & SPIOEN) {
+                if (aic_pio_enabled(dev)) {
                     /* "During a transfer from SCSI, it is cleared on a
                        read from SCSIDATL." */
                     dev->sstat0 &= ~SPIORDY;
@@ -3130,7 +3183,7 @@ aic_write(aic7xxx_t *dev, uint8_t addr, uint8_t val, int seq)
                 aic_scsi_reset_bus(dev);
             if (val & ENSELO)
                 aic_select_start(dev);
-            else if (!(val & ENSELO) && dev->selecting) {
+            else if (!(val & ENSELO) && dev->selecting && (dev->sel_ch == dev->cell_live)) {
                 dev->selecting = 0;
                 dev->sstat0 &= ~SELINGO;
                 timer_stop(&dev->sel_timer);
@@ -3441,6 +3494,7 @@ aic_write(aic7xxx_t *dev, uint8_t addr, uint8_t val, int seq)
         case DSCOMMAND0:
             if (dev->eisa) {
                 dev->bctl = val & 0x09;
+                aic_update_irq(dev); /* ENABLE also gates the EISA IRQ output. */
                 break;
             }
             dev->dscommand0 = val & 0xf0;
@@ -3511,9 +3565,9 @@ aic_write(aic7xxx_t *dev, uint8_t addr, uint8_t val, int seq)
                interrupt and must not look like one in INTSTAT, or the
                handler will think the firmware stopped in mid-transfer. */
             aic_update_irq(dev);
-            /* Any write that leaves PAUSE clear ends a sleep. */
-            if (!(val & PAUSE))
-                dev->sleepctl &= ~(SLP1 | SLP0);
+            /* Every HCNTRL write wakes the sequencer, including a write
+               that keeps it paused (AIC-7870 HCNTRL description). */
+            dev->sleepctl &= ~(SLP1 | SLP0);
             if (!(val & PAUSE) && (was & PAUSE)) {
                 /* Releasing PAUSE always gets one instruction executed,
                    whatever else wants the sequencer stopped. Single step
@@ -3605,6 +3659,12 @@ aic_write(aic7xxx_t *dev, uint8_t addr, uint8_t val, int seq)
                 aic_log(dev->tag, "host: CLRINT %02x (intstat %02x) at pc %03x\n", val,
                         dev->intstat, dev->pc);
             }
+            /* Clear parity causes before handling CLRBRKADRINT so a
+               single write can clear both the cause and its interrupt.
+               ILLOPCODE still requires a chip reset; the AIC-7770 has
+               no CLRPARERR bit. */
+            if (val & CLRPARERR & dev->chip->clrint_mask)
+                dev->error &= ILLOPCODE;
             /* A breakpoint's BRKADRINT clears here; a hard error's does
                not. "If this condition occurs BRKADRINT may only be
                cleared by setting CHIPRST" (the AIC-7770 book, Hardware
@@ -3625,11 +3685,6 @@ aic_write(aic7xxx_t *dev, uint8_t addr, uint8_t val, int seq)
                 dev->intstat &= ~CMDCMPLT;
             if (val & CLRSEQINT)
                 dev->intstat &= ~SEQINT;
-            /* Not ILLOPCODE: only a chip reset gets rid of that. And not
-               on an AIC-7770 at all -- bit 4 of CLRINT is not used there,
-               the parity error being a later part's. */
-            if (val & CLRPARERR & dev->chip->clrint_mask)
-                dev->error &= ILLOPCODE;
             aic_update_irq(dev);
             /* SCSIINT reads clear only once its cause has been dealt with;
                with the cause still standing it comes straight back. */
@@ -3639,6 +3694,11 @@ aic_write(aic7xxx_t *dev, uint8_t addr, uint8_t val, int seq)
             break;
         case DFCNTRL:
             was = dev->dfcntrl;
+            /* DIRECTIONACK cannot change while a transfer stays enabled
+               (DFCNTRL, both data books). A direction may be selected
+               when starting from idle or when clearing all enables. */
+            if ((was & (SCSIEN | SDMAEN | HDMAEN)) && (val & (SCSIEN | SDMAEN | HDMAEN)))
+                val = (val & ~DIRECTION) | (was & DIRECTION);
             /* FIFORESET is a strobe and reads back clear. Firmware turns
                the engine off with a read-modify-write, and a reset bit
                that stuck would empty the FIFO it is about to read. */
@@ -3825,7 +3885,7 @@ aic_seq_flags(aic7xxx_t *dev, uint8_t result, int carry)
         dev->flags |= CARRY;
 }
 
-/* The logical operations and the rotate set ZERO and LEAVE CARRY ALONE.
+/* The logical operations and conditional tests set ZERO and leave carry alone.
    Adaptec's own firmware proves it: the routine that turns an SCB number
    into a host address puts a mov between an add and its adc, and an and
    between two adcs, and the twenty-four bit sum it builds is only right if
@@ -4427,7 +4487,7 @@ aic_seq_step(aic7xxx_t *dev)
             a   = aic_seq_rd(dev, src);
             b   = (imm == 0) ? dev->accum : imm;
             res = a ^ b; /* a compare is an exclusive-or, not a subtract */
-            aic_seq_flags(dev, res, 0);
+            aic_seq_flags_logic(dev, res);
             taken = (opcode == OP_JE) ? (res == 0) : (res != 0);
             if (taken) {
                 dev->pc = addr;
@@ -4440,7 +4500,7 @@ aic_seq_step(aic7xxx_t *dev)
             a   = aic_seq_rd(dev, src);
             b   = (imm == 0) ? dev->accum : imm;
             res = a & b;
-            aic_seq_flags(dev, res, 0);
+            aic_seq_flags_logic(dev, res);
             taken = (opcode == OP_JZ) ? (res == 0) : (res != 0);
             if (taken) {
                 dev->pc = addr;
@@ -5430,6 +5490,22 @@ aic_reset(void *priv)
 
     aic_ram_clear(dev);
     aic_chip_reset(dev);
+    /* PCI RST# also initializes configuration space. HCNTRL.CHIPRST
+       deliberately leaves it intact (AIC-7870 data book, pp. 2-15,
+       4-69), so this belongs only in the machine-reset callback. */
+    if (!dev->eisa) {
+        dev->pci_regs[0x04] = dev->pci_regs[0x05] = 0;
+        dev->pci_regs[0x07] = 0x02; /* medium DEVSEL, errors cleared */
+        dev->pci_regs[0x0c] = dev->pci_regs[0x0d] = 0;
+        memset(&dev->pci_regs[0x10], 0, 8);
+        dev->pci_regs[0x10] = 0x01; /* I/O BAR type */
+        memset(&dev->pci_regs[0x30], 0, 4);
+        dev->pci_regs[0x3c] = 0;
+        memset(&dev->pci_regs[DEVCONFIG], 0, 4);
+        aic_io_update(dev);
+        aic_mem_update(dev);
+        aic_bios_update(dev);
+    }
 }
 
 static void *
@@ -5446,6 +5522,27 @@ aic_init(const device_t *info)
     other_scsi_present++;
 
     dev->board = info->local & 0xff;
+    if (dev->board == BOARD_FROM_CONFIG) {
+        dev->board = device_get_config_int("model");
+        /* A 274x with its floppy controller fitted and jumpered on is the
+           2742 of its kind: the same board, the same EISA ID and option
+           ROM, and an N82077 beside the chip. The 2744W has none. */
+        if (AIC_BOARD_EISA(dev->board) && device_get_config_int("floppy")) {
+            switch (dev->board) {
+                case BOARD_2740:
+                    dev->board = BOARD_2742;
+                    break;
+                case BOARD_2740T:
+                    dev->board = BOARD_2742T;
+                    break;
+                case BOARD_2740W:
+                    dev->board = BOARD_2742W;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
     dev->wide  = (dev->board == BOARD_2940UW) || (dev->board == BOARD_2944UW) || (dev->board == BOARD_7880) || (dev->board == BOARD_2940W) || AIC_BOARD_WIDE(dev->board);
     /* An AHA-2740 is one narrow bus. Other members of the family strap the
        same chip for two buses or for one wide one, and on the AIC-7770
@@ -5483,12 +5580,7 @@ aic_init(const device_t *info)
 
     dev->eisa = AIC_BOARD_EISA(dev->board);
     /* Which part this board is built on, before anything asks. */
-    if (dev->eisa)
-        dev->chip = &aic_chip_7770;
-    else if ((dev->board == BOARD_2940) || (dev->board == BOARD_2940W))
-        dev->chip = &aic_chip_7870;
-    else
-        dev->chip = &aic_chip_788x;
+    dev->chip = aic_board_chip(dev->board);
     dev->bus  = scsi_get_bus();
     /* What every line of this board's log will say it is. Set before
        anything else can log, and before the slot is known, so it names
@@ -5755,67 +5847,22 @@ aic_close(void *priv)
 static const device_config_t aic7770_config[] = {
     // clang-format off
     {
-        .name           = "bios_rev",
-        .description    = "BIOS Revision",
-        .type           = CONFIG_BIOS,
-        .default_string = "v2_11_edd",
-        .default_int    = 0,
-        .file_filter    = NULL,
-        .spinner        = { 0 },
-        .bios           = {
-            {
-                .name          = "Version 2.10",
-                .internal_name = "v2_10",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = 0,
-                .size          = 16384,
-                .files         = { AHA2740_V210_ROM, "" }
-            },
-            {
-                .name          = "Version 2.11 EDD 1.1",
-                .internal_name = "v2_11_edd",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = 0,
-                .size          = 32768,
-                .files         = { AHA2742A_V211_ROM, "" }
-            },
-            {
-                .name          = "Version 2.11 EDD 1.1 (2740W dump)",
-                .internal_name = "v2_11_edd_w",
-                .bios_type     = BIOS_NORMAL,
-                .files_no      = 1,
-                .local         = 0,
-                .size          = 32768,
-                .files         = { AHA2740W_V211_ROM, "" }
-            },
-            { .files_no = 0 }
-        }
-    },
-    {
-        .name           = "slot",
-        .description    = "EISA slot",
+        .name           = "model",
+        .description    = "Model",
         .type           = CONFIG_SELECTION,
         .default_string = NULL,
-        .default_int    = 1,
+        .default_int    = BOARD_2740,
         .file_filter    = NULL,
         .spinner        = { 0 },
         .selection      = {
-            { .description = "Slot 1", .value = 1 },
-            { .description = "Slot 2", .value = 2 },
-            { .description = "Slot 3", .value = 3 },
-            { .description = "Slot 4", .value = 4 },
-            { .description = ""                   }
+            { .description = "AHA-274x",                       .value = BOARD_2740  },
+            { .description = "AHA-274xT (twin channel)",       .value = BOARD_2740T },
+            { .description = "AHA-274xW (Wide)",               .value = BOARD_2740W },
+            { .description = "AHA-2744W (Wide, differential)", .value = BOARD_2744W },
+            { .description = ""                                                     }
         },
         .bios           = { { 0 } }
     },
-    { .name = "", .description = "", .type = CONFIG_END }
-    // clang-format on
-};
-
-static const device_config_t aic7770_fdc_config[] = {
-    // clang-format off
     {
         .name           = "bios_rev",
         .description    = "BIOS Revision",
@@ -5887,8 +5934,23 @@ static const device_config_t aic7770_fdc_config[] = {
     // clang-format on
 };
 
-static const device_config_t aic_card_config[] = {
+static const device_config_t aha2940u_config[] = {
     // clang-format off
+    {
+        .name           = "model",
+        .description    = "Model",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = BOARD_2940U,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description = "AHA-2940U (Ultra)",       .value = BOARD_2940U  },
+            { .description = "AHA-2940UW (Ultra Wide)", .value = BOARD_2940UW },
+            { .description = ""                                               }
+        },
+        .bios           = { { 0 } }
+    },
     {
         .name           = "bios",
         .description    = "Enable BIOS",
@@ -5963,6 +6025,21 @@ static const device_config_t aic_card_config[] = {
 
 static const device_config_t aha2940_config[] = {
     // clang-format off
+    {
+        .name           = "model",
+        .description    = "Model",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = BOARD_2940,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description = "AHA-2940",         .value = BOARD_2940  },
+            { .description = "AHA-2940W (Wide)", .value = BOARD_2940W },
+            { .description = ""                                       }
+        },
+        .bios           = { { 0 } }
+    },
     {
         .name           = "bios",
         .description    = "Enable BIOS",
@@ -6081,161 +6158,127 @@ const device_t aic7880_pci_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "AIC-7880",
+    .scsi_buses    = aic_scsi_buses
 };
 
-const device_t aha2740_device = {
-    .name          = "Adaptec AHA-2740",
-    .internal_name = "aha2740",
+/* Until the models became options each board had an entry of its own. A
+   configuration naming one of those becomes the entry that covers it, with
+   the model it was; its section (under whichever name the old entry carried)
+   moves to the new name, so the BIOS revision, slot and floppy jumper come
+   along. A 2742's floppy jumper defaulted off as the 274x's does, so the
+   model is all that has to be written. */
+static const struct {
+    const char *old_internal;
+    const char *old_names[2];
+    const char *new_internal;
+    int         model;
+} aic_migrations[] = {
+    { "aha2740",   { "Adaptec AHA-2740"                              }, "aha274x",  BOARD_2740   },
+    { "aha2742",   { "Adaptec AHA-2742"                              }, "aha274x",  BOARD_2740   },
+    { "aha2740t",  { "Adaptec AHA-2740T"                             }, "aha274x",  BOARD_2740T  },
+    { "aha2742t",  { "Adaptec AHA-2742T"                             }, "aha274x",  BOARD_2740T  },
+    { "aha2740w",  { "Adaptec AHA-2740W"                             }, "aha274x",  BOARD_2740W  },
+    { "aha2742w",  { "Adaptec AHA-2742W"                             }, "aha274x",  BOARD_2740W  },
+    { "aha2744w",  { "Adaptec AHA-2744W"                             }, "aha274x",  BOARD_2744W  },
+    { "aha2940w",  { "Adaptec AHA-2940W"                             }, "aha2940",  BOARD_2940W  },
+    { "aha2940uw", { "Adaptec AHA-2940UW", "Adaptec AHA-2940 Ultra Wide" }, "aha2940u", BOARD_2940UW },
+};
+
+const char *
+aic_config_migrate(const char *internal_name, int slot)
+{
+    const device_t *dev = NULL;
+    char            new_sec[512];
+    char            old_sec[512];
+
+    for (size_t i = 0; i < (sizeof(aic_migrations) / sizeof(aic_migrations[0])); i++) {
+        if (strcmp(internal_name, aic_migrations[i].old_internal))
+            continue;
+
+        if (!strcmp(aic_migrations[i].new_internal, "aha274x"))
+            dev = &aha274x_device;
+        else if (!strcmp(aic_migrations[i].new_internal, "aha2940"))
+            dev = &aha2940_pci_device;
+        else
+            dev = &aha2940u_pci_device;
+
+        /* Sections are the entry's name and its instance, the card's slot. */
+        snprintf(new_sec, sizeof(new_sec), "%s #%i", dev->name, slot);
+        if (config_find_section(new_sec) == NULL) {
+            for (int n = 0; (n < 2) && (aic_migrations[i].old_names[n] != NULL); n++) {
+                void *sec;
+
+                snprintf(old_sec, sizeof(old_sec), "%s #%i", aic_migrations[i].old_names[n], slot);
+                sec = config_find_section(old_sec);
+                if (sec == NULL)
+                    sec = config_find_section((char *) aic_migrations[i].old_names[n]);
+                if (sec != NULL) {
+                    config_rename_section(sec, new_sec);
+                    break;
+                }
+            }
+        }
+        config_set_int(new_sec, "model", aic_migrations[i].model);
+
+        return aic_migrations[i].new_internal;
+    }
+
+    return NULL;
+}
+
+/* The AIC-7770 boards: one EISA ID (ADP7771) and one option ROM, told apart
+   by the chip's straps -- one narrow channel, two, one wide, one wide
+   differential -- and by whether a floppy controller is fitted. */
+const device_t aha274x_device = {
+    .name          = "Adaptec AHA-274x (EISA)",
+    .internal_name = "aha274x",
     .flags         = DEVICE_EISA,
-    .local         = BOARD_2740,
+    .local         = BOARD_FROM_CONFIG,
     .init          = aic_init,
     .close         = aic_close,
     .reset         = aic_reset,
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = aic7770_config
+    .config        = aic7770_config,
+    .short_name    = "AHA-274x",
+    .scsi_buses    = aic_scsi_buses
 };
 
-const device_t aha2742_device = {
-    .name          = "Adaptec AHA-2742",
-    .internal_name = "aha2742",
-    .flags         = DEVICE_EISA,
-    .local         = BOARD_2742,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic7770_fdc_config
-};
-
-const device_t aha2740t_device = {
-    .name          = "Adaptec AHA-2740T",
-    .internal_name = "aha2740t",
-    .flags         = DEVICE_EISA,
-    .local         = BOARD_2740T,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic7770_config
-};
-
-const device_t aha2742t_device = {
-    .name          = "Adaptec AHA-2742T",
-    .internal_name = "aha2742t",
-    .flags         = DEVICE_EISA,
-    .local         = BOARD_2742T,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic7770_fdc_config
-};
-
-const device_t aha2740w_device = {
-    .name          = "Adaptec AHA-2740W",
-    .internal_name = "aha2740w",
-    .flags         = DEVICE_EISA,
-    .local         = BOARD_2740W,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic7770_config
-};
-
-const device_t aha2742w_device = {
-    .name          = "Adaptec AHA-2742W",
-    .internal_name = "aha2742w",
-    .flags         = DEVICE_EISA,
-    .local         = BOARD_2742W,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic7770_fdc_config
-};
-
-const device_t aha2744w_device = {
-    .name          = "Adaptec AHA-2744W",
-    .internal_name = "aha2744w",
-    .flags         = DEVICE_EISA,
-    .local         = BOARD_2744W,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic7770_config
-};
-
+/* The AIC-7870 card, strapped narrow (AHA-2940) or wide (AHA-2940W). */
 const device_t aha2940_pci_device = {
-    .name          = "Adaptec AHA-2940",
+    .name          = "Adaptec AHA-2940 (AIC-7870)",
     .internal_name = "aha2940",
     .flags         = DEVICE_PCI,
-    .local         = BOARD_2940,
+    .local         = BOARD_FROM_CONFIG,
     .init          = aic_init,
     .close         = aic_close,
     .reset         = aic_reset,
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = aha2940_config
+    .config        = aha2940_config,
+    .short_name    = "AHA-2940",
+    .scsi_buses    = aic_scsi_buses
 };
 
-const device_t aha2940w_pci_device = {
-    .name          = "Adaptec AHA-2940W",
-    .internal_name = "aha2940w",
-    .flags         = DEVICE_PCI,
-    .local         = BOARD_2940W,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aha2940_config
-};
-
+/* The AIC-7880 card, narrow (AHA-2940U) or wide (AHA-2940UW). */
 const device_t aha2940u_pci_device = {
-    .name          = "Adaptec AHA-2940U",
+    .name          = "Adaptec AHA-2940 Ultra (AIC-7880)",
     .internal_name = "aha2940u",
     .flags         = DEVICE_PCI,
-    .local         = BOARD_2940U,
+    .local         = BOARD_FROM_CONFIG,
     .init          = aic_init,
     .close         = aic_close,
     .reset         = aic_reset,
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = aic_card_config
-};
-
-const device_t aha2940uw_pci_device = {
-    .name          = "Adaptec AHA-2940UW",
-    .internal_name = "aha2940uw",
-    .flags         = DEVICE_PCI,
-    .local         = BOARD_2940UW,
-    .init          = aic_init,
-    .close         = aic_close,
-    .reset         = aic_reset,
-    .available     = NULL,
-    .speed_changed = NULL,
-    .force_redraw  = NULL,
-    .config        = aic_card_config
+    .config        = aha2940u_config,
+    .short_name    = "AHA-2940U",
+    .scsi_buses    = aic_scsi_buses
 };
 
 const device_t aha2944uw_pci_device = {
@@ -6249,5 +6292,7 @@ const device_t aha2944uw_pci_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = aha2944uw_config
+    .config        = aha2944uw_config,
+    .short_name    = "AHA-2944UW",
+    .scsi_buses    = aic_scsi_buses
 };

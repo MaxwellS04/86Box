@@ -350,19 +350,16 @@ w83977_fdc_handler(w83977_t *dev)
 {
     const uint8_t  global_enable = !!(dev->regs[0x22] & (1 << 0));
     const uint8_t  local_enable  = !!dev->ld_regs[0][0x30];
-    const uint16_t old_base      = dev->fdc_base;
 
     dev->fdc_base = 0x0000;
 
     if (global_enable && local_enable)
         dev->fdc_base = make_port(dev, 0) & 0xfff8;
 
-    if ((dev->id != 1) && ((dev->fdc_base != old_base) ||
-                           (dev->fdc_base == 0x0000)))
+    if (dev->id != 1)
         fdc_remove(dev->fdc);
 
-    if ((dev->id != 1) && (dev->fdc_base != old_base) &&
-        (dev->fdc_base >= 0x0100) && (dev->fdc_base <= 0x0ff8))
+    if ((dev->id != 1) && (dev->fdc_base >= 0x0100) && (dev->fdc_base <= 0x0ff8))
         fdc_set_base(dev->fdc, dev->fdc_base);
 }
 
@@ -1291,7 +1288,7 @@ w83977_init(const device_t *info)
     if (next_id == 1)
         dev->hefras   ^= W83977_370;
     else
-        dev->fdc       = device_add(&fdc_at_smc_device);
+        dev->fdc       = device_add_params(&fdc_at_smc_device, (void *) FDC_FLAG_PNP);
 
     if (info->local & W83977_UART_FORCE_SEC) {
         dev->uart[0]   = device_add_inst(&ns16550_device, 3);
