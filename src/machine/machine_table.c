@@ -26566,8 +26566,8 @@ const machine_t machines[] = {
             .max_bus     = 150000000,
             .min_voltage = 1300,
             .max_voltage = 3500,
-            .min_multi   = MACHINE_MULTIPLIER_FIXED,
-            .max_multi   = MACHINE_MULTIPLIER_FIXED
+            .min_multi   = 1.5,
+            .max_multi   = 8.0
         },
         .bus_flags = MACHINE_PS2_A97 | MACHINE_BUS_USB,
         .flags     = MACHINE_IDE_DUAL | MACHINE_AG | MACHINE_APM | MACHINE_ACPI | MACHINE_GAMEPORT | MACHINE_USB,
@@ -26615,8 +26615,8 @@ const machine_t machines[] = {
             .max_bus     = 150000000,
             .min_voltage = 1300,
             .max_voltage = 3500,
-            .min_multi   = MACHINE_MULTIPLIER_FIXED,
-            .max_multi   = MACHINE_MULTIPLIER_FIXED
+            .min_multi   = 1.5,
+            .max_multi   = 8.0
         },
         .bus_flags = MACHINE_PS2_A97 | MACHINE_BUS_USB,
         .flags     = MACHINE_IDE_DUAL | MACHINE_APM | MACHINE_ACPI | MACHINE_USB,
