@@ -36,6 +36,7 @@
 #include <86box/pci.h>
 #include <86box/pic.h>
 #include <86box/plat_unused.h>
+#include <86box/plat_fallthrough.h>
 #include <86box/port_92.h>
 #include <86box/sio.h>
 #include <86box/smbus.h>
@@ -44,6 +45,8 @@
 #include <86box/acpi.h>
 
 #include <86box/chipset.h>
+#include <86box/flash.h>
+#include <86box/machine.h>
 
 typedef struct ali1543_t {
     uint8_t mirq_states[8];
@@ -70,17 +73,8 @@ typedef struct ali1543_t {
     smbus_ali7101_t *smbus;
     usb_t           *usb;
 
+    pc_timer_t wdt_timer;
 } ali1543_t;
-
-/*
-    Notes:
-    - Power Managment isn't functioning properly
-    - IDE isn't functioning properly
-    - 1543C differences have to be examined
-    - Some Chipset functionality might be missing
-    - Device numbers and types might be incorrect
-    - Code quality is abysmal and needs lot's of cleanup.
-*/
 
 int ali1533_irq_routing[16] = { PCI_IRQ_DISABLED, 9, 3, 10, 4, 5, 7, 6,
                                 1, 11, PCI_IRQ_DISABLED, 12, PCI_IRQ_DISABLED, 14, PCI_IRQ_DISABLED, 15 };
@@ -112,13 +106,28 @@ ali1533_ddma_handler(UNUSED(ali1543_t *dev))
 static void ali5229_ide_handler(ali1543_t *dev);
 static void ali5229_ide_irq_handler(ali1543_t *dev);
 
-static void ali5229_write(int func, int addr, uint8_t val, void *priv);
+static void ali5229_write(int func, int addr, int len, uint8_t val, void *priv);
 
-static void    ali7101_write(int func, int addr, uint8_t val, void *priv);
-static uint8_t ali7101_read(int func, int addr, void *priv);
+static void    ali7101_write(int func, int addr, int len, uint8_t val, void *priv);
+static uint8_t ali7101_read(int func, int addr, int len, void *priv);
+
+/*
+   53h bit 6 makes the M5237 invisible (ALi-C p64): no window, no bus
+   master, no interrupt. Its registers are kept for when it comes back.
+ */
+static void
+ali5237_set_enable(ali1543_t *dev, int enable)
+{
+    if (enable == dev->usb_dev_enable)
+        return;
+
+    dev->usb_dev_enable = enable;
+    ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13],
+                            enable && (dev->usb_conf[0x04] & 2));
+}
 
 static void
-ali1533_write(int func, int addr, uint8_t val, void *priv)
+ali1533_write(int func, int addr, int len, uint8_t val, void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
     ali1543_log("M1533: dev->pci_conf[%02x] = %02x\n", addr, val);
@@ -263,7 +272,7 @@ ali1533_write(int func, int addr, uint8_t val, void *priv)
             else
                 dev->pci_conf[addr] = val & 0xcf;
             /* This actually enables/disables the USB *device* rather than the interface itself. */
-            dev->usb_dev_enable = !(val & 0x40);
+            ali5237_set_enable(dev, !(val & 0x40));
             if (dev->type == 1) {
                 nvr_at_index_read_handler(0, 0x0070, dev->nvr);
                 nvr_at_index_read_handler(0, 0x0072, dev->nvr);
@@ -453,7 +462,7 @@ ali1533_write(int func, int addr, uint8_t val, void *priv)
         case 0x7c ... 0xff:
             if ((dev->type == 1) && !dev->pmu_dev_enable) {
                 dev->pmu_dev_enable = 1;
-                ali7101_write(func, addr, val, priv);
+                ali7101_write(func, addr, len, val, priv);
                 dev->pmu_dev_enable = 0;
             }
             break;
@@ -464,7 +473,7 @@ ali1533_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-ali1533_read(int func, int addr, void *priv)
+ali1533_read(int func, int addr, int len, void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
     uint8_t    ret = 0xff;
@@ -478,7 +487,7 @@ ali1533_read(int func, int addr, void *priv)
                 ret = (ret & 0xbf) | (dev->ide_dev_enable ? 0x40 : 0x00);
             else if ((dev->type == 1) && ((addr >= 0x7c) && (addr <= 0xff)) && !dev->pmu_dev_enable) {
                 dev->pmu_dev_enable = 1;
-                ret                 = ali7101_read(func, addr, priv);
+                ret                 = ali7101_read(func, addr, len, priv);
                 dev->pmu_dev_enable = 0;
             }
         }
@@ -572,10 +581,10 @@ ali5229_ide_handler(ali1543_t *dev)
 {
     uint32_t ch = 0;
 
-    uint16_t native_base_pri_addr = (dev->ide_conf[0x11] | dev->ide_conf[0x10] << 8) & 0xfffe;
-    uint16_t native_side_pri_addr = (dev->ide_conf[0x15] | dev->ide_conf[0x14] << 8) & 0xfffe;
-    uint16_t native_base_sec_addr = (dev->ide_conf[0x19] | dev->ide_conf[0x18] << 8) & 0xfffe;
-    uint16_t native_side_sec_addr = (dev->ide_conf[0x1c] | dev->ide_conf[0x1b] << 8) & 0xfffe;
+    uint16_t native_base_pri_addr = (dev->ide_conf[0x10] | dev->ide_conf[0x11] << 8) & 0xfffe;
+    uint16_t native_side_pri_addr = ((dev->ide_conf[0x14] | dev->ide_conf[0x15] << 8) & 0xfffe) | 0x0002;
+    uint16_t native_base_sec_addr = (dev->ide_conf[0x18] | dev->ide_conf[0x19] << 8) & 0xfffe;
+    uint16_t native_side_sec_addr = ((dev->ide_conf[0x1c] | dev->ide_conf[0x1d] << 8) & 0xfffe) | 0x0002;
 
     uint16_t comp_base_pri_addr = 0x01f0;
     uint16_t comp_side_pri_addr = 0x03f6;
@@ -690,23 +699,23 @@ ali5229_chip_reset(ali1543_t *dev)
         dev->ide_conf[0x4f] = 0x1a;
     }
 
-    ali5229_write(0, 0x04, 0x05, dev);
-    ali5229_write(0, 0x10, 0xf1, dev);
-    ali5229_write(0, 0x11, 0x01, dev);
-    ali5229_write(0, 0x14, 0xf5, dev);
-    ali5229_write(0, 0x15, 0x03, dev);
-    ali5229_write(0, 0x18, 0x71, dev);
-    ali5229_write(0, 0x19, 0x01, dev);
-    ali5229_write(0, 0x1a, 0x75, dev);
-    ali5229_write(0, 0x1b, 0x03, dev);
-    ali5229_write(0, 0x20, 0x01, dev);
-    ali5229_write(0, 0x21, 0xf0, dev);
-    ali5229_write(0, 0x4d, 0x00, dev);
+    ali5229_write(0, 0x04, 1, 0x05, dev);
+    ali5229_write(0, 0x10, 1, 0xf1, dev);
+    ali5229_write(0, 0x11, 1, 0x01, dev);
+    ali5229_write(0, 0x14, 1, 0xf5, dev);
+    ali5229_write(0, 0x15, 1, 0x03, dev);
+    ali5229_write(0, 0x18, 1, 0x71, dev);
+    ali5229_write(0, 0x19, 1, 0x01, dev);
+    ali5229_write(0, 0x1a, 1, 0x75, dev);
+    ali5229_write(0, 0x1b, 1, 0x03, dev);
+    ali5229_write(0, 0x20, 1, 0x01, dev);
+    ali5229_write(0, 0x21, 1, 0xf0, dev);
+    ali5229_write(0, 0x4d, 1, 0x00, dev);
     dev->ide_conf[0x09] = 0xfa;
-    ali5229_write(0, 0x09, 0xfa, dev);
-    ali5229_write(0, 0x52, 0x00, dev);
+    ali5229_write(0, 0x09, 1, 0xfa, dev);
+    ali5229_write(0, 0x52, 1, 0x00, dev);
 
-    ali5229_write(0, 0x50, 0x02, dev);
+    ali5229_write(0, 0x50, 1, 0x02, dev);
 
     sff_set_slot(dev->ide_controller[0], dev->ide_slot);
     sff_set_slot(dev->ide_controller[1], dev->ide_slot);
@@ -716,7 +725,7 @@ ali5229_chip_reset(ali1543_t *dev)
 }
 
 static void
-ali5229_write(int func, int addr, uint8_t val, void *priv)
+ali5229_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
     ali1543_log("M5229: [W] dev->ide_conf[%02x] = %02x\n", addr, val);
@@ -781,7 +790,7 @@ ali5229_write(int func, int addr, uint8_t val, void *priv)
         case 0x21:
             /* Datasheet erratum: the PCI BAR's actually have different sizes. */
             if (addr == 0x20)
-                dev->ide_conf[addr] = (val & 0xe0) | 0x01;
+                dev->ide_conf[addr] = (val & 0xf0) | 0x01;
             else if ((addr & 0x07) == 0x00)
                 dev->ide_conf[addr] = (val & 0xf8) | 0x01;
             else if ((addr & 0x07) == 0x04)
@@ -885,7 +894,7 @@ ali5229_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-ali5229_read(int func, int addr, void *priv)
+ali5229_read(int func, int addr, UNUSED(int len), void *priv)
 {
     const ali1543_t *dev = (ali1543_t *) priv;
     uint8_t    ret = 0xff;
@@ -908,7 +917,7 @@ ali5229_read(int func, int addr, void *priv)
 }
 
 static void
-ali5237_write(int func, int addr, uint8_t val, void *priv)
+ali5237_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
     ali1543_log("M5237: dev->usb_conf[%02x] = %02x\n", addr, val);
@@ -922,7 +931,8 @@ ali5237_write(int func, int addr, uint8_t val, void *priv)
     switch (addr) {
         case 0x04: /* USB Enable */
             dev->usb_conf[addr] = val & 0x5f;
-            ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13], dev->usb_conf[0x04] & 1);
+            /* Memory Space is bit 1, PCI Master bit 2 (ALi-C p117). */
+            ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13], dev->usb_conf[0x04] & 2);
             break;
 
         case 0x05:
@@ -953,12 +963,12 @@ ali5237_write(int func, int addr, uint8_t val, void *priv)
         /* USB Base I/O */
         case 0x11:
             dev->usb_conf[addr] = val & 0xf0;
-            ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13], dev->usb_conf[0x04] & 1);
+            ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13], dev->usb_conf[0x04] & 2);
             break;
         case 0x12:
         case 0x13:
             dev->usb_conf[addr] = val;
-            ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13], dev->usb_conf[0x04] & 1);
+            ohci_update_mem_mapping(dev->usb, dev->usb_conf[0x11], dev->usb_conf[0x12], dev->usb_conf[0x13], dev->usb_conf[0x04] & 2);
             break;
 
         case 0x2c: /* Subsystem Vendor ID */
@@ -975,7 +985,7 @@ ali5237_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-ali5237_read(int func, int addr, void *priv)
+ali5237_read(int func, int addr, UNUSED(int len), void *priv)
 {
     const ali1543_t *dev = (ali1543_t *) priv;
     uint8_t    ret = 0xff;
@@ -987,7 +997,7 @@ ali5237_read(int func, int addr, void *priv)
 }
 
 static void
-ali7101_write(int func, int addr, uint8_t val, void *priv)
+ali7101_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
     ali1543_log("M7101: [W] dev->pmu_conf[%02x] = %02x\n", addr, val);
@@ -1277,6 +1287,18 @@ ali7101_write(int func, int addr, uint8_t val, void *priv)
                 dev->pmu_conf[addr] = val & 0x02;
             break;
 
+        case 0x92:
+            if (dev->type == 1) {
+                if (val & 0x01) {
+                    if (!(dev->pmu_conf[addr] & 0x01))
+                        timer_set_delay_u64(&dev->wdt_timer, (uint64_t) (((val & 0x02) ? 1000000 : 1000) * TIMER_USEC));
+                } else if (dev->pmu_conf[addr] & 0x01) {
+                    timer_disable(&dev->wdt_timer);
+                }
+                dev->pmu_conf[addr] = val & 0x07;
+            }
+            break;
+
         case 0x94:
             dev->pmu_conf[addr] = val & 0xf0;
             break;
@@ -1313,6 +1335,10 @@ ali7101_write(int func, int addr, uint8_t val, void *priv)
             break;
 
         case 0xb8:
+            if (dev->type == 1)
+                flash_e28f0xx_cobalt3k_update(val);
+            fallthrough;
+
         case 0xb9:
             if (dev->type == 1)
                 dev->pmu_conf[addr] = val;
@@ -1408,7 +1434,7 @@ ali7101_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-ali7101_read(int func, int addr, void *priv)
+ali7101_read(int func, int addr, UNUSED(int len), void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
     uint8_t    ret = 0xff;
@@ -1439,7 +1465,10 @@ ali7101_read(int func, int addr, void *priv)
                     ret = acpi_ali_soft_smi_status_read(dev->acpi) ? 0x10 : 0x00;
                     break;
                 case 0x7f:
-                    ret = 0x80;
+                    if (machines[machine].init == machine_at_cobalt3k_init) /* TODO: proper machine table ACPI GPIO plumbing */
+                        ret = machine_get_gpio_acpi_default();
+                    else
+                        ret = 0x80;
                     break;
                 case 0xbc:
                     ret = inb(0x70);
@@ -1490,6 +1519,17 @@ ali7101_read(int func, int addr, void *priv)
 }
 
 static void
+ali7101_wdt_timer(void *priv)
+{
+    const ali1543_t *dev = (ali1543_t *) priv;
+
+    if (dev->pmu_conf[0x92] & 0x01) {
+        ali1543_log("M7101: watchdog expired, resetting\n");
+        pci_write(0xcf9, 0x06, NULL);
+    }
+}
+
+static void
 ali1543_reset(void *priv)
 {
     ali1543_t *dev = (ali1543_t *) priv;
@@ -1516,11 +1556,12 @@ ali1543_reset(void *priv)
     dev->usb_conf[0x0b] = 0x0c;
     dev->usb_conf[0x3d] = 0x01;
 
-    ali5237_write(0, 0x04, 0x00, dev);
-    ali5237_write(0, 0x10, 0x00, dev);
-    ali5237_write(0, 0x11, 0x00, dev);
-    ali5237_write(0, 0x12, 0x00, dev);
-    ali5237_write(0, 0x13, 0x00, dev);
+    ali5237_write(0, 0x04, 1, 0x00, dev);
+    ali5237_write(0, 0x10, 1, 0x00, dev);
+    ali5237_write(0, 0x11, 1, 0x00, dev);
+    ali5237_write(0, 0x12, 1, 0x00, dev);
+    ali5237_write(0, 0x13, 1, 0x00, dev);
+    ali5237_write(0, 0x43, 1, 0x00, dev);
 
     /* M7101 */
     memset(dev->pmu_conf, 0x00, sizeof(dev->pmu_conf));
@@ -1536,26 +1577,26 @@ ali1543_reset(void *priv)
     acpi_set_slot(dev->acpi, dev->pmu_slot);
     acpi_set_nvr(dev->acpi, dev->nvr);
 
-    ali7101_write(0, 0x04, 0x0f, dev);
-    ali7101_write(0, 0x10, 0x01, dev);
-    ali7101_write(0, 0x11, 0x00, dev);
-    ali7101_write(0, 0x12, 0x00, dev);
-    ali7101_write(0, 0x13, 0x00, dev);
-    ali7101_write(0, 0x14, 0x01, dev);
-    ali7101_write(0, 0x15, 0x00, dev);
-    ali7101_write(0, 0x16, 0x00, dev);
-    ali7101_write(0, 0x17, 0x00, dev);
-    ali7101_write(0, 0x40, 0x00, dev);
-    ali7101_write(0, 0x41, 0x00, dev);
-    ali7101_write(0, 0x42, 0x00, dev);
-    ali7101_write(0, 0x43, 0x00, dev);
-    ali7101_write(0, 0x77, 0x00, dev);
-    ali7101_write(0, 0xbd, 0x00, dev);
-    ali7101_write(0, 0xc0, 0x00, dev);
-    ali7101_write(0, 0xc1, 0x00, dev);
-    ali7101_write(0, 0xc2, 0x00, dev);
-    ali7101_write(0, 0xc3, 0x00, dev);
-    ali7101_write(0, 0xe0, 0x00, dev);
+    ali7101_write(0, 0x04, 1, 0x0f, dev);
+    ali7101_write(0, 0x10, 1, 0x01, dev);
+    ali7101_write(0, 0x11, 1, 0x00, dev);
+    ali7101_write(0, 0x12, 1, 0x00, dev);
+    ali7101_write(0, 0x13, 1, 0x00, dev);
+    ali7101_write(0, 0x14, 1, 0x01, dev);
+    ali7101_write(0, 0x15, 1, 0x00, dev);
+    ali7101_write(0, 0x16, 1, 0x00, dev);
+    ali7101_write(0, 0x17, 1, 0x00, dev);
+    ali7101_write(0, 0x40, 1, 0x00, dev);
+    ali7101_write(0, 0x41, 1, 0x00, dev);
+    ali7101_write(0, 0x42, 1, 0x00, dev);
+    ali7101_write(0, 0x43, 1, 0x00, dev);
+    ali7101_write(0, 0x77, 1, 0x00, dev);
+    ali7101_write(0, 0xbd, 1, 0x00, dev);
+    ali7101_write(0, 0xc0, 1, 0x00, dev);
+    ali7101_write(0, 0xc1, 1, 0x00, dev);
+    ali7101_write(0, 0xc2, 1, 0x00, dev);
+    ali7101_write(0, 0xc3, 1, 0x00, dev);
+    ali7101_write(0, 0xe0, 1, 0x00, dev);
 
     /* Do the bridge last due to device deactivations. */
     /* M1533 */
@@ -1570,19 +1611,19 @@ ali1543_reset(void *priv)
     dev->pci_conf[0x0a] = 0x01;
     dev->pci_conf[0x0b] = 0x06;
 
-    ali1533_write(0, 0x41, 0x00, dev);    /* Disables the keyboard and mouse IRQ latch. */
-    ali1533_write(0, 0x48, 0x00, dev);    /* Disables all IRQ's. */
-    ali1533_write(0, 0x44, 0x00, dev);
-    ali1533_write(0, 0x4d, 0x00, dev);
-    ali1533_write(0, 0x53, 0x00, dev);
-    ali1533_write(0, 0x58, 0x00, dev);
-    ali1533_write(0, 0x5f, 0x00, dev);
-    ali1533_write(0, 0x72, 0x00, dev);
-    ali1533_write(0, 0x74, 0x00, dev);
-    ali1533_write(0, 0x75, 0x00, dev);
-    ali1533_write(0, 0x76, 0x00, dev);
+    ali1533_write(0, 0x41, 1, 0x00, dev);    /* Disables the keyboard and mouse IRQ latch. */
+    ali1533_write(0, 0x48, 1, 0x00, dev);    /* Disables all IRQ's. */
+    ali1533_write(0, 0x44, 1, 0x00, dev);
+    ali1533_write(0, 0x4d, 1, 0x00, dev);
+    ali1533_write(0, 0x53, 1, 0x00, dev);
+    ali1533_write(0, 0x58, 1, 0x00, dev);
+    ali1533_write(0, 0x5f, 1, 0x00, dev);
+    ali1533_write(0, 0x72, 1, 0x00, dev);
+    ali1533_write(0, 0x74, 1, 0x00, dev);
+    ali1533_write(0, 0x75, 1, 0x00, dev);
+    ali1533_write(0, 0x76, 1, 0x00, dev);
     if (dev->type == 1)
-        ali1533_write(0, 0x78, 0x00, dev);
+        ali1533_write(0, 0x78, 1, 0x00, dev);
 
     unmask_a20_in_smm = 1;
 }
@@ -1614,7 +1655,8 @@ ali1543_init(const device_t *info)
 
     /* ACPI */
     dev->acpi = device_add(&acpi_ali_device);
-    dev->nvr  = device_add(&piix4_nvr_device);
+    dev->nvr  = device_add_params(&nvr_at_device, (void *) (uintptr_t) NVR_PIIX4);
+    timer_add(&dev->wdt_timer, ali7101_wdt_timer, dev, 0);
 
     /* DMA */
     dma_alias_set();
@@ -1655,7 +1697,8 @@ ali1543_init(const device_t *info)
     pci_enable_mirq(6);
 
     /* Super I/O chip */
-    device_add(&ali5123_device);
+    device_add_params(&ali5123_device, (void *) (uintptr_t) (((info->local & ALI1543_SIO_370) ? ALI5123_370 : 0) |
+                                                              ((dev->type == 0) ? ALI5123_NO_UART3 : 0)));
 
     ali1543_reset(dev);
 

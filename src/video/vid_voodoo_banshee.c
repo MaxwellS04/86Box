@@ -51,7 +51,9 @@
 #include <86box/vid_voodoo_texture.h>
 
 #define ROM_BANSHEE                 "roms/video/voodoo/Pci_sg.rom"
+#define ROM_BANSHEE_AGP             "roms/video/voodoo/Agp_sg.rom"
 #define ROM_CREATIVE_BANSHEE        "roms/video/voodoo/BlasterPCI.rom"
+#define ROM_CREATIVE_BANSHEE_AGP    "roms/video/voodoo/BlasterAGP.rom"
 #define ROM_QUANTUM3D_RAVEN         "roms/video/voodoo/RVPD0224.rom"
 #define ROM_VOODOO3_1000            "roms/video/voodoo/1k11sg.rom"
 #define ROM_VOODOO3_2000            "roms/video/voodoo/2k11sd.rom"
@@ -533,7 +535,9 @@ banshee_render_16bpp_tiled(svga_t *svga)
     uint32_t   addr;
     int        drawn = 0;
 
-    if ((svga->displine + svga->y_add) < 0)
+    if (((svga->displine + svga->y_add) < 0) ||
+        (svga->monitor->target_buffer == NULL) ||
+        (svga->monitor->target_buffer->line[svga->displine + svga->y_add] == NULL))
         return;
 
     if (banshee->vidProcCfg & VIDPROCCFG_HALF_MODE)
@@ -733,6 +737,7 @@ banshee_recalctimings(svga_t *svga)
         double freq = (((double) n + 2) / (((double) m + 2) * (double) (1 << k))) * 14318184.0;
 
         svga->clock = (cpuclock * (float) (1ULL << 32)) / freq;
+
 #if 0
         svga->clock = cpuclock / freq;
 #endif
@@ -743,74 +748,58 @@ banshee_recalctimings(svga_t *svga)
     }
 }
 
+static uint32_t banshee_ext_inl(uint16_t addr, void *priv);
+static void     banshee_ext_outl(uint16_t addr, uint32_t val, void *priv);
+
 static void
 banshee_ext_out(uint16_t addr, uint8_t val, void *priv)
 {
-#if 0
-    banshee_t *banshee = (banshee_t *)priv;
-    svga_t *svga = &banshee->svga;
-#endif
+    uint32_t reg;
+    uint32_t shift;
 
 #if 0
     banshee_log("banshee_ext_out: addr=%04x val=%02x\n", addr, val);
 #endif
 
     switch (addr & 0xff) {
-        case 0xb0:
-        case 0xb1:
-        case 0xb2:
-        case 0xb3:
-        case 0xb4:
-        case 0xb5:
-        case 0xb6:
-        case 0xb7:
-        case 0xb8:
-        case 0xb9:
-        case 0xba:
-        case 0xbb:
-        case 0xbc:
-        case 0xbd:
-        case 0xbe:
-        case 0xbf:
-        case 0xc0:
-        case 0xc1:
-        case 0xc2:
-        case 0xc3:
-        case 0xc4:
-        case 0xc5:
-        case 0xc6:
-        case 0xc7:
-        case 0xc8:
-        case 0xc9:
-        case 0xca:
-        case 0xcb:
-        case 0xcc:
-        case 0xcd:
-        case 0xce:
-        case 0xcf:
-        case 0xd0:
-        case 0xd1:
-        case 0xd2:
-        case 0xd3:
-        case 0xd4:
-        case 0xd5:
-        case 0xd6:
-        case 0xd7:
-        case 0xd8:
-        case 0xd9:
-        case 0xda:
-        case 0xdb:
-        case 0xdc:
-        case 0xdd:
-        case 0xde:
-        case 0xdf:
+        case 0xb0 ... 0xdf:
             banshee_out((addr & 0xff) + 0x300, val, priv);
             break;
 
         default:
-            banshee_log("bad banshee_ext_out: addr=%04x val=%02x\n", addr, val);
+            /* Windows XP banshee.sys sets extended shift out bit with
+               an OR m8, imm8 - so byte accesses are in fact possible. */
+            shift = (addr & 3) << 3;
+            reg   = banshee_ext_inl(addr & 0xfc, priv);
+            banshee_ext_outl(addr & 0xfc, (reg & ~(0xff << shift)) | (val << shift), priv);
+            break;
     }
 }
+
+static void
+banshee_ext_outw(uint16_t addr, uint16_t val, void *priv)
+{
+    uint32_t reg;
+    uint32_t shift;
+
+#if 0
+    banshee_log("banshee_ext_outw: addr=%04x val=%04x\n", addr, val);
+#endif
+
+    switch (addr & 0xff) {
+        case 0xb0 ... 0xdf:
+            banshee_ext_out(addr, val & 0xff, priv);
+            banshee_ext_out(addr + 1, val >> 8, priv);
+            break;
+
+        default:
+            shift = (addr & 2) << 3;
+            reg   = banshee_ext_inl(addr & 0xfc, priv);
+            banshee_ext_outl(addr & 0xfc, (reg & ~(0xffff << shift)) | (val << shift), priv);
+            break;
+    }
+}
+
 static void
 banshee_ext_outl(uint16_t addr, uint32_t val, void *priv)
 {
@@ -1040,82 +1029,40 @@ banshee_ext_outl(uint16_t addr, uint32_t val, void *priv)
 static uint8_t
 banshee_ext_in(uint16_t addr, void *priv)
 {
-    banshee_t *banshee = (banshee_t *) priv;
-#if 0
-    svga_t *svga = &banshee->svga;
-#endif
     uint8_t ret = 0xff;
 
     switch (addr & 0xff) {
-        case Init_status:
-        case Init_status + 1:
-        case Init_status + 2:
-        case Init_status + 3:
-            ret = (banshee_status(banshee) >> ((addr & 3) * 8)) & 0xff;
-#if 0
-            banshee_log("Read status reg! %04x(%08x):%08x\n", CS, cs, cpu_state.pc);
-#endif
-            break;
-
-        case 0xb0:
-        case 0xb1:
-        case 0xb2:
-        case 0xb3:
-        case 0xb4:
-        case 0xb5:
-        case 0xb6:
-        case 0xb7:
-        case 0xb8:
-        case 0xb9:
-        case 0xba:
-        case 0xbb:
-        case 0xbc:
-        case 0xbd:
-        case 0xbe:
-        case 0xbf:
-        case 0xc0:
-        case 0xc1:
-        case 0xc2:
-        case 0xc3:
-        case 0xc4:
-        case 0xc5:
-        case 0xc6:
-        case 0xc7:
-        case 0xc8:
-        case 0xc9:
-        case 0xca:
-        case 0xcb:
-        case 0xcc:
-        case 0xcd:
-        case 0xce:
-        case 0xcf:
-        case 0xd0:
-        case 0xd1:
-        case 0xd2:
-        case 0xd3:
-        case 0xd4:
-        case 0xd5:
-        case 0xd6:
-        case 0xd7:
-        case 0xd8:
-        case 0xd9:
-        case 0xda:
-        case 0xdb:
-        case 0xdc:
-        case 0xdd:
-        case 0xde:
-        case 0xdf:
+        case 0xb0 ... 0xdf:
             ret = banshee_in((addr & 0xff) + 0x300, priv);
             break;
 
         default:
-            banshee_log("bad banshee_ext_in: addr=%04x\n", addr);
+            ret = banshee_ext_inl(addr & 0xfc, priv) >> ((addr & 3) << 3);
             break;
     }
 
 #if 0
     banshee_log("banshee_ext_in: addr=%04x val=%02x\n", addr, ret);
 #endif
+
+    return ret;
+}
+
+static uint16_t
+banshee_ext_inw(uint16_t addr, void *priv)
+{
+    uint16_t ret;
+
+    switch (addr & 0xff) {
+        case 0xb0 ... 0xdf:
+            ret = banshee_ext_in(addr, priv);
+            ret |= banshee_ext_in(addr + 1, priv) << 8;
+            break;
+
+        default:
+            ret = banshee_ext_inl(addr & 0xfc, priv) >> ((addr & 2) << 3);
+            break;
+    }
 
     return ret;
 }
@@ -1128,7 +1075,7 @@ banshee_status(banshee_t *banshee)
     int           fifo_entries = FIFO_ENTRIES;
     int           swap_count   = voodoo->swap_count;
     int           written      = voodoo->cmd_written + voodoo->cmd_written_fifo;
-    int           busy         = (written - voodoo->cmd_read) || (voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr) || (voodoo->cmdfifo_depth_rd_2 != voodoo->cmdfifo_depth_wr_2) || voodoo->render_voodoo_busy[0] || voodoo->render_voodoo_busy[1] || voodoo->render_voodoo_busy[2] || voodoo->render_voodoo_busy[3] || voodoo->voodoo_busy;
+    int           busy         = (written - voodoo->cmd_read) || (voodoo->cmdfifo_depth_rd != voodoo->cmdfifo_depth_wr) || (voodoo->cmdfifo_depth_rd_2 != voodoo->cmdfifo_depth_wr_2) || RENDER_VOODOO_BUSY(voodoo, 0) || RENDER_VOODOO_BUSY(voodoo, 1) || RENDER_VOODOO_BUSY(voodoo, 2) || RENDER_VOODOO_BUSY(voodoo, 3) || voodoo->voodoo_busy;
     uint32_t      ret          = 0;
 
     if (fifo_entries < 0x20)
@@ -1238,6 +1185,10 @@ banshee_ext_inl(uint16_t addr, void *priv)
             break;
         case DAC_dacData:
             ret = svga->pallook[banshee->dacAddr];
+            break;
+
+        case Video_maxRgbDelta:
+            ret = voodoo->scrfilterThreshold;
             break;
 
         case Video_vidProcCfg:
@@ -1617,11 +1568,15 @@ banshee_reg_readl(uint32_t addr, void *priv)
 }
 
 static void
-banshee_reg_write(UNUSED(uint32_t addr), UNUSED(uint8_t val), UNUSED(void *priv))
+banshee_reg_write(uint32_t addr, uint8_t val, void *priv)
 {
+    banshee_t *banshee = (banshee_t *) priv;
+
 #if 0
     banshee_log("banshee_reg_writeb: addr=%08x val=%02x\n", addr, val);
 #endif
+    if (!(addr & 0x1f80000)) /*IO remap*/
+        banshee_ext_out(addr & 0xff, val, banshee);
 }
 
 static void
@@ -1636,6 +1591,11 @@ banshee_reg_writew(uint32_t addr, uint16_t val, void *priv)
     banshee_log("banshee_reg_writew: addr=%08x val=%04x\n", addr, val);
 #endif
     switch (addr & 0x1f00000) {
+        case 0x0000000: /*IO remap*/
+            if (!(addr & 0x80000))
+                banshee_ext_outw(addr & 0xff, val, banshee);
+            break;
+
         case 0x1000000:
         case 0x1100000:
         case 0x1200000:
@@ -3066,7 +3026,7 @@ banshee_vsync_callback(svga_t *svga)
 }
 
 static uint8_t
-banshee_pci_read(int func, int addr, void *priv)
+banshee_pci_read(int func, int addr, UNUSED(int len), void *priv)
 {
     const banshee_t *banshee = (banshee_t *) priv;
 #if 0
@@ -3096,6 +3056,10 @@ banshee_pci_read(int func, int addr, void *priv)
 
         case 0x04:
             ret = banshee->pci_regs[0x04] & 0x27;
+            break;
+
+        case 0x06:
+            ret = PCI_STATUS_L_CAPAB | (banshee->agp ? PCI_STATUS_L_66MHZ : 0);
             break;
 
         case 0x07:
@@ -3276,7 +3240,7 @@ banshee_pci_read(int func, int addr, void *priv)
 }
 
 static void
-banshee_pci_write(int func, int addr, uint8_t val, void *priv)
+banshee_pci_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     banshee_t *banshee = (banshee_t *) priv;
 #if 0
@@ -3304,16 +3268,18 @@ banshee_pci_write(int func, int addr, uint8_t val, void *priv)
 
         case PCI_REG_COMMAND:
             if (val & PCI_COMMAND_IO) {
-                io_removehandler(0x03c0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
+                io_removehandler(0x03a0, 0x0040, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
                 if (banshee->ioBaseAddr)
-                    io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, NULL, banshee_ext_inl, banshee_ext_out, NULL, banshee_ext_outl, banshee);
+                    io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, banshee_ext_inw, banshee_ext_inl, banshee_ext_out, banshee_ext_outw, banshee_ext_outl, banshee);
 
+                if (!(banshee->svga.miscout & 0x01))
+                    io_sethandler(0x03a0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
                 io_sethandler(0x03c0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
                 if (banshee->ioBaseAddr)
-                    io_sethandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, NULL, banshee_ext_inl, banshee_ext_out, NULL, banshee_ext_outl, banshee);
+                    io_sethandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, banshee_ext_inw, banshee_ext_inl, banshee_ext_out, banshee_ext_outw, banshee_ext_outl, banshee);
             } else {
-                io_removehandler(0x03c0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
-                io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, NULL, banshee_ext_inl, banshee_ext_out, NULL, banshee_ext_outl, banshee);
+                io_removehandler(0x03a0, 0x0040, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
+                io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, banshee_ext_inw, banshee_ext_inl, banshee_ext_out, banshee_ext_outw, banshee_ext_outl, banshee);
             }
             banshee->pci_regs[PCI_REG_COMMAND] = val & 0x27;
             banshee_updatemapping(banshee);
@@ -3337,11 +3303,11 @@ banshee_pci_write(int func, int addr, uint8_t val, void *priv)
 
         case 0x19:
             if (banshee->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_IO)
-                io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, NULL, banshee_ext_inl, banshee_ext_out, NULL, banshee_ext_outl, banshee);
+                io_removehandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, banshee_ext_inw, banshee_ext_inl, banshee_ext_out, banshee_ext_outw, banshee_ext_outl, banshee);
             banshee->ioBaseAddr &= 0xffff00ff;
             banshee->ioBaseAddr |= val << 8;
             if ((banshee->pci_regs[PCI_REG_COMMAND] & PCI_COMMAND_IO) && banshee->ioBaseAddr)
-                io_sethandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, NULL, banshee_ext_inl, banshee_ext_out, NULL, banshee_ext_outl, banshee);
+                io_sethandler(banshee->ioBaseAddr, 0x0100, banshee_ext_in, banshee_ext_inw, banshee_ext_inl, banshee_ext_out, banshee_ext_outw, banshee_ext_outl, banshee);
             banshee_log("Banshee ioBaseAddr=%08x\n", banshee->ioBaseAddr);
             return;
 
@@ -3387,7 +3353,7 @@ banshee_pci_write(int func, int addr, uint8_t val, void *priv)
             return;
 
         case 0x5f:
-            banshee->pci_regs[0x5e] = val;
+            banshee->pci_regs[0x5f] = val;
             return;
 
         case 0x64:
@@ -3404,11 +3370,11 @@ banshee_pci_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static void *
-banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int voodoo_type, int agp)
+banshee_init_common(const device_t *info, const char *fn, const int has_sgram,
+                    const int type, const int voodoo_type, const int agp, const int clamp)
 {
     int        mem_size;
-    banshee_t *banshee = malloc(sizeof(banshee_t));
-    memset(banshee, 0, sizeof(banshee_t));
+    banshee_t *banshee = calloc(1, sizeof(banshee_t));
 
     banshee->type     = type;
     banshee->agp      = agp;
@@ -3420,6 +3386,9 @@ banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int
         rom_init(&banshee->bios_rom, fn, 0xc0000, 0x10000, 0xffff, 0, MEM_MAPPING_EXTERNAL);
         mem_mapping_disable(&banshee->bios_rom.mapping);
     }
+
+    const uint64_t bios_flags = clamp ? device_get_bios_flags(info, device_get_config_bios("bios")) :
+                                        0x0000000000000000ULL;
 
     if (!banshee->has_bios)
 #if 0
@@ -3435,6 +3404,9 @@ banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int
             mem_size = device_get_config_int("memory");
     } else
         mem_size = 16; /* SDRAM Banshee only supports 16 MB */
+
+    if (clamp)
+        video_clamp_vram(bios_flags, &mem_size);
 
     svga_init(info, &banshee->svga, banshee, mem_size << 20,
               banshee_recalctimings,
@@ -3473,12 +3445,8 @@ banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int
 
     banshee->svga.vblank_start = banshee_vblank_start;
 
-#if 0
-    io_sethandler(0x03c0, 0x0020, banshee_in, NULL, NULL, banshee_out, NULL, NULL, banshee);
-#endif
-
     banshee->svga.bpp     = 8;
-    banshee->svga.miscout = 1;
+    banshee->svga.miscout = 0;
 
     banshee->dramInit0 = 1 << 27;
     if (has_sgram && mem_size == 16)
@@ -3495,6 +3463,7 @@ banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int
     banshee->voodoo               = voodoo_2d3d_card_init(voodoo_type);
     banshee->voodoo->priv         = banshee;
     banshee->voodoo->vram         = banshee->svga.vram;
+    banshee->voodoo->vram_max     = banshee->svga.vram_max;
     banshee->voodoo->changedvram  = banshee->svga.changedvram;
     banshee->voodoo->fb_mem       = banshee->svga.vram;
     banshee->voodoo->fb_mask      = banshee->svga.vram_mask;
@@ -3606,123 +3575,85 @@ banshee_init_common(const device_t *info, char *fn, int has_sgram, int type, int
 }
 
 static void *
-banshee_init(const device_t *info)
+banshee_bios_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_BANSHEE, 1, TYPE_BANSHEE, VOODOO_BANSHEE, 0);
+    uint32_t local = device_get_bios_local(info, device_get_config_bios("bios"));
+
+    return banshee_init_common(info, device_get_bios_file(info, device_get_config_bios("bios"), 0),
+                               (uint8_t) ((local >> 8) & 0xff), (uint8_t) (local & 0xff),
+                               VOODOO_BANSHEE, 0, 1);
 }
 
 static void *
-creative_banshee_init(const device_t *info)
+banshee_bios_agp_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_CREATIVE_BANSHEE, 0, TYPE_BANSHEE, VOODOO_BANSHEE, 0);
-}
+    uint32_t local = device_get_bios_local(info, device_get_config_bios("bios"));
 
-static void *
-quantum3d_raven_init(const device_t *info)
-{
-    return banshee_init_common(info, ROM_QUANTUM3D_RAVEN, 0, TYPE_QUANTUM3D_RAVEN, VOODOO_BANSHEE, 0);
+    return banshee_init_common(info, device_get_bios_file(info, device_get_config_bios("bios"), 0),
+                               (uint8_t) ((local >> 8) & 0xff), (uint8_t) (local & 0xff),
+                               VOODOO_BANSHEE, 1, 1);
 }
 
 static void *
 v3_1000_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_1000, 1, TYPE_V3_1000, VOODOO_3, 0);
+    return banshee_init_common(info, ROM_VOODOO3_1000, 1, TYPE_V3_1000, VOODOO_3, 0, 0);
 }
 
 static void *
 v3_1000_agp_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_1000, 1, TYPE_V3_1000, VOODOO_3, 1);
+    return banshee_init_common(info, ROM_VOODOO3_1000, 1, TYPE_V3_1000, VOODOO_3, 1, 0);
 }
 
 static void *
 v3_2000_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_2000, 0, TYPE_V3_2000, VOODOO_3, 0);
+    return banshee_init_common(info, ROM_VOODOO3_2000, 0, TYPE_V3_2000, VOODOO_3, 0, 0);
 }
 
 static void *
 v3_2000_agp_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_2000, 0, TYPE_V3_2000, VOODOO_3, 1);
+    return banshee_init_common(info, ROM_VOODOO3_2000, 0, TYPE_V3_2000, VOODOO_3, 1, 0);
 }
 
 static void *
 v3_2000_agp_onboard_init(const device_t *info)
 {
-    return banshee_init_common(info, NULL, 1, TYPE_V3_2000, VOODOO_3, 1);
+    return banshee_init_common(info, NULL, 1, TYPE_V3_2000, VOODOO_3, 1, 0);
 }
 
 static void *
 v3_3000_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_3000, 0, TYPE_V3_3000, VOODOO_3, 0);
+    return banshee_init_common(info, ROM_VOODOO3_3000, 0, TYPE_V3_3000, VOODOO_3, 0, 0);
 }
 
 static void *
 v3_3000_agp_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_3000, 0, TYPE_V3_3000, VOODOO_3, 1);
+    return banshee_init_common(info, ROM_VOODOO3_3000, 0, TYPE_V3_3000, VOODOO_3, 1, 0);
 }
 
 static void *
-v3_3500_agp_ntsc_init(const device_t *info)
+v3_3500_agp_bios_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VOODOO3_3500_AGP_NTSC, 0, TYPE_V3_3500, VOODOO_3, 1);
-}
-
-static void *
-v3_3500_agp_pal_init(const device_t *info)
-{
-    return banshee_init_common(info, ROM_VOODOO3_3500_AGP_PAL, 0, TYPE_V3_3500, VOODOO_3, 1);
-}
-
-static void *
-compaq_v3_3500_agp_init(const device_t *info)
-{
-    return banshee_init_common(info, ROM_VOODOO3_3500_AGP_COMPAQ, 0, TYPE_V3_3500_COMPAQ, VOODOO_3, 1);
-}
-
-static void *
-v3_3500_se_agp_init(const device_t *info)
-{
-    return banshee_init_common(info, ROM_VOODOO3_3500_SE_AGP, 0, TYPE_V3_3500, VOODOO_3, 1);
-}
-
-static void *
-v3_3500_si_agp_init(const device_t *info)
-{
-    return banshee_init_common(info, ROM_VOODOO3_3500_SI_AGP, 0, TYPE_V3_3500_SI, VOODOO_3, 1);
+    return banshee_init_common(info, device_get_bios_file(info, device_get_config_bios("bios"), 0),
+                               0, (int) device_get_bios_local(info, device_get_config_bios("bios")),
+                               VOODOO_3, 1, 1);
 }
 
 static void *
 velocity_100_agp_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VELOCITY_100, 1, TYPE_VELOCITY100, VOODOO_3, 1);
+    return banshee_init_common(info, ROM_VELOCITY_100, 1, TYPE_VELOCITY100, VOODOO_3, 1, 0);
 }
 
 static void *
 velocity_200_agp_init(const device_t *info)
 {
-    return banshee_init_common(info, ROM_VELOCITY_200, 1, TYPE_VELOCITY200, VOODOO_3, 1);
-}
-
-static int
-banshee_available(void)
-{
-    return rom_present(ROM_BANSHEE);
-}
-
-static int
-creative_banshee_available(void)
-{
-    return rom_present(ROM_CREATIVE_BANSHEE);
-}
-
-static int
-quantum3d_raven_available(void)
-{
-    return rom_present(ROM_QUANTUM3D_RAVEN);
+    return banshee_init_common(info, ROM_VELOCITY_200, 1, TYPE_VELOCITY200, VOODOO_3, 1, 0);
 }
 
 static int
@@ -3745,36 +3676,6 @@ v3_3000_available(void)
     return rom_present(ROM_VOODOO3_3000);
 }
 #define v3_3000_agp_available v3_3000_available
-
-static int
-v3_3500_agp_ntsc_available(void)
-{
-    return rom_present(ROM_VOODOO3_3500_AGP_NTSC);
-}
-
-static int
-v3_3500_agp_pal_available(void)
-{
-    return rom_present(ROM_VOODOO3_3500_AGP_PAL);
-}
-
-static int
-compaq_v3_3500_agp_available(void)
-{
-    return rom_present(ROM_VOODOO3_3500_AGP_COMPAQ);
-}
-
-static int
-v3_3500_se_agp_available(void)
-{
-    return rom_present(ROM_VOODOO3_3500_SE_AGP);
-}
-
-static int
-v3_3500_si_agp_available(void)
-{
-    return rom_present(ROM_VOODOO3_3500_SI_AGP);
-}
 
 static int
 velocity_100_available(void)
@@ -3819,7 +3720,7 @@ banshee_force_redraw(void *priv)
 }
 
 // clang-format off
-static const device_config_t banshee_sgram_config[] = {
+static const device_config_t voodoo_sgram_config[] = {
     {
         .name           = "memory",
         .description    = "Memory size",
@@ -3898,7 +3799,7 @@ static const device_config_t banshee_sgram_config[] = {
 #ifndef NO_CODEGEN
     {
         .name           = "recompiler",
-        .description    = "Dynamic Recompiler",
+        .description    = "Dynamic recompiler",
         .type           = CONFIG_BINARY,
         .default_string = NULL,
         .default_int    = 1,
@@ -3911,7 +3812,64 @@ static const device_config_t banshee_sgram_config[] = {
     { .name = "", .description = "", .type = CONFIG_END }
 };
 
-static const device_config_t banshee_sgram_16mbonly_config[] = {
+static const device_config_t voodoo_banshee_pci_config[] = {
+    {
+        .name           = "bios",
+        .description    = "Variant",
+        .type           = CONFIG_BIOS,
+        .default_string = "voodoo_banshee_pci",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .bios           = {
+            {
+                .name          = "3Dfx Voodoo Banshee",
+                .internal_name = "voodoo_banshee_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_BANSHEE | 0x100,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MIN_MEMORY | 16,
+                .files         = { ROM_BANSHEE, "" }
+            },
+            {
+                .name          = "Creative 3D Blaster Banshee",
+                .internal_name = "ctl3d_banshee_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_BANSHEE,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_CREATIVE_BANSHEE, "" }
+            },
+            {
+                .name          = "Quantum3D Raven",
+                .internal_name = "q3d_raven_pci",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_QUANTUM3D_RAVEN,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_QUANTUM3D_RAVEN, "" }
+            },
+            { .files_no = 0 }
+        },
+    },
+    {
+        .name           = "memory",
+        .description    = "Memory size",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = 16,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description =  "8 MB", .value =  8 },
+            { .description = "16 MB", .value = 16 },
+            { .description = ""                   }
+        },
+        .bios           = { { 0 } }
+    },
     {
         .name           = "bilinear",
         .description    = "Bilinear filtering",
@@ -3975,7 +3933,7 @@ static const device_config_t banshee_sgram_16mbonly_config[] = {
 #ifndef NO_CODEGEN
     {
         .name           = "recompiler",
-        .description    = "Dynamic Recompiler",
+        .description    = "Dynamic recompiler",
         .type           = CONFIG_BINARY,
         .default_string = NULL,
         .default_int    = 1,
@@ -3988,7 +3946,141 @@ static const device_config_t banshee_sgram_16mbonly_config[] = {
     { .name = "", .description = "", .type = CONFIG_END }
 };
 
-static const device_config_t banshee_sdram_config[] = {
+static const device_config_t voodoo_banshee_agp_config[] = {
+    {
+        .name           = "bios",
+        .description    = "Variant",
+        .type           = CONFIG_BIOS,
+        .default_string = "voodoo_banshee_agp",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .bios           = {
+            {
+                .name          = "3Dfx Voodoo Banshee",
+                .internal_name = "voodoo_banshee_agp",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_BANSHEE | 0x100,
+                .size          = 32768,
+                .flags         = BIOS_LIMIT_MIN_MEMORY | 16,
+                .files         = { ROM_BANSHEE_AGP, "" }
+            },
+            {
+                .name          = "Creative 3D Blaster Banshee",
+                .internal_name = "ctl3d_banshee_agp",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_BANSHEE,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_CREATIVE_BANSHEE_AGP, "" }
+            },
+            {
+                .name          = "Quantum3D Raven",
+                .internal_name = "q3d_raven_agp",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_QUANTUM3D_RAVEN,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_QUANTUM3D_RAVEN, "" }
+            },
+            { .files_no = 0 }
+        },
+    },
+    {
+        .name           = "memory",
+        .description    = "Memory size",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = 16,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description =  "8 MB", .value =  8 },
+            { .description = "16 MB", .value = 16 },
+            { .description = ""                   }
+        },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "bilinear",
+        .description    = "Bilinear filtering",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "chromakey",
+        .description    = "Video chroma-keying",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "dithersub",
+        .description    = "Dither subtraction",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "dacfilter",
+        .description    = "Screen Filter",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "render_threads",
+        .description    = "Render threads",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = 2,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description = "1", .value = 1 },
+            { .description = "2", .value = 2 },
+            { .description = "4", .value = 4 },
+            { .description = ""              }
+        },
+        .bios           = { { 0 } }
+    },
+    #ifndef NO_CODEGEN
+    {
+        .name           = "recompiler",
+        .description    = "Dynamic recompiler",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    #endif
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+static const device_config_t voodoo_nomem_config[] = {
     {
         .name           = "bilinear",
         .description    = "Bilinear filtering",
@@ -4052,7 +4144,146 @@ static const device_config_t banshee_sdram_config[] = {
 #ifndef NO_CODEGEN
     {
         .name           = "recompiler",
-        .description    = "Dynamic Recompiler",
+        .description    = "Dynamic recompiler",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+#endif
+    { .name = "", .description = "", .type = CONFIG_END }
+};
+
+static const device_config_t voodoo_3_3500_agp_config[] = {
+    {
+        .name           = "bios",
+        .description    = "Variant",
+        .type           = CONFIG_BIOS,
+        .default_string = "voodoo3_3500_si_agp",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .bios           = {
+            {
+                .name          = "3dfx Voodoo3 3500 TV (NTSC)",
+                .internal_name = "voodoo3_3500_agp_ntsc",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_V3_3500,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_VOODOO3_3500_AGP_NTSC, "" }
+            },
+            {
+                .name          = "3dfx Voodoo3 3500 TV (PAL)",
+                .internal_name = "voodoo3_3500_agp_pal",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_V3_3500,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_VOODOO3_3500_AGP_PAL, "" }
+            },
+            {
+                .name          = "Compaq Voodoo3 3500 TV",
+                .internal_name = "compaq_voodoo3_3500_agp",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_V3_3500_COMPAQ,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_VOODOO3_3500_AGP_COMPAQ, "" }
+            },
+            {
+                .name          = "Falcon Northwest Voodoo3 3500 SE",
+                .internal_name = "voodoo3_3500_se_agp",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_V3_3500,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_VOODOO3_3500_SE_AGP, "" }
+            },
+            {
+                .name          = "3dfx Voodoo3 3500 SI",
+                .internal_name = "voodoo3_3500_si_agp",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = TYPE_V3_3500_SI,
+                .size          = 32768,
+                .flags         = 0,
+                .files         = { ROM_VOODOO3_3500_SI_AGP, "" }
+            },
+            { .files_no = 0 }
+        },
+    },
+    {
+        .name           = "bilinear",
+        .description    = "Bilinear filtering",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "chromakey",
+        .description    = "Video chroma-keying",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "dithersub",
+        .description    = "Dither subtraction",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "dacfilter",
+        .description    = "Screen Filter",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "render_threads",
+        .description    = "Render threads",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = 2,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description = "1", .value = 1 },
+            { .description = "2", .value = 2 },
+            { .description = "4", .value = 4 },
+            { .description = ""              }
+        },
+        .bios           = { { 0 } }
+    },
+#ifndef NO_CODEGEN
+    {
+        .name           = "recompiler",
+        .description    = "Dynamic recompiler",
         .type           = CONFIG_BINARY,
         .default_string = NULL,
         .default_int    = 1,
@@ -4066,46 +4297,37 @@ static const device_config_t banshee_sdram_config[] = {
 };
 // clang-format on
 
-const device_t voodoo_banshee_device = {
-    .name          = "3Dfx Voodoo Banshee",
-    .internal_name = "voodoo_banshee_pci",
-    .flags         = DEVICE_PCI,
+const device_t voodoo_banshee_pci_device = {
+    .name          = "3Dfx Voodoo Banshee PCI",
+    /*
+       Migrate this to without _migrated once the migration from unmerged to merged is removed:
+       This is because the Generic variant uses the internal name without _migrated that would
+       be expected here, which would cause the migrated variants to recursively migrate.
+     */
+    .internal_name = "voodoo_banshee_migrated_pci",
+    .flags         = DEVICE_PCI | DEVICE_BIOS_ALIAS,
     .local         = 0,
-    .init          = banshee_init,
+    .init          = banshee_bios_init,
     .close         = banshee_close,
     .reset         = NULL,
-    .available     = banshee_available,
+    .available     = NULL,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sgram_config
+    .config        = voodoo_banshee_pci_config
 };
 
-const device_t creative_voodoo_banshee_device = {
-    .name          = "Creative 3D Blaster Banshee",
-    .internal_name = "ctl3d_banshee_pci",
-    .flags         = DEVICE_PCI,
+const device_t voodoo_banshee_agp_device = {
+    .name          = "3dfx Voodoo Banshee",
+    .internal_name = "voodoo_banshee_agp",
+    .flags         = DEVICE_AGP | DEVICE_BIOS_ALIAS,
     .local         = 0,
-    .init          = creative_banshee_init,
+    .init          = banshee_bios_agp_init,
     .close         = banshee_close,
     .reset         = NULL,
-    .available     = creative_banshee_available,
+    .available     = NULL,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
-};
-
-const device_t quantum3d_raven_device = {
-    .name          = "Quantum3D Raven",
-    .internal_name = "q3d_raven_pci",
-    .flags         = DEVICE_PCI,
-    .local         = 0,
-    .init          = quantum3d_raven_init,
-    .close         = banshee_close,
-    .reset         = NULL,
-    .available     = quantum3d_raven_available,
-    .speed_changed = banshee_speed_changed,
-    .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_banshee_agp_config
 };
 
 const device_t voodoo_3_1000_device = {
@@ -4119,7 +4341,7 @@ const device_t voodoo_3_1000_device = {
     .available     = v3_1000_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sgram_config
+    .config        = voodoo_sgram_config
 };
 
 const device_t voodoo_3_1000_agp_device = {
@@ -4133,7 +4355,7 @@ const device_t voodoo_3_1000_agp_device = {
     .available     = v3_1000_agp_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sgram_16mbonly_config
+    .config        = voodoo_nomem_config
 };
 
 const device_t voodoo_3_2000_device = {
@@ -4147,7 +4369,7 @@ const device_t voodoo_3_2000_device = {
     .available     = v3_2000_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_nomem_config
 };
 
 const device_t voodoo_3_2000_agp_device = {
@@ -4161,11 +4383,11 @@ const device_t voodoo_3_2000_agp_device = {
     .available     = v3_2000_agp_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_nomem_config
 };
 
 const device_t voodoo_3_2000_agp_onboard_8m_device = {
-    .name          = "3dfx Voodoo3 2000 (On-Board 8MB SGRAM)",
+    .name          = "3dfx Voodoo3 2000 (On-Board)",
     .internal_name = "voodoo3_2k_agp_onboard_8m",
     .flags         = DEVICE_AGP,
     .local         = 8,
@@ -4175,7 +4397,7 @@ const device_t voodoo_3_2000_agp_onboard_8m_device = {
     .available     = NULL,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sgram_config
+    .config        = voodoo_sgram_config
 };
 
 const device_t voodoo_3_3000_device = {
@@ -4189,7 +4411,7 @@ const device_t voodoo_3_3000_device = {
     .available     = v3_3000_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_nomem_config
 };
 
 const device_t voodoo_3_3000_agp_device = {
@@ -4203,77 +4425,21 @@ const device_t voodoo_3_3000_agp_device = {
     .available     = v3_3000_agp_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_nomem_config
 };
 
-const device_t voodoo_3_3500_agp_ntsc_device = {
-    .name          = "3dfx Voodoo3 3500 TV (NTSC)",
-    .internal_name = "voodoo3_3500_agp_ntsc",
-    .flags         = DEVICE_AGP,
+const device_t voodoo_3_3500_agp_device = {
+    .name          = "3dfx Voodoo3 3500 AGP",
+    .internal_name = "voodoo3_3500_agp",
+    .flags         = DEVICE_AGP | DEVICE_BIOS_ALIAS,
     .local         = 0,
-    .init          = v3_3500_agp_ntsc_init,
+    .init          = v3_3500_agp_bios_init,
     .close         = banshee_close,
     .reset         = NULL,
-    .available     = v3_3500_agp_ntsc_available,
+    .available     = NULL,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
-};
-
-const device_t voodoo_3_3500_agp_pal_device = {
-    .name          = "3dfx Voodoo3 3500 TV (PAL)",
-    .internal_name = "voodoo3_3500_agp_pal",
-    .flags         = DEVICE_AGP,
-    .local         = 0,
-    .init          = v3_3500_agp_pal_init,
-    .close         = banshee_close,
-    .reset         = NULL,
-    .available     = v3_3500_agp_pal_available,
-    .speed_changed = banshee_speed_changed,
-    .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
-};
-
-const device_t compaq_voodoo_3_3500_agp_device = {
-    .name          = "Compaq Voodoo3 3500 TV",
-    .internal_name = "compaq_voodoo3_3500_agp",
-    .flags         = DEVICE_AGP,
-    .local         = 0,
-    .init          = compaq_v3_3500_agp_init,
-    .close         = banshee_close,
-    .reset         = NULL,
-    .available     = compaq_v3_3500_agp_available,
-    .speed_changed = banshee_speed_changed,
-    .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
-};
-
-const device_t voodoo_3_3500_se_agp_device = {
-    .name          = "Falcon Northwest Voodoo3 3500 SE",
-    .internal_name = "voodoo3_3500_se_agp",
-    .flags         = DEVICE_AGP,
-    .local         = 0,
-    .init          = v3_3500_se_agp_init,
-    .close         = banshee_close,
-    .reset         = NULL,
-    .available     = v3_3500_se_agp_available,
-    .speed_changed = banshee_speed_changed,
-    .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
-};
-
-const device_t voodoo_3_3500_si_agp_device = {
-    .name          = "3dfx Voodoo3 3500 SI",
-    .internal_name = "voodoo3_3500_si_agp",
-    .flags         = DEVICE_AGP,
-    .local         = 0,
-    .init          = v3_3500_si_agp_init,
-    .close         = banshee_close,
-    .reset         = NULL,
-    .available     = v3_3500_si_agp_available,
-    .speed_changed = banshee_speed_changed,
-    .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_3_3500_agp_config
 };
 
 const device_t velocity_100_agp_device = {
@@ -4287,7 +4453,7 @@ const device_t velocity_100_agp_device = {
     .available     = velocity_100_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sdram_config
+    .config        = voodoo_nomem_config
 };
 
 const device_t velocity_200_agp_device = {
@@ -4301,5 +4467,5 @@ const device_t velocity_200_agp_device = {
     .available     = velocity_200_available,
     .speed_changed = banshee_speed_changed,
     .force_redraw  = banshee_force_redraw,
-    .config        = banshee_sgram_16mbonly_config
+    .config        = voodoo_nomem_config
 };

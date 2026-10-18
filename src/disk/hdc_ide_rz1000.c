@@ -30,6 +30,7 @@
 #include <86box/mem.h>
 #include <86box/pci.h>
 #include <86box/pic.h>
+#include <86box/plat_unused.h>
 #include <86box/timer.h>
 #include <86box/hdc.h>
 #include <86box/hdc_ide.h>
@@ -108,7 +109,7 @@ rz1000_ide_handlers(rz1000_t *dev)
 }
 
 static void
-rz1000_pci_write(int func, int addr, uint8_t val, void *priv)
+rz1000_pci_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     rz1000_t *dev = (rz1000_t *) priv;
 
@@ -138,7 +139,7 @@ rz1000_pci_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-rz1000_pci_read(int func, int addr, void *priv)
+rz1000_pci_read(int func, int addr, UNUSED(int len), void *priv)
 {
     rz1000_t *dev = (rz1000_t *) priv;
     uint8_t   ret = 0xff;
@@ -216,10 +217,12 @@ rz1000_reset(void *priv)
     dev->regs[0x11] = 0x01;
     dev->regs[0x14] = 0xf5;
     dev->regs[0x15] = 0x03;
-    dev->regs[0x18] = 0x71;
-    dev->regs[0x19] = 0x01;
-    dev->regs[0x1c] = 0x75;
-    dev->regs[0x1d] = 0x03;
+    if (dev->channels & 0x02) {
+        dev->regs[0x18] = 0x71;
+        dev->regs[0x19] = 0x01;
+        dev->regs[0x1c] = 0x75;
+        dev->regs[0x1d] = 0x03;
+    }
 
     dev->irq_mode[0] = dev->irq_mode[1] = 0;
     dev->irq_pin                        = PCI_INTA;
@@ -284,7 +287,9 @@ const device_t ide_rz1000_pci_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "PC Tech RZ1000",
+    .ide_boards    = ide_boards_pri_sec
 };
 
 const device_t ide_rz1000_pci_single_channel_device = {
@@ -298,7 +303,9 @@ const device_t ide_rz1000_pci_single_channel_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "PC Tech RZ1000",
+    .ide_boards    = ide_boards_primary
 };
 
 const device_t ide_rz1001_pci_device = {
@@ -312,5 +319,7 @@ const device_t ide_rz1001_pci_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "PC Tech RZ1001",
+    .ide_boards    = ide_boards_pri_sec
 };

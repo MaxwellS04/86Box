@@ -70,7 +70,7 @@ static const device_config_t deskpro386_config[] = {
         .selection      = { { 0 } },
         .bios           = {
             {
-                .name          = "September 1986",
+                .name          = "Compaq BIOS - Revision 09/04/86",
                 .internal_name = "deskpro386_09_1986",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
@@ -79,7 +79,7 @@ static const device_config_t deskpro386_config[] = {
                 .files         = { "roms/machines/deskpro386/1986-09-04-HI.json.bin", "" }
             },
             {
-                .name          = "May 1988",
+                .name          = "Compaq BIOS - Revision 05/10/88",
                 .internal_name = "deskpro386",
                 .bios_type     = BIOS_NORMAL,
                 .files_no      = 1,
@@ -96,7 +96,7 @@ static const device_config_t deskpro386_config[] = {
 
 const device_t deskpro386_device = {
     .name          = "Compaq Deskpro 386",
-    .internal_name = "deskpro386_device",
+    .internal_name = "deskpro386",
     .flags         = 0,
     .local         = 0,
     .init          = NULL,
@@ -272,7 +272,7 @@ machine_at_spc6000a_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init_ex(model, 1);
+    machine_at_common_init(model);
 
     device_add(&cs8230_device);
 
@@ -371,7 +371,7 @@ static const device_config_t dataexpert386wb_config[] = {
 
 const device_t dataexpert386wb_device = {
     .name          = "DataExpert 386C",
-    .internal_name = "dataexpert386wb_device",
+    .internal_name = "dataexpert386wb",
     .flags         = 0,
     .local         = 0,
     .init          = NULL,
@@ -471,6 +471,29 @@ machine_at_asus386_init(const machine_t *model)
     machine_at_common_init(model);
 
     device_add(&rabbit_device);
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_asus386siq_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/asus386siq/bios-657e297a703d5076313977.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&sis_85c460_device);
 
     device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
 

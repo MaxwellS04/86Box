@@ -2024,14 +2024,15 @@ m19_vid_init(m19_vid_t *vid)
     vid->ogc.cga.revision     = device_get_config_int("composite_type");
     vid->ogc.cga.snow_enabled = device_get_config_int("snow_enabled");
 
-    vid->ogc.cga.vram = malloc(0x8000);
+    vid->ogc.cga.vram = calloc(1, 0x8000);
 
 #if 0
     cga_comp_init(vid->ogc.cga.revision);
 #endif
 
     vid->ogc.cga.rgb_type = device_get_config_int("rgb_type");
-    cga_palette           = (vid->ogc.cga.rgb_type << 1);
+    if (&(cga_palette) != NULL)
+        cga_palette           = (vid->ogc.cga.rgb_type << 1);
     cgapal_rebuild();
     ogc_mdaattr_rebuild();
 
@@ -2051,7 +2052,7 @@ m19_vid_init(m19_vid_t *vid)
     vid->colorplus.cga.snow_enabled = device_get_config_int("snow_enabled");
 #endif
 
-    vid->colorplus.cga.vram = malloc(0x8000);
+    vid->colorplus.cga.vram = calloc(1, 0x8000);
 
 #if 0
     vid->colorplus.cga.cgamode = 0x1;
@@ -2119,7 +2120,7 @@ const device_config_t m19_vid_config[] = {
 };
 
 const device_t m19_vid_device = {
-    .name          = "Olivetti M19 graphics card",
+    .name          = "Olivetti M19 (Video)",
     .internal_name = "m19_vid",
     .flags         = 0,
     .local         = 0,
@@ -2206,7 +2207,7 @@ m24_read(uint16_t port, UNUSED(void *priv))
          */
         case 0x67:
             for (uint8_t i = 0; i < FDD_NUM; i++) {
-                if (fdd_get_flags(i))
+                if (fdd_get_flags(&drives[i]))
                     fdd_count++;
             }
 
@@ -2235,7 +2236,8 @@ m24_read(uint16_t port, UNUSED(void *priv))
             ret |= 0x2;
 
             /* 1 = 720 kB (3.5"), 0 = 360 kB (5.25") */
-            ret |= (fdd_doublestep_40(0) || fdd_doublestep_40(1)) ? 0x1 : 0x0;
+            ret |= (fdd_doublestep_40(&drives[0]) ||
+                    fdd_doublestep_40(&drives[1])) ? 0x1 : 0x0;
             break;
 
         default:
@@ -2258,7 +2260,7 @@ m240_read(uint16_t port, UNUSED(void *priv))
             if (ppi.pb & 0x8) {
                 /* Switches 4, 5 - floppy drives (number) */
                 for (uint8_t i = 0; i < FDD_NUM; i++) {
-                    if (fdd_get_flags(i))
+                    if (fdd_get_flags(&drives[i]))
                         fdd_count++;
                 }
                 if (!fdd_count)
@@ -2291,9 +2293,9 @@ m240_read(uint16_t port, UNUSED(void *priv))
                         0 = First drive is 5.25" (for low density drive, this means 40-track).
              */
 
-            ret = (fdd_is_hd(0) || fdd_is_hd(1)) ? 0x80 : 0x00;
-            ret |= fdd_doublestep_40(1) ? 0x40 : 0x00;
-            ret |= fdd_doublestep_40(0) ? 0x20 : 0x00;
+            ret = (fdd_is_hd(&drives[0]) || fdd_is_hd(&drives[1])) ? 0x80 : 0x00;
+            ret |= fdd_doublestep_40(&drives[1]) ? 0x40 : 0x00;
+            ret |= fdd_doublestep_40(&drives[0]) ? 0x20 : 0x00;
             break;
 
         default:
@@ -2459,7 +2461,8 @@ machine_xt_m19_init(const machine_t *model)
 
     device_add(&kbc_xt_olivetti_device);
 
-    pit_set_clock((uint32_t) 14318184.0);
+    if (cpu_s != NULL)
+        pit_set_clock((uint32_t) 14318184.0);
 
     return ret;
 }

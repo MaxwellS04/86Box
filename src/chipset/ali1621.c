@@ -31,6 +31,7 @@
 #include <86box/smram.h>
 #include <86box/spd.h>
 
+#include <86box/agpgart.h>
 #include <86box/chipset.h>
 
 typedef struct ali1621_t {
@@ -41,7 +42,8 @@ typedef struct ali1621_t {
 
     uint8_t pci_conf[256];
 
-    smram_t *smram[2];
+    smram_t   *smram[2];
+    agpgart_t *agpgart;
 } ali1621_t;
 
 #ifdef ENABLE_ALI1621_LOG
@@ -214,6 +216,7 @@ ali1621_mask_bar(ali1621_t *dev)
 {
     uint32_t bar;
     uint32_t mask;
+    uint32_t gart;
 
     switch (dev->pci_conf[0xbc] & 0x0f) {
         default:
@@ -252,10 +255,20 @@ ali1621_mask_bar(ali1621_t *dev)
     bar                 = ((dev->pci_conf[0x13] << 24) | (dev->pci_conf[0x12] << 16)) & mask;
     dev->pci_conf[0x12] = (bar >> 16) & 0xff;
     dev->pci_conf[0x13] = (bar >> 24) & 0xff;
+
+    if (!dev->agpgart)
+        return;
+
+    /* Map aperture and GART. ATTBASE (BCh-BFh) holds the aperture size in
+       bits 3-0 and the GART base in bits 31-12; the aperture is live once
+       both are set, as the ALi AGP drivers program them together. */
+    gart = (dev->pci_conf[0xbd] << 8) | (dev->pci_conf[0xbe] << 16) | (dev->pci_conf[0xbf] << 24);
+    agpgart_set_aperture(dev->agpgart, bar, ~mask + 1, !!mask && !!gart);
+    agpgart_set_gart(dev->agpgart, gart);
 }
 
 static void
-ali1621_write(UNUSED(int func), int addr, uint8_t val, void *priv)
+ali1621_write(UNUSED(int func), int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     ali1621_t *dev = (ali1621_t *) priv;
 
@@ -513,16 +526,29 @@ ali1621_write(UNUSED(int func), int addr, uint8_t val, void *priv)
             dev->pci_conf[addr] = val;
             break;
 
+        /* AGP command: data rate, AGP_EN, SBA_EN and RQ_DEPTH. */
+        case 0xb8:
+            dev->pci_conf[addr] = val & 0x03;
+            break;
+        case 0xb9:
+            dev->pci_conf[addr] = val & 0x03;
+            break;
+        case 0xbb:
+            dev->pci_conf[addr] = val;
+            break;
+
         case 0xbc:
             dev->pci_conf[addr] = val & 0x0f;
             ali1621_mask_bar(dev);
             break;
         case 0xbd:
             dev->pci_conf[addr] = val & 0xf0;
+            ali1621_mask_bar(dev);
             break;
         case 0xbe:
         case 0xbf:
             dev->pci_conf[addr] = val;
+            ali1621_mask_bar(dev);
             break;
 
         case 0xc0:
@@ -581,7 +607,7 @@ ali1621_write(UNUSED(int func), int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-ali1621_read(UNUSED(int func), int addr, void *priv)
+ali1621_read(UNUSED(int func), int addr, UNUSED(int len), void *priv)
 {
     const ali1621_t *dev = (ali1621_t *) priv;
     uint8_t          ret = 0xff;
@@ -647,10 +673,12 @@ ali1621_reset(void *priv)
     dev->pci_conf[0xf2] = dev->pci_conf[0xf6] = dev->pci_conf[0xfa] = dev->pci_conf[0xfe] = 0x21;
     dev->pci_conf[0xf3] = dev->pci_conf[0xf7] = dev->pci_conf[0xfb] = dev->pci_conf[0xff] = 0x43;
 
-    ali1621_write(0, 0x83, 0x08, dev);
+    ali1621_write(0, 0x83, 1, 0x08, dev);
 
     for (uint8_t i = 0; i < 4; i++)
-        ali1621_write(0, 0x84 + i, 0x00, dev);
+        ali1621_write(0, 0x84 + i, 1, 0x00, dev);
+
+    ali1621_mask_bar(dev);
 }
 
 static void
@@ -673,6 +701,8 @@ ali1621_init(UNUSED(const device_t *info))
 
     dev->smram[0] = smram_add();
     dev->smram[1] = smram_add();
+
+    dev->agpgart = device_add(&agpgart_device);
 
     ali1621_reset(dev);
 

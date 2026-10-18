@@ -6,7 +6,7 @@
  *
  *           This file is part of the 86Box distribution.
  *
- *           Pro Audio Spectrum Plus and 16 emulation.
+ *           Pro Audio Spectrum, Plus and 16 emulation.
  *
  *           Original PAS uses:
  *               - 2 x OPL2;
@@ -82,9 +82,13 @@
  * Authors:  Sarah Walker, <https://pcem-emulator.co.uk/>
  *           Miran Grca, <mgrca8@gmail.com>
  *           TheCollector1995, <mariogplayer@gmail.com>
+ *           Jasmine Iwanek, <jriwanek@gmail.com>
+ *           win2kgamer
  *
  *           Copyright 2008-2024 Sarah Walker.
  *           Copyright 2024 Miran Grca.
+ *           Copyright 2024-2026 Jasmine Iwanek.
+ *           Copyright 2026 win2kgamer.
  */
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -104,6 +108,7 @@
 #include <86box/io.h>
 #include <86box/mem.h>
 #include <86box/midi.h>
+#include <86box/gameport.h>
 #include <86box/pic.h>
 #include <86box/timer.h>
 #include <86box/pit.h>
@@ -117,6 +122,9 @@
 #include <86box/snd_opl.h>
 #include <86box/snd_sb.h>
 #include <86box/snd_sb_dsp.h>
+
+#define PAS16_REC_SAFEFTY_MARGIN 4096
+#define PAS16_REC_MAX_MARGIN (PAS16_REC_SAFEFTY_MARGIN * 2)
 
 typedef struct nsc_mixer_t {
     double master_l;
@@ -234,24 +242,62 @@ typedef struct pas16_t {
     int      midi_w;
     int      midi_uart_out;
     int      midi_uart_in;
+    int      midi_used;
     int      sysex;
 
     int      irq;
     int      scsi_irq;
 
+    uint8_t  is_old_pas;
+    uint8_t  ym3802_ivr;
+    uint8_t  ym3802_rgr;
+    uint8_t  ym3802_isr;
+    uint8_t  ym3802_icr;
+    uint8_t  ym3802_banked_idx;
+    uint8_t  ym3802_reg4_banked[16];
+    uint8_t  ym3802_reg5_banked[16];
+    uint8_t  ym3802_reg6_banked[16];
+    uint8_t  ym3802_reg7_banked[16];
+
+    uint16_t ym3802_gen_timer;
+    pc_timer_t ym3802_gentimer;
+
     nsc_mixer_t   nsc_mixer;
     mv508_mixer_t mv508_mixer;
 
     fm_drv_t opl;
+    fm_drv_t opl2;
     sb_dsp_t dsp;
 
     mpu_t *  mpu;
+
+    void *gameport;
 
     pitf_t * pit;
 
     t128_t * scsi;
 
     pc_timer_t scsi_timer;
+
+    /* Recording */
+    uint8_t rate_div;
+    int     record_pos_read;
+    int     record_pos_write_mic;
+    int     record_phase_mic;
+    int     record_denom_mic;
+    int     record_rate_mic;
+    int32_t record_prev_l_mic;
+    int32_t record_prev_r_mic;
+    int     record_prev_valid_mic;
+    int     record_aa_active_mic;
+    double  record_aa_b0_mic;
+    double  record_aa_b1_mic;
+    double  record_aa_b2_mic;
+    double  record_aa_a1_mic;
+    double  record_aa_a2_mic;
+    double  record_aa_z1_mic[2];
+    double  record_aa_z2_mic[2];
+    int16_t record_buffer[0x10000];
 } pas16_t;
 
 static uint8_t pas16_next = 0;
@@ -640,7 +686,8 @@ recalc_pas16_filter(const int playback_freq)
 {
     /* Cutoff frequency = playback / 2 */
     int          n;
-    const double fC = ((double) playback_freq) / (double) FREQ_96000;
+    // const double fC = ((double) playback_freq) / (double) FREQ_96000;
+    const double fC = ((double) playback_freq) / (double) (sound_sample_rate << 1);
     double       gain = 0.0;
 
     for (n = 0; n < SB16_NCoef; n++) {
@@ -686,6 +733,10 @@ static uint8_t
 pas16_in(uint16_t port, void *priv);
 static void
 pas16_out(uint16_t port, uint8_t val, void *priv);
+static uint8_t
+pas_in(uint16_t port, void *priv);
+static void
+pas_out(uint16_t port, uint8_t val, void *priv);
 
 static void
 pas16_update_irq(pas16_t *pas16)
@@ -700,6 +751,187 @@ pas16_update_irq(pas16_t *pas16)
         if ((pas16->irq != -1) && (pas16->irq_ena & PAS16_INT_MIDI))
             picint(1 << pas16->irq);
     }
+}
+
+static void
+pas_update_irq(pas16_t *pas16)
+{
+    if ((pas16->ym3802_reg5_banked[0x03] & 0x01) && (pas16->ym3802_reg4_banked[0x03] & 0x80)) {
+        pas16->irq_stat |= PAS16_INT_MIDI;
+        pas16->ym3802_ivr |= 0x0a;
+        pas16->ym3802_isr |= 0x20;
+        if ((pas16->irq != -1) && (pas16->irq_ena & PAS16_INT_MIDI))
+            picint(1 << pas16->irq);
+    }
+}
+
+void
+ym3802_gentimer_poll(void *priv)
+{
+    pas16_t *pas16 = (pas16_t *) priv;
+
+    timer_set_delay_u64(&pas16->ym3802_gentimer, (pas16->ym3802_gen_timer * 8 * TIMER_USEC));
+
+    if (pas16->ym3802_reg6_banked[0x00] & 0x80) {
+        pas16->irq_stat |= PAS16_INT_MIDI;
+        pas16->ym3802_ivr |= 0x0e;
+        pas16->ym3802_isr |= 0x80;
+        if ((pas16->irq != -1) && (pas16->irq_ena & PAS16_INT_MIDI))
+            picint(1 << pas16->irq);
+    }
+}
+
+static uint8_t
+pas_in(uint16_t port, void *priv)
+{
+    pas16_t *pas16 = (pas16_t *) priv;
+    scsi_bus_t *scsi_bus = NULL;
+    uint8_t  ret   = 0xff;
+
+    port -= 0x388;
+
+    switch (port) {
+        case 0x0000 ... 0x0001:
+            ret = pas16->opl.read(port + 0x388, pas16->opl.priv);
+            break;
+        case 0x0002 ... 0x0003:
+            ret = pas16->opl2.read(port + 0x38A, pas16->opl2.priv);
+            break;
+        case 0x0400 ... 0x0401: /* Alias for reading first OPL? */
+            ret = pas16->opl.read(port + 0x388, pas16->opl.priv);
+            break;
+
+        case 0x0801:
+            ret = pas16->irq_stat & 0xdf;
+            break;
+        case 0x0802:
+            ret = pas16->audiofilt;
+            break;
+        case 0x0803:
+            ret = pas16->irq_ena;
+            pas16_log("IRQ Mask read=%02X\n", ret);
+            break;
+
+        case 0x0c02:
+            ret = pas16->pcm_ctrl;
+            break;
+
+        case 0x1400:
+            ret = pas16->ym3802_ivr;
+            if (pas16->ym3802_isr == 0x00)
+                ret |= 0x10;
+            pas16_log("YM3802 IVR read: ivr = %02X, isr = %02X\n", pas16->ym3802_ivr, pas16->ym3802_isr);
+            break;
+        case 0x1401:
+            ret = pas16->ym3802_rgr;
+            break;
+        case 0x1402:
+            ret = pas16->ym3802_isr;
+            break;
+
+        case 0x1800:
+            ret = pas16->ym3802_reg4_banked[pas16->ym3802_banked_idx];
+            if (pas16->ym3802_banked_idx == 0x05)
+                ret = 0xc0; /* Return FIFO empty and FIFO < 16 bytes status bits for TSR reads */
+            break;
+        case 0x1801:
+            ret = pas16->ym3802_reg5_banked[pas16->ym3802_banked_idx];
+            break;
+        case 0x1802:
+            ret = pas16->ym3802_reg6_banked[pas16->ym3802_banked_idx];
+            if (pas16->ym3802_banked_idx == 0x03) {
+                ret = 0;
+                if (pas16->ym3802_reg5_banked[0x03] & 0x01) {
+                    ret = pas16->midi_queue[pas16->midi_r];
+                    pas16_log("Read MIDI queue %02X\n", pas16->midi_queue[pas16->midi_r]);
+                    if (pas16->midi_r != pas16->midi_w) {
+                        pas16->midi_r++;
+                        pas16->midi_r &= 0xff;
+                        if (pas16->midi_used > 0)
+                            pas16->midi_used--;
+                    }
+                    if (pas16->midi_r == pas16->midi_w) {
+                        pas16->ym3802_reg4_banked[0x03] &= 0x7f;
+                        pas16->ym3802_isr &= 0xdf;
+                    }
+                }
+                pas_update_irq(pas16);
+            }
+            break;
+        case 0x1803:
+            ret = pas16->ym3802_reg7_banked[pas16->ym3802_banked_idx];
+            break;
+
+        case 0x1c00 ... 0x1c03:    /* NCR5380 ports 0 to 3. */
+        case 0x3c00 ... 0x3c03:    /* NCR5380 ports 4 to 7. */
+            if (pas16->has_scsi)
+                ret = ncr5380_read((port & 0x0003) | ((port & 0x2000) >> 11), &pas16->scsi->ncr);
+            break;
+
+        case 0x2401:    /* Board revision */
+            ret = 0x00;
+            break;
+
+        case 0x4000:
+            ret = pas16->timeout_count;
+            break;
+        case 0x4001:
+            ret = pas16->timeout_status;
+            break;
+
+        case 0x5c00:
+            if (pas16->has_scsi)
+                ret = t128_read(0x1e00, pas16->scsi);
+            break;
+        case 0x5c01:
+            if (pas16->has_scsi) {
+                scsi_bus = &pas16->scsi->ncr.scsibus;
+                /* Bits 0-6 must absolutely be set for SCSI hard disk drivers to work. */
+                ret = (((scsi_bus->tx_mode != PIO_TX_BUS) && (pas16->scsi->status & 0x04)) << 7) | 0x7f;
+                if ((scsi_bus->tx_mode == PIO_TX_BUS) && !(ret & 0x80))
+                    ret |= 0x80;
+
+                if ((pas16->scsi->status & 0x06) == 0x00)
+                    ret = 0x00;
+
+                pas16_log("%04X:%08X: Port %04x read ret=%02x, status=%02x, txmode=%x, repeat=%d, total=%d.\n", CS, cpu_state.pc, port + 0x388, ret, pas16->scsi->status & 0x06, scsi_bus->tx_mode, scsi_bus->data_repeat, MIN(511, scsi_bus->total_len));
+            }
+            break;
+        case 0x5c03:
+            if (pas16->has_scsi)
+                ret = pas16->scsi->ncr.irq_state << 7;
+            break;
+
+        case 0x7c01:
+            ret = pas16->enhancedscsi & ~0x01;
+            break;
+
+        case 0xbc00:
+            ret = pas16->waitstates;
+            break;
+        case 0xbc02:
+            ret = pas16->prescale_div;
+            break;
+
+        case 0xec03:
+            ret = 0x07;
+            break;
+
+        case 0xfc00:    /* Board model */
+            ret = 0x01;
+            break;
+        case 0xfc03:    /* Master mode read */
+            /* AT bus, XT/AT timing */
+            ret = 0x11;
+            break;
+
+        default:
+            break;
+    }
+    pas16_log("[%04X:%08X] PAS: [R] %04X (%04X) = %02X\n",
+              CS, cpu_state.pc, port + 0x388, port, ret);
+
+    return ret;
 }
 
 static uint8_t
@@ -749,6 +981,8 @@ pas16_in(uint16_t port, void *priv)
                     if (pas16->midi_r != pas16->midi_w) {
                         pas16->midi_r++;
                         pas16->midi_r &= 0xff;
+                        if (pas16->midi_used > 0)
+                            pas16->midi_used--;
                     }
                 }
                 pas16->midi_stat &= ~0x04;
@@ -915,6 +1149,9 @@ pas16_io_handler(pas16_t *pas16, int set)
             if (addr != 0x1000)
                 io_handler(set, pas16->base + addr, 0x0004,
                            pas16_in, NULL, NULL, pas16_out, NULL, NULL, pas16);
+            else
+                io_handler(set, pas16->base + addr, 0x0001,
+                           NULL, NULL, NULL, pas16_out, NULL, NULL, pas16);
         }
 
         pitf_handler(set, pas16->base + 0x1000, 0x0004, pas16->pit);
@@ -1118,8 +1355,11 @@ pas16_reset_common(void *priv)
     if (pas16->irq != -1)
         picintc(1 << pas16->irq);
 
-    pas16_io_handler(pas16, 0);
-    pas16->base = 0x0000;
+    if (!pas16->is_old_pas) {
+        pas16_io_handler(pas16, 0);
+        pas16->base = 0x0000;
+    } else
+        pitf_handler(0, 0x388 + 0x1000, 0x0004, pas16->pit);
 }
 
 static void
@@ -1133,14 +1373,17 @@ pas16_reset(void *priv)
     pas16->master_ff = 0;
 
     pas16->base = 0x0388;
-    pas16_io_handler(pas16, 1);
+    if (!pas16->is_old_pas) {
+        pas16_io_handler(pas16, 1);
 
-    pas16->new_base = 0x0388;
+        pas16->new_base = 0x0388;
 
-    pas16->sb_compat_base = 0x0220;
-    pas16->compat = 0x02;
-    pas16->compat_base = 0x02;
-    sb_dsp_setaddr(&pas16->dsp, pas16->sb_compat_base);
+        pas16->sb_compat_base = 0x0220;
+        pas16->compat = 0x02;
+        pas16->compat_base = 0x02;
+        sb_dsp_setaddr(&pas16->dsp, pas16->sb_compat_base);
+    } else
+        pitf_handler(1, 0x388 + 0x1000, 0x0004, pas16->pit);
 }
 
 static int
@@ -1218,6 +1461,362 @@ pas16_timeout_callback(void *priv)
 }
 
 static void
+pas_out(uint16_t port, uint8_t val, void *priv)
+{
+    pas16_t *      pas16       = (pas16_t *) priv;
+    nsc_mixer_t *  nsc_mixer   = &pas16->nsc_mixer;
+    uint8_t old;
+
+    pas16_log("[%04X:%08X] PAS: [W] %04X (%04X) = %02X\n",
+              CS, cpu_state.pc, port, port - 0x388, val);
+
+    port -= 0x388;
+
+    switch (port) {
+        case 0x0000 ... 0x0001:
+            pas16->opl.write(port + 0x388, val, pas16->opl.priv);
+            break;
+        case 0x0002 ... 0x0003:
+            pas16->opl2.write(port + 0x38A, val, pas16->opl2.priv);
+            break;
+
+        case 0x0400 ... 0x0401: /* Alias to write to both OPLs? */
+            pas16->opl.write(port + 0x388, val, pas16->opl.priv);
+            pas16->opl2.write(port + 0x38A, val, pas16->opl2.priv);
+            break;
+
+        case 0x0800:
+            switch (nsc_mixer->im_state) {
+                default:
+                    break;
+                case STATE_SM_IDLE:
+                    /* Transmission initiated. */
+                    if (val & SERIAL_MIXER_IDENT) {
+                        if (!(val & SERIAL_MIXER_CLOCK) && (pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                            /* Prepare for receiving LMC835N data. */
+                            nsc_mixer->im_data[LMC835_DATA] = 0x0000;
+                            nsc_mixer->im_state |= STATE_LMC835_DATA;
+                        }
+                    } else {
+                        if ((pas16->audio_mixer & SERIAL_MIXER_IDENT)) {
+                            /*
+                               Prepare for receiving the LMC1982CIN address.
+                             */
+                            nsc_mixer->im_data[LMC1982_ADDR] = 0x0000;
+                            nsc_mixer->im_state |= STATE_LMC1982_ADDR;
+                        }
+                        if ((val & SERIAL_MIXER_CLOCK) && !(pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                            /*
+                               Clock the least siginificant bit of the LMC1982CIN address.
+                             */
+                            nsc_mixer->im_data[LMC1982_ADDR] |=
+                                ((val & SERIAL_MIXER_DATA) << (nsc_mixer->im_state & STATE_DATA_MASK));
+                            nsc_mixer->im_state++;
+                        }
+                    }
+                    break;
+                case STATE_LMC1982_ADDR_0:
+                    if (val & SERIAL_MIXER_IDENT) {
+                        /*
+                           IDENT went high in LM1982CIN address state 0,
+                           behave as if we were in the idle state.
+                         */
+                        if (!(val & SERIAL_MIXER_CLOCK) && (pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                            nsc_mixer->im_data[LMC835_DATA] = 0x0000;
+                            nsc_mixer->im_state = STATE_LMC835_DATA_0;
+                        }
+                    } else if ((val & SERIAL_MIXER_CLOCK) &&
+                               !(pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                        /*
+                           Clock the least siginificant bit of the LMC1982CIN address.
+                         */
+                        nsc_mixer->im_data[LMC1982_ADDR] |=
+                            ((val & SERIAL_MIXER_DATA) << (nsc_mixer->im_state & STATE_DATA_MASK));
+                        nsc_mixer->im_state++;
+                    }
+                    break;
+                case STATE_LMC1982_ADDR_1 ... STATE_LMC1982_ADDR_7:
+                    if ((val & 0x02) && !(pas16->audio_mixer & 0x02)) {
+                        /*
+                           Clock the next bit of the LMC1982CIN address.
+                         */
+                        nsc_mixer->im_data[LMC1982_ADDR] |=
+                            ((val & SERIAL_MIXER_DATA) << (nsc_mixer->im_state & STATE_DATA_MASK));
+                        nsc_mixer->im_state++;
+                    }
+                    break;
+                case STATE_LMC1982_ADDR_OVER:
+                    /*
+                       Prepare for receiving the LMC1982CIN data.
+                     */
+                    nsc_mixer->im_data[LMC1982_DATA] = 0x0000;
+                    nsc_mixer->im_state = STATE_LMC1982_DATA_0;
+                    break;
+                case STATE_LMC1982_DATA_0 ... STATE_LMC1982_DATA_7:
+                case STATE_LMC1982_DATA_9 ... STATE_LMC1982_DATA_F:
+                    if ((val & SERIAL_MIXER_CLOCK) && !(pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                        /*
+                           Clock the next bit of the LMC1982CIN data.
+                         */
+                        nsc_mixer->im_data[LMC1982_DATA] |=
+                            ((val & SERIAL_MIXER_DATA) << (nsc_mixer->im_state & STATE_DATA_MASK_W));
+                        nsc_mixer->im_state++;
+                    }
+                    break;
+                case STATE_LMC1982_DATA_8:
+                    pas16_log("LMC1982_DATA_8: val = %02X, audio_mixer = %02X\n", val, pas16->audio_mixer);
+                    if ((val & SERIAL_MIXER_IDENT)) {
+                        if (!(pas16->audio_mixer & SERIAL_MIXER_IDENT))
+                            /*
+                               LMC1982CIN data transfer ended after 8 bits, process the data and
+                               reset the state back to idle.
+                             */
+                            lmc1982_update_reg(nsc_mixer);
+                        else if ((val & SERIAL_MIXER_CLOCK) &&
+                                 !(pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                            /*
+                               Clock the next bit of the LMC1982CIN data.
+                             */
+                            nsc_mixer->im_data[LMC1982_DATA] |=
+                                ((val & SERIAL_MIXER_DATA) << (nsc_mixer->im_state & STATE_DATA_MASK_W));
+                            nsc_mixer->im_state++;
+                        }
+                    }
+                    break;
+                case STATE_LMC1982_DATA_OVER:
+                    if ((val & SERIAL_MIXER_IDENT) && !(pas16->audio_mixer & SERIAL_MIXER_IDENT))
+                        /*
+                           LMC1982CIN data transfer ended, process the data and reset the state
+                           back to idle.
+                         */
+                        lmc1982_update_reg(nsc_mixer);
+                    break;
+                case STATE_LMC835_DATA_0 ... STATE_LMC835_DATA_7:
+                    if ((val & SERIAL_MIXER_CLOCK) && !(pas16->audio_mixer & SERIAL_MIXER_CLOCK)) {
+                        /*
+                           Clock the next bit of the LMC835N data.
+                         */
+                        nsc_mixer->im_data[LMC835_DATA] |=
+                            ((val &  SERIAL_MIXER_DATA) << (nsc_mixer->im_state & STATE_DATA_MASK));
+                        nsc_mixer->im_state++;
+                    }
+                    break;
+                case STATE_LMC835_DATA_OVER:
+                    if ((val & SERIAL_MIXER_STROBE) && !(pas16->audio_mixer & SERIAL_MIXER_STROBE)) {
+                        if (nsc_mixer->im_data[LMC835_DATA] & LMC835_FLAG_ADDR)
+                            /*
+                               The LMC835N data is an address, copy it into its own space for usage
+                               when processing it at the end and strip bits 7 (it's the address/data
+                               indicator) and 6 (it's a "don't care" bit).
+                             */
+                            nsc_mixer->im_data[LMC835_ADDR] = nsc_mixer->im_data[LMC835_DATA] & 0x7f;
+                        else
+                            lmc835_update_reg(nsc_mixer);
+                        nsc_mixer->im_state = STATE_SM_IDLE;
+                    }
+                    break;
+            }
+            pas16->audio_mixer = val;
+            break;
+        case 0x0801:
+            pas16->irq_stat &= ~val;
+            if (pas16->irq != -1)
+                picintc(1 << pas16->irq);
+            break;
+        case 0x0802:
+            pas16_update(pas16);
+
+            pitf_ctr_set_gate(pas16->pit, 1, !!(val & 0x80));
+            pitf_ctr_set_gate(pas16->pit, 0, !!(val & 0x40));
+
+            pas16->stereo_lr = 0;
+            pas16->dma8_ff = 0;
+
+            if ((val & 0x20) && !(pas16->audiofilt & 0x20)) {
+                pas16_log("PAS PCM enable, clearing IRQ mask/status\n");
+                /* Clear IRQ mask and status bits */
+                pas16->irq_ena = 0;
+                pas16->irq_stat = 0;
+            }
+
+            pas16->audiofilt = val;
+
+            if (val & 0x1f) {
+                pas16->filter = 1;
+                switch (val & 0x1f) {
+                    default:
+                        pas16->filter = 0;
+                        break;
+                    case 0x01:
+                        recalc_pas16_filter(17897);
+                        break;
+                    case 0x02:
+                        recalc_pas16_filter(15909);
+                        break;
+                    case 0x04:
+                        recalc_pas16_filter(2982);
+                        break;
+                    case 0x09:
+                        recalc_pas16_filter(11931);
+                        break;
+                    case 0x11:
+                        recalc_pas16_filter(8948);
+                        break;
+                    case 0x19:
+                        recalc_pas16_filter(5965);
+                        break;
+                }
+            } else
+                pas16->filter = 0;
+            break;
+        case 0x0803:
+            pas16->irq_ena = val & 0x1f;
+            pas16->irq_stat &= ((val & 0x1f) | 0xe0);
+
+            if ((pas16->irq != -1) && !(pas16->irq_stat & 0x1f))
+                picintc(1 << pas16->irq);
+            break;
+
+        case 0x1000:
+            if (val != 0)
+                pas16->rate_div = val;
+            break;
+
+        case 0x1401:
+            old = pas16->ym3802_rgr;
+            pas16->ym3802_rgr = val;
+            pas16->ym3802_banked_idx = val & 0x0f; /* Bits 3-0 select register bank */
+            if ((old == 0x80) && (val == 0x00)) {
+                pas16_log("YM3802 reset\n");
+                timer_disable(&pas16->ym3802_gentimer);
+                pas16->irq_stat &= 0xef;
+                pas16->ym3802_ivr = 0x00;
+                pas16->ym3802_isr = 0x00;
+                pas16->ym3802_icr = 0x00;
+                pas16->ym3802_gen_timer = 0x0000;
+                for (int i = 0; i < 0x0a; i++) {
+                    pas16->ym3802_reg4_banked[i] = val;
+                    pas16->ym3802_reg5_banked[i] = val;
+                    pas16->ym3802_reg6_banked[i] = val;
+                    pas16->ym3802_reg7_banked[i] = val;
+                }
+            }
+            break;
+        case 0x1403:
+            pas16->ym3802_icr = val;
+            pas16->ym3802_ivr = (pas16->ym3802_reg4_banked[0x00] & 0xe0);
+            pas16->ym3802_isr &= ~val;
+            if (pas16->ym3802_isr & 0x20)
+                pas16->ym3802_ivr |= 0x0a;
+            pas16_log("YM3802 ICR write: icr = %02X, ivr = %02X, isr = %02X\n", pas16->ym3802_icr, pas16->ym3802_ivr, pas16->ym3802_isr);
+            if (!(pas16->ym3802_isr))
+                pas16->irq_stat &= 0x0f;
+            if ((pas16->irq != -1) && (!(pas16->irq_stat & 0x0f)) && (!(pas16->ym3802_isr)))
+                picintc(1 << pas16->irq);
+            break;
+
+        case 0x1800:
+            pas16->ym3802_reg4_banked[pas16->ym3802_banked_idx] = val;
+            if (pas16->ym3802_banked_idx == 0x00)
+                pas16->ym3802_ivr = (val & 0xe0) | (pas16->ym3802_ivr & 0x1f);
+            if (pas16->ym3802_banked_idx == 0x08)
+                pas16->ym3802_gen_timer = (pas16->ym3802_gen_timer & 0x3f00) | val;
+            break;
+        case 0x1801:
+            pas16->ym3802_reg5_banked[pas16->ym3802_banked_idx] = val;
+            if (pas16->ym3802_banked_idx == 0x08) {
+                pas16->ym3802_gen_timer = (pas16->ym3802_gen_timer & 0x00ff) | ((val & 0x3f) << 8);
+                if (val & 0x80)
+                    timer_set_delay_u64(&pas16->ym3802_gentimer, (pas16->ym3802_gen_timer * 8 * TIMER_USEC));
+            }
+            break;
+        case 0x1802:
+            pas16->ym3802_reg6_banked[pas16->ym3802_banked_idx] = val;
+            if (pas16->ym3802_banked_idx == 0x05) {
+                if (pas16->ym3802_reg5_banked[0x05] & 0x01) {
+                    pas16_log("MIDI data out %02X\n", val);
+                    midi_raw_out_byte(val);
+                }
+            }
+            break;
+        case 0x1803:
+            pas16->ym3802_reg7_banked[pas16->ym3802_banked_idx] = val;
+            break;
+
+        case 0x0c00:
+        case 0x0c01:
+            pas16_update(pas16);
+            break;
+        case 0x0c02:
+            if ((val & PAS16_PCM_ENA) && !(pas16->pcm_ctrl & PAS16_PCM_ENA)) {
+                /* Guess */
+                pas16->stereo_lr = 0;
+                pas16->irq_stat &= 0xd7;
+                /* Needed for 8-bit DMA to work correctly on a 16-bit DMA channel. */
+                pas16->dma8_ff = 0;
+            }
+
+            pas16->pcm_ctrl = val;
+            pas16_log("Now in: %s (%02X)\n", (pas16->pcm_ctrl & PAS16_PCM_MONO) ? "Mono" : "Stereo", val);
+            break;
+
+        case 0x1c00 ... 0x1c03:    /* NCR5380 ports 0 to 3. */
+        case 0x3c00 ... 0x3c03:    /* NCR5380 ports 4 to 7. */
+            if (pas16->has_scsi)
+                ncr5380_write((port & 0x0003) | ((port & 0x2000) >> 11), val, &pas16->scsi->ncr);
+            break;
+
+        case 0x4000:
+            if (pas16->has_scsi) {
+                pas16->timeout_count = val;
+                if (timer_is_enabled(&pas16->scsi_timer))
+                    timer_disable(&pas16->scsi_timer);
+                if ((val & 0x3f) > 0x00)
+                    timer_set_delay_u64(&pas16->scsi_timer, (val & 0x3f) * PASSCSICONST);
+            }
+            break;
+
+        case 0x4001:
+            if (pas16->has_scsi) {
+                pas16->timeout_status = val & 0x7f;
+                if (pas16->scsi_irq != -1)
+                    picintc(1 << pas16->scsi_irq);
+            }
+            break;
+
+        case 0x5c00:
+            if (pas16->has_scsi)
+                t128_write(0x1e00, val, pas16->scsi);
+            break;
+        case 0x5c03:
+            if (pas16->has_scsi) {
+                if (val & 0x80) {
+                    pas16->scsi->ncr.irq_state = 0;
+                    if (pas16->scsi_irq != -1)
+                        picintc(1 << pas16->scsi_irq);
+                }
+            }
+            break;
+
+        case 0x7c01:
+            pas16->enhancedscsi = val;
+            break;
+
+        case 0xbc00:
+            pas16->waitstates = val;
+            break;
+        case 0xbc02:
+            pas16->prescale_div = val;
+            pas16_change_pit_clock_speed(pas16);
+            pas16_log("Prescale divider now: %i\n", val);
+            break;
+
+        default:
+            pas16_log("pas_out : unknown %04X\n", port);
+    }
+}
+
+static void
 pas16_out(uint16_t port, uint8_t val, void *priv)
 {
     pas16_t *      pas16       = (pas16_t *) priv;
@@ -1248,7 +1847,7 @@ pas16_out(uint16_t port, uint8_t val, void *priv)
 
                 if (mv508_mixer->index & MV508_MIXER) {
 		    bank = !!(val & MV508_INPUT_MIX);
-                    mask = 0x1f;
+                    mask = bank ? 0x3f : 0x1f;
                 } else {
 		    bank = 2;
                     mask = 0x3f;
@@ -1417,11 +2016,6 @@ pas16_out(uint16_t port, uint8_t val, void *priv)
             pas16->stereo_lr = 0;
             pas16->dma8_ff = 0;
 
-            if ((val & 0x20) && !(pas16->audiofilt & 0x20)) {
-                pas16_log("Reset.\n");
-                pas16_reset_regs(pas16);
-            }
-
             pas16->audiofilt = val;
 
             if (val & 0x1f) {
@@ -1458,6 +2052,11 @@ pas16_out(uint16_t port, uint8_t val, void *priv)
 
             if ((pas16->irq != -1) && !(pas16->irq_stat & 0x1f))
                 picintc(1 << pas16->irq);
+            break;
+
+        case 0x1000:
+            if (val != 0)
+                pas16->rate_div = val;
             break;
 
         case 0x0c00:
@@ -1588,6 +2187,13 @@ pas16_out(uint16_t port, uint8_t val, void *priv)
 
         case 0xf000:
             pas16->io_conf_1 = val;
+            if (pas16->io_conf_1 & 0x40) {
+                pas16_log("pas16_out: Enable joystick\n");
+                gameport_remap(pas16->gameport, 0x201);
+            } else {
+                pas16_log("pas16_out: Disable joystick\n");
+                gameport_remap(pas16->gameport, 0x0);
+            }
             break;
         case 0xf001:
             pas16->io_conf_2 = val;
@@ -1752,7 +2358,7 @@ static uint16_t
 pas16_readdmaw_stereo(pas16_t *pas16)
 {
     uint16_t ret;
-    uint16_t ticks = (pas16->sys_conf_1 & 0x02) ? (1 + (pas16->dma < 5)) : 1;
+    uint16_t ticks = (1 + (pas16->dma < 5));
 
     ret = pas16_dma_readw(pas16, ticks);
 
@@ -1798,63 +2404,211 @@ pas16_readdma_stereo(pas16_t *pas16)
 }
 
 static void
+pas16_record_resync(pas16_t *pas16)
+{
+    int pos = (pas16->record_pos_write_mic - PAS16_REC_SAFEFTY_MARGIN) & 0xFFFF;
+
+    pas16->record_pos_read = pos;
+
+    for (int i = 0; i < PAS16_REC_SAFEFTY_MARGIN; i++) {
+        pas16->record_buffer[pos] = 0;
+        pos                     = (pos + 1) & 0xFFFF;
+    }
+}
+
+static void
 pas16_pit_timer0(const int new_out, UNUSED(int old_out), void *priv)
 {
     const pitf_t *pit   = (const pitf_t *) priv;
     pas16_t *     pas16 = (pas16_t *) pit->dev_priv;
 
+    uint8_t dma_channel_unreadable = 0;
+
     if (!pas16->pit->counters[0].gate)
         return;
 
-    if (!dma_channel_readable(pas16->dma))
-        return;
+    if (pas16->pcm_ctrl & 0x10) {
+        if ((!dma_channel_readable(pas16->dma)) && !pas16->is_old_pas)
+            return;
 
-    pas16_update_irq(pas16);
+        if (!dma_channel_readable(pas16->dma))
+            dma_channel_unreadable = 1;
 
-    if (((pas16->pcm_ctrl & PAS16_PCM_ENA) == PAS16_PCM_ENA) && (pit->counters[1].m & 2) && new_out) {
-        uint16_t temp;
+        if (!pas16->is_old_pas)
+            pas16_update_irq(pas16);
 
-        pas16->ticks = 0;
-
-        if (pas16->pcm_ctrl & PAS16_PCM_MONO) {
-            temp = pas16_readdma_mono(pas16);
-
-            pas16->pcm_dat_l = pas16->pcm_dat_r = temp;
-        } else {
-            temp = pas16_readdma_stereo(pas16);
-
-            if (pas16->sys_conf_1 & 0x02) {
-                pas16->pcm_dat_l = temp;
-
-                temp = pas16_readdma_stereo(pas16);
-
-                pas16->pcm_dat_r = temp;
-            } else {
-                if (pas16->stereo_lr)
-                    pas16->pcm_dat_r = temp;
-                else
-                    pas16->pcm_dat_l = temp;
-
-                pas16->stereo_lr = !pas16->stereo_lr;
-                pas16->irq_stat = (pas16->irq_stat & 0xdf) | (pas16->stereo_lr << 5);
-            }
-        }
-
-        if (pas16->ticks) {
-            for (uint16_t i = 0; i < pas16->ticks; i++)
-                pitf_ctr_clock(pas16->pit, 1);
+        if (((pas16->pcm_ctrl & PAS16_PCM_ENA) == PAS16_PCM_ENA) && (pit->counters[1].m & 2) && new_out) {
+            uint16_t temp;
 
             pas16->ticks = 0;
-        }
 
-        pas16->irq_stat |= PAS16_INT_SAMP;
-        if (pas16->irq_ena & PAS16_INT_SAMP) {
-            pas16_log("INT SAMP.\n");
-            if (pas16->irq != -1)
-                picint(1 << pas16->irq);
-        }
+            if (pas16->pcm_ctrl & PAS16_PCM_MONO) {
+                temp = pas16_readdma_mono(pas16);
 
-        pas16_update(pas16);
+                pas16->pcm_dat_l = pas16->pcm_dat_r = temp;
+            } else {
+                temp = pas16_readdma_stereo(pas16);
+
+                if (pas16->sys_conf_1 & 0x02) {
+                    pas16->pcm_dat_l = temp;
+
+                    temp = pas16_readdma_stereo(pas16);
+
+                    pas16->pcm_dat_r = temp;
+                } else {
+                    if (pas16->stereo_lr)
+                        pas16->pcm_dat_r = temp;
+                    else
+                        pas16->pcm_dat_l = temp;
+
+                    pas16->stereo_lr = !pas16->stereo_lr;
+                    pas16->irq_stat = (pas16->irq_stat & 0xdf) | (pas16->stereo_lr << 5);
+                }
+            }
+
+            if (dma_channel_unreadable)
+                pas16->pcm_dat_l = pas16->pcm_dat_r = 0;
+
+            if (pas16->ticks) {
+                for (uint16_t i = 0; i < pas16->ticks; i++)
+                    pitf_ctr_clock(pas16->pit, 1);
+
+                pas16->ticks = 0;
+            }
+
+            pas16->irq_stat |= PAS16_INT_SAMP;
+            if (pas16->irq_ena & PAS16_INT_SAMP) {
+                pas16_log("INT SAMP.\n");
+                if (pas16->irq != -1)
+                    picint(1 << pas16->irq);
+            }
+
+            pas16_update(pas16);
+        }
+    } else {
+        if (!pas16->is_old_pas)
+            pas16_update_irq(pas16);
+
+        if (((pas16->pcm_ctrl & PAS16_PCM_ENA) == PAS16_PCM_ENA) && (pit->counters[1].m & 2) && new_out) {
+            const int diff = (int) (int16_t) (pas16->record_pos_write_mic - pas16->record_pos_read);
+            if ((diff <= 0) || (diff > PAS16_REC_MAX_MARGIN))
+                pas16_record_resync(pas16);
+
+            pas16->ticks = 0;
+
+            if (pas16->pcm_ctrl & PAS16_PCM_MONO) {
+                if (pas16->sys_conf_2 & 0x04) {
+                    if (pas16->dma >= 5) {
+                        dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read]);
+                        pas16->ticks++;
+                    } else {
+                        dma_channel_write(pas16->dma, (pas16->record_buffer[pas16->record_pos_read] & 0xff));
+                        dma_channel_write(pas16->dma, (pas16->record_buffer[pas16->record_pos_read] >> 8));
+                        pas16->ticks += 2;
+                    }
+                } else {
+                    if ((pas16->dma >= 5) && pas16->dma8_ff) {
+                        pas16->dma8_dat |= (pas16->record_buffer[pas16->record_pos_read]) & 0xff00;
+                        pas16->dma8_dat ^= 0x8080;
+                        dma_channel_write(pas16->dma, pas16->dma8_dat);
+                        pas16->ticks++;
+                    } else if (pas16->dma >= 5) {
+                        pas16->dma8_dat = (pas16->record_buffer[pas16->record_pos_read] >> 8) & 0xff;
+                    } else {
+                        dma_channel_write(pas16->dma, (pas16->record_buffer[pas16->record_pos_read] >> 8) ^ 0x80);
+                        pas16->ticks++;
+                    }
+                    pas16->dma8_ff = !pas16->dma8_ff;
+                }
+            } else {
+                if (pas16->sys_conf_2 & 0x04) {
+                    if (pas16->dma >= 5) {
+                        if (!(pas16->sys_conf_1 & 0x02) && (pas16->irq_stat & 0x20))
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read + 1]);
+                        else
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read]);
+                        pas16->ticks++;
+                    } else {
+                        if (!(pas16->sys_conf_1 & 0x02) && (pas16->irq_stat & 0x20)) {
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read + 1] & 0xff);
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read + 1] >> 8);
+                        } else {
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read] & 0xff);
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read] >> 8);
+                        }
+                        pas16->ticks += 2;
+                    }
+                } else {
+                    if ((pas16->dma >= 5) && pas16->dma8_ff) {
+                        if (!(pas16->sys_conf_1 & 0x02) && (pas16->irq_stat & 0x20))
+                            pas16->dma8_dat |= (pas16->record_buffer[pas16->record_pos_read + 1]) & 0xff00;
+                        else
+                            pas16->dma8_dat |= (pas16->record_buffer[pas16->record_pos_read]) & 0xff00;
+                        pas16->dma8_dat ^= 0x8080;
+                        dma_channel_write(pas16->dma, pas16->dma8_dat);
+                        pas16->ticks++;
+                    } else if (pas16->dma >= 5) {
+                        if (!(pas16->sys_conf_1 & 0x02) && (pas16->irq_stat & 0x20))
+                            pas16->dma8_dat = (pas16->record_buffer[pas16->record_pos_read + 1] >> 8) & 0xff;
+                        else
+                            pas16->dma8_dat = (pas16->record_buffer[pas16->record_pos_read] >> 8) & 0xff;
+                    } else {
+                        if (!(pas16->sys_conf_1 & 0x02) && (pas16->irq_stat & 0x20))
+                            dma_channel_write(pas16->dma, (pas16->record_buffer[pas16->record_pos_read + 1] >> 8) ^ 0x80);
+                        else
+                            dma_channel_write(pas16->dma, (pas16->record_buffer[pas16->record_pos_read] >> 8) ^ 0x80);
+                        pas16->ticks++;
+                    }
+                    pas16->dma8_ff = !pas16->dma8_ff;
+                }
+
+                if (pas16->sys_conf_1 & 0x02) {
+                    if (pas16->sys_conf_2 & 0x04) {
+                        if (pas16->dma >= 5) {
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read + 1]);
+                            pas16->ticks++;
+                        } else {
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read + 1] & 0xff);
+                            dma_channel_write(pas16->dma, pas16->record_buffer[pas16->record_pos_read + 1] >> 8);
+                            pas16->ticks += 2;
+                        }
+                    } else {
+                        if ((pas16->dma >= 5) && pas16->dma8_ff) {
+                            pas16->dma8_dat |= (pas16->record_buffer[pas16->record_pos_read + 1]) & 0xff00;
+                            pas16->dma8_dat ^= 0x8080;
+                            dma_channel_write(pas16->dma, pas16->dma8_dat);
+                            pas16->ticks++;
+                        } else if (pas16->dma >= 5) {
+                            pas16->dma8_dat = (pas16->record_buffer[pas16->record_pos_read + 1] >> 8) & 0xff;
+                        } else {
+                            dma_channel_write(pas16->dma, (pas16->record_buffer[pas16->record_pos_read + 1] >> 8) ^ 0x80);
+                            pas16->ticks++;
+                        }
+                        pas16->dma8_ff = !pas16->dma8_ff;
+                    }
+
+                } else {
+                    pas16->stereo_lr = !pas16->stereo_lr;
+                    pas16->irq_stat = (pas16->irq_stat & 0xdf) | (pas16->stereo_lr << 5);
+                }
+            }
+            pas16->record_pos_read += 2;
+            pas16->record_pos_read &= 0xFFFF;
+
+            if (pas16->ticks) {
+                for (uint16_t i = 0; i < pas16->ticks; i++)
+                    pitf_ctr_clock(pas16->pit, 1);
+
+                pas16->ticks = 0;
+            }
+
+            pas16->irq_stat |= PAS16_INT_SAMP;
+            if (pas16->irq_ena & PAS16_INT_SAMP) {
+                pas16_log("INT SAMP.\n");
+                if (pas16->irq != -1)
+                    picint(1 << pas16->irq);
+            }
+        }
     }
 }
 
@@ -1894,6 +2648,29 @@ pas16_out_base(UNUSED(uint16_t port), uint8_t val, void *priv)
 }
 
 static void
+pas_input_msg(void *priv, uint8_t *msg, uint32_t len)
+{
+    pas16_t  *pas16 = (pas16_t *) priv;
+
+    if (pas16->sysex)
+        return;
+
+    if (pas16->ym3802_reg5_banked[0x03] & 0x01) {
+        pas16->ym3802_reg4_banked[0x03] |= 0x80; /* Set FIFO-Rx Ready flag */
+
+        for (uint32_t i = 0; i < len; i++) {
+            pas16_log("Write message %02X to queue\n", msg[i]);
+            pas16->midi_queue[pas16->midi_w++] = msg[i];
+            pas16->midi_w &= 0xff;
+            pas16->midi_used++;
+        }
+
+        if (pas16->ym3802_reg6_banked[0x00] & 0x20) /* Check if FIFO-Rx interrupt is enabled */
+            pas_update_irq(pas16);
+    }
+}
+
+static void
 pas16_input_msg(void *priv, uint8_t *msg, uint32_t len)
 {
     pas16_t  *pas16 = (pas16_t *) priv;
@@ -1907,6 +2684,7 @@ pas16_input_msg(void *priv, uint8_t *msg, uint32_t len)
         for (uint32_t i = 0; i < len; i++) {
             pas16->midi_queue[pas16->midi_w++] = msg[i];
             pas16->midi_w &= 0xff;
+            pas16->midi_used++;
         }
 
         pas16_update_irq(pas16);
@@ -1928,9 +2706,18 @@ pas16_input_sysex(void *priv, uint8_t *buffer, uint32_t len, int abort)
             return (int) (len - i);
         pas16->midi_queue[pas16->midi_w++] = buffer[i];
         pas16->midi_w &= 0xff;
+        pas16->midi_used++;
     }
     pas16->sysex = 0;
     return 0;
+}
+
+static int
+pas16_input_remain(void *priv)
+{
+    pas16_t  *pas16 = (pas16_t *) priv;
+
+    return (256 - pas16->midi_used);
 }
 
 static void
@@ -1949,18 +2736,246 @@ pas16_update(pas16_t *pas16)
     }
 }
 
+#define PAS16_RECORD_CLAMP(x) (((x) < -32768) ? -32768 : (((x) > 32767) ? 32767 : (x)))
+
+/* filter when freq < capture rate */
+#define PAS16_RECORD_ANTIALIAS 1
+
+/* nyquist anti alias */
+#define PAS16_RECORD_AA_NYQ 0.9
+
+/* audio filter called on filter rate change */
+static void
+pas16_record_aa_design(pas16_t *pas16, int out_rate, int in_rate)
+{
+    const double fc    = (PAS16_RECORD_AA_NYQ * 0.5) * ((double) out_rate);
+    const double w0    = (2.0 * M_PI * fc) / ((double) in_rate);
+    const double cw    = cos(w0);
+    const double sw    = sin(w0);
+    const double alpha = sw / (2.0 * 0.70710678118654752);
+    const double a0    = 1.0 + alpha;
+
+    pas16->record_aa_b0_mic = ((1.0 - cw) / 2.0) / a0;
+    pas16->record_aa_b1_mic = (1.0 - cw) / a0;
+    pas16->record_aa_b2_mic = pas16->record_aa_b0_mic;
+    pas16->record_aa_a1_mic = (-2.0 * cw) / a0;
+    pas16->record_aa_a2_mic = (1.0 - alpha) / a0;
+}
+
+static double
+pas16_record_aa_step(pas16_t *pas16, int ch, double x)
+{
+    const double y = (pas16->record_aa_b0_mic * x) + pas16->record_aa_z1_mic[ch];
+
+    pas16->record_aa_z1_mic[ch] = (pas16->record_aa_b1_mic * x) - (pas16->record_aa_a1_mic * y)
+                                + pas16->record_aa_z2_mic[ch];
+    pas16->record_aa_z2_mic[ch] = (pas16->record_aa_b2_mic * x) - (pas16->record_aa_a2_mic * y);
+
+    return y;
+}
+
+static void
+pas16_put_buffer(int16_t *buffer, int len, void *priv)
+{
+    pas16_t                      *pas16 = (pas16_t *) priv;
+    nsc_mixer_t     *nsc_mixer = &pas16->nsc_mixer;
+    mv508_mixer_t *mv508_mixer = &pas16->mv508_mixer;
+
+    /* divisor is rate capture device opened at*/
+    const int cap_rate = al_capture_get_rate();
+    const int denom    = (cap_rate > 0) ? cap_rate : SOUND_FREQ;
+    const int rate     = ((pas16->type) ? 882000 : 1193180) / (pas16->rate_div ? pas16->rate_div : 54);
+
+    int c;
+    int gain_l;
+    int gain_r;
+    int sel_l_mic, sel_l_linel;
+    int sel_r_mic, sel_r_liner;
+    int interp;
+    int filt;
+
+    /* freq is 0 until the guest programs a rate  */
+    if (rate <= 0)
+        return;
+
+    if ((denom != pas16->record_denom_mic) || (rate != pas16->record_rate_mic)) {
+        pas16->record_denom_mic      = denom;
+        pas16->record_rate_mic       = rate;
+        pas16->record_phase_mic      = 0;
+        pas16->record_prev_l_mic     = 0;
+        pas16->record_prev_r_mic     = 0;
+        pas16->record_prev_valid_mic = 0;
+
+        pas16->record_aa_z1_mic[0] = 0.0;
+        pas16->record_aa_z1_mic[1] = 0.0;
+        pas16->record_aa_z2_mic[0] = 0.0;
+        pas16->record_aa_z2_mic[1] = 0.0;
+        pas16->record_aa_active_mic = 0;
+
+#if PAS16_RECORD_ANTIALIAS
+        /* only when decimating */
+        if (rate < denom) {
+            pas16_record_aa_design(pas16, rate, denom);
+            pas16->record_aa_active_mic = 1;
+        }
+#endif
+    }
+
+    interp = (rate != denom);
+    filt   = pas16->record_aa_active_mic;
+
+    gain_l = 8;
+    gain_r = 8;
+
+    if (pas16->type) {
+        sel_l_mic   = (mv508_mixer->regs[1][0x54] & 0x20) ? 1 : 0;
+        sel_l_linel = (mv508_mixer->regs[1][0x52] & 0x20) ? 1 : 0;
+
+        sel_r_mic   = (mv508_mixer->regs[1][0x54] & 0x20) ? 1 : 0;
+        sel_r_liner = (mv508_mixer->regs[1][0x52] & 0x20) ? 1 : 0;
+    } else {
+        sel_l_mic   = (nsc_mixer->lmc835_regs[0x05] & 0x40) ? 1 : 0;
+        sel_l_linel = (nsc_mixer->lmc835_regs[0x03] & 0x40) ? 1 : 0;
+
+        sel_r_mic   = (nsc_mixer->lmc835_regs[0x0c] & 0x40) ? 1 : 0;
+        sel_r_liner = (nsc_mixer->lmc835_regs[0x0a] & 0x40) ? 1 : 0;
+    }
+    /* Mute inputs if gain is zero on original PAS, PASTEST relies on this */
+    if (pas16->is_old_pas) {
+        if (((nsc_mixer->lmc835_regs[0x05] & 0x3f) == 0) && ((nsc_mixer->lmc835_regs[0x0c] & 0x3f) == 0))
+            sel_l_mic = sel_r_mic = 0;
+        if (((nsc_mixer->lmc835_regs[0x03] & 0x3f) == 0) && ((nsc_mixer->lmc835_regs[0x0a] & 0x3f) == 0))
+            sel_l_linel = sel_r_liner = 0;
+    }
+
+    for (c = 0; c < len * 2; c += 2) {
+        const int32_t cap_l = (int32_t) buffer[c];
+        const int32_t cap_r = (int32_t) buffer[c + 1];
+
+        /* mic is the mono sum of line-in. truncating division for dc symmetry */
+        const int32_t mic = (cap_l + cap_r) / 2;
+
+        int32_t mix_l = (mic * sel_l_mic) + (cap_l * sel_l_linel);
+        int32_t mix_r = (mic * sel_r_mic) + (cap_r * sel_r_liner);
+        int32_t in_l;
+        int32_t in_r;
+
+        /* run on every input frame*/
+        if (filt) {
+            mix_l = (int32_t) lrint(pas16_record_aa_step(pas16, 0, (double) mix_l));
+            mix_r = (int32_t) lrint(pas16_record_aa_step(pas16, 1, (double) mix_r));
+        }
+
+        in_l = PAS16_RECORD_CLAMP(mix_l * gain_l);
+        in_r = PAS16_RECORD_CLAMP(mix_r * gain_r);
+
+        /* start new device change with first frame in interpolartor queue */
+        if (!pas16->record_prev_valid_mic) {
+            pas16->record_prev_l_mic     = in_l;
+            pas16->record_prev_r_mic     = in_r;
+            pas16->record_prev_valid_mic = 1;
+        }
+
+        /* phase ticks this forward, while-loop for new samples so they arent dropped */
+        pas16->record_phase_mic += rate;
+        while (pas16->record_phase_mic >= denom) {
+            int32_t out_l;
+            int32_t out_r;
+
+            pas16->record_phase_mic -= denom; /* denom tracks input frame vs emitted frame , (rate - phase) / rate */
+
+            if (interp) {
+
+                const int32_t num = rate - pas16->record_phase_mic;
+
+                out_l = pas16->record_prev_l_mic
+                        + (int32_t) ((((int64_t) (in_l - pas16->record_prev_l_mic)) * num) / rate);
+                out_r = pas16->record_prev_r_mic
+                        + (int32_t) ((((int64_t) (in_r - pas16->record_prev_r_mic)) * num) / rate);
+            } else {
+                out_l = in_l;
+                out_r = in_r;
+            }
+
+            pas16->record_buffer[pas16->record_pos_write_mic]                = (int16_t) out_l;
+            pas16->record_buffer[(pas16->record_pos_write_mic + 1) & 0xffff] = (int16_t) out_r;
+
+            pas16->record_pos_write_mic = (pas16->record_pos_write_mic + 2) & 0xffff;
+        }
+
+        pas16->record_prev_l_mic = in_l;
+        pas16->record_prev_r_mic = in_r;
+    }
+}
+
 void
-pasplus_get_buffer(int32_t *buffer, int len, void *priv)
+pas_get_buffer(int32_t *buffer, uint16_t len, void *priv)
 {
     pas16_t *          pas16   = (pas16_t *) priv;
     const nsc_mixer_t *mixer   = &pas16->nsc_mixer;
     double             bass_treble;
 
-    sb_dsp_update(&pas16->dsp);
     pas16_update(pas16);
-    for (int c = 0; c < len * 2; c += 2) {
-        double out_l = pas16->dsp.buffer[c];
-        double out_r = pas16->dsp.buffer[c + 1];
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        double out_l;
+        double out_r;
+
+        if (pas16->filter) {
+            /* We divide by 3 to get the volume down to normal. */
+            out_l = low_fir_pas16(0, (double) pas16->pcm_buffer[0][c >> 1]) * mixer->pcm_l;
+            out_r = low_fir_pas16(1, (double) pas16->pcm_buffer[1][c >> 1]) * mixer->pcm_r;
+        } else {
+            out_l = ((double) pas16->pcm_buffer[0][c >> 1]) * mixer->pcm_l;
+            out_r = ((double) pas16->pcm_buffer[1][c >> 1]) * mixer->pcm_r;
+        }
+
+        out_l *= mixer->master_l;
+        out_r *= mixer->master_r;
+
+        /* This is not exactly how one does bass/treble controls, but the end result is like it.
+           A better implementation would reduce the CPU usage. */
+        if (mixer->bass != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->bass];
+
+            if (mixer->bass > 6) {
+                out_l += (low_iir(0, 0, out_l) * bass_treble);
+                out_r += (low_iir(0, 1, out_r) * bass_treble);
+            } else if (mixer->bass < 6) {
+                out_l = (out_l *bass_treble + low_cut_iir(0, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + low_cut_iir(0, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        if (mixer->treble != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->treble];
+
+            if (mixer->treble > 6) {
+                out_l += (high_iir(0, 0, out_l) * bass_treble);
+                out_r += (high_iir(0, 1, out_r) * bass_treble);
+            } else if (mixer->treble < 6) {
+                out_l = (out_l *bass_treble + high_cut_iir(0, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + high_cut_iir(0, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        buffer[c] += (int32_t) out_l;
+        buffer[c + 1] += (int32_t) out_r;
+    }
+
+    pas16->pos = 0;
+}
+
+void
+pasplus_get_buffer(int32_t *buffer, uint16_t len, void *priv)
+{
+    pas16_t *          pas16   = (pas16_t *) priv;
+    const nsc_mixer_t *mixer   = &pas16->nsc_mixer;
+    double             bass_treble;
+
+    pas16_update(pas16);
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        double out_l = 0.0;
+        double out_r = 0.0;
 
         if (pas16->filter) {
             /* We divide by 3 to get the volume down to normal. */
@@ -2005,20 +3020,67 @@ pasplus_get_buffer(int32_t *buffer, int len, void *priv)
     }
 
     pas16->pos = 0;
+}
+
+void
+pasplus_get_sb_buffer(int32_t *buffer, uint16_t len, void *priv)
+{
+    pas16_t *          pas16   = (pas16_t *) priv;
+    const nsc_mixer_t *mixer   = &pas16->nsc_mixer;
+    double             bass_treble;
+
+    sb_dsp_update(&pas16->dsp);
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        double out_l = pas16->dsp.buffer[c];
+        double out_r = pas16->dsp.buffer[c + 1];
+
+        out_l *= mixer->master_l;
+        out_r *= mixer->master_r;
+
+        /* This is not exactly how one does bass/treble controls, but the end result is like it.
+           A better implementation would reduce the CPU usage. */
+        if (mixer->bass != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->bass];
+
+            if (mixer->bass > 6) {
+                out_l += (low_iir(2, 0, out_l) * bass_treble);
+                out_r += (low_iir(2, 1, out_r) * bass_treble);
+            } else if (mixer->bass < 6) {
+                out_l = (out_l *bass_treble + low_cut_iir(2, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + low_cut_iir(2, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        if (mixer->treble != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->treble];
+
+            if (mixer->treble > 6) {
+                out_l += (high_iir(2, 0, out_l) * bass_treble);
+                out_r += (high_iir(2, 1, out_r) * bass_treble);
+            } else if (mixer->treble < 6) {
+                out_l = (out_l *bass_treble + high_cut_iir(2, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + high_cut_iir(2, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        buffer[c] += (int32_t) out_l;
+        buffer[c + 1] += (int32_t) out_r;
+    }
+
     pas16->dsp.pos = 0;
 }
 
 void
-pasplus_get_music_buffer(int32_t *buffer, int len, void *priv)
+pasplus_get_music_buffer(int32_t *buffer, uint16_t len, void *priv)
 {
     const pas16_t *    pas16   = (const pas16_t *) priv;
     const nsc_mixer_t *mixer   = &pas16->nsc_mixer;
     const int32_t *    opl_buf = pas16->opl.update(pas16->opl.priv);
     double             bass_treble;
 
-    for (int c = 0; c < len * 2; c += 2) {
-        double out_l = (((double) opl_buf[c]) * mixer->fm_l) * 0.7171630859375;
-        double out_r = (((double) opl_buf[c + 1]) * mixer->fm_r) * 0.7171630859375;
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        double out_l = (((double) opl_buf[c]) * mixer->fm_l) * 7.7171630859375;
+        double out_r = (((double) opl_buf[c + 1]) * mixer->fm_r) * 7.7171630859375;
 
         /* TODO: recording CD, Mic with AGC or line in. Note: mic volume does not affect recording. */
         out_l *= mixer->master_l;
@@ -2128,25 +3190,24 @@ pasplus_filter_pc_speaker(int channel, double *buffer, void *priv)
 }
 
 void
-pas16_get_buffer(int32_t *buffer, int len, void *priv)
+pas16_get_buffer(int32_t *buffer, uint16_t len, void *priv)
 {
     pas16_t *            pas16 =  (pas16_t *) priv;
     const mv508_mixer_t *mixer   = &pas16->mv508_mixer;
     double               bass_treble;
 
-    sb_dsp_update(&pas16->dsp);
     pas16_update(pas16);
-    for (int c = 0; c < len * 2; c += 2) {
-        double out_l = (pas16->dsp.buffer[c] * mixer->sb_l) / 3.0;
-        double out_r = (pas16->dsp.buffer[c + 1] * mixer->sb_r) / 3.0;
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        double out_l = 0.0;
+        double out_r = 0.0;
 
         if (pas16->filter) {
             /* We divide by 3 to get the volume down to normal. */
-            out_l += (low_fir_pas16(0, (double) pas16->pcm_buffer[0][c >> 1]) * mixer->pcm_l) / 3.0;
-            out_r += (low_fir_pas16(1, (double) pas16->pcm_buffer[1][c >> 1]) * mixer->pcm_r) / 3.0;
+            out_l += (low_fir_pas16(0, (double) pas16->pcm_buffer[0][c >> 1]) * mixer->pcm_l);
+            out_r += (low_fir_pas16(1, (double) pas16->pcm_buffer[1][c >> 1]) * mixer->pcm_r);
         } else {
-            out_l += (((double) pas16->pcm_buffer[0][c >> 1]) * mixer->pcm_l) / 3.0;
-            out_r += (((double) pas16->pcm_buffer[1][c >> 1]) * mixer->pcm_r) / 3.0;
+            out_l += (((double) pas16->pcm_buffer[0][c >> 1]) * mixer->pcm_l);
+            out_r += (((double) pas16->pcm_buffer[1][c >> 1]) * mixer->pcm_r);
         }
 
         out_l *= mixer->master_l;
@@ -2183,18 +3244,118 @@ pas16_get_buffer(int32_t *buffer, int len, void *priv)
     }
 
     pas16->pos = 0;
+}
+
+void
+pas16_get_sb_buffer(int32_t *buffer, uint16_t len, void *priv)
+{
+    pas16_t *            pas16 =  (pas16_t *) priv;
+    const mv508_mixer_t *mixer   = &pas16->mv508_mixer;
+    double               bass_treble;
+
+    sb_dsp_update(&pas16->dsp);
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        double out_l = (pas16->dsp.buffer[c] * mixer->sb_l) / 3.0;
+        double out_r = (pas16->dsp.buffer[c + 1] * mixer->sb_r) / 3.0;
+
+        out_l *= mixer->master_l;
+        out_r *= mixer->master_r;
+
+        /* This is not exactly how one does bass/treble controls, but the end result is like it.
+           A better implementation would reduce the CPU usage. */
+        if (mixer->bass != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->bass];
+
+            if (mixer->bass > 6) {
+                out_l += (low_iir(2, 0, out_l) * bass_treble);
+                out_r += (low_iir(2, 1, out_r) * bass_treble);
+            } else if (mixer->bass < 6) {
+                out_l = (out_l *bass_treble + low_cut_iir(2, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + low_cut_iir(2, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        if (mixer->treble != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->treble];
+
+            if (mixer->treble > 6) {
+                out_l += (high_iir(2, 0, out_l) * bass_treble);
+                out_r += (high_iir(2, 1, out_r) * bass_treble);
+            } else if (mixer->treble < 6) {
+                out_l = (out_l *bass_treble + high_cut_iir(2, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + high_cut_iir(2, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        buffer[c] += (int32_t) out_l;
+        buffer[c + 1] += (int32_t) out_r;
+    }
+
     pas16->dsp.pos = 0;
 }
 
 void
-pas16_get_music_buffer(int32_t *buffer, int len, void *priv)
+pas_get_music_buffer(int32_t *buffer, uint16_t len, void *priv)
+{
+    pas16_t             *pas16    = (pas16_t *) priv;
+    const int32_t       *opl_buf  = pas16->opl.update(pas16->opl.priv);
+    const int32_t       *opl2_buf = pas16->opl2.update(pas16->opl2.priv);
+    const nsc_mixer_t *mixer   = &pas16->nsc_mixer;
+    double               bass_treble;
+
+    for (uint16_t c = 0; c < len * 2; c += 2) {
+        /* Two chips for LEFT and RIGHT channels.
+           Each chip stores data into the LEFT channel only (no sample alternating.) */
+        double out_l = (((double) opl_buf[c]) * mixer->fm_l) * 7.7171630859375;
+        double out_r = (((double) opl2_buf[c]) * mixer->fm_r) * 7.7171630859375;
+
+        /* TODO: recording CD, Mic with AGC or line in. Note: mic volume does not affect recording. */
+        out_l *= mixer->master_l;
+        out_r *= mixer->master_r;
+
+        /* This is not exactly how one does bass/treble controls, but the end result is like it.
+           A better implementation would reduce the CPU usage. */
+        if (mixer->bass != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->bass];
+
+            if (mixer->bass > 6) {
+                out_l += (low_iir(1, 0, out_l) * bass_treble);
+                out_r += (low_iir(1, 1, out_r) * bass_treble);
+            } else if (mixer->bass < 6) {
+                out_l = (out_l *bass_treble + low_cut_iir(1, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + low_cut_iir(1, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        if (mixer->treble != 6) {
+            bass_treble = lmc1982_bass_treble_4bits[mixer->treble];
+
+            if (mixer->treble > 6) {
+                out_l += (high_iir(1, 0, out_l) * bass_treble);
+                out_r += (high_iir(1, 1, out_r) * bass_treble);
+            } else if (mixer->treble < 6) {
+                out_l = (out_l *bass_treble + high_cut_iir(1, 0, out_l) * (1.0 - bass_treble));
+                out_r = (out_r *bass_treble + high_cut_iir(1, 1, out_r) * (1.0 - bass_treble));
+            }
+        }
+
+        buffer[c] += (int32_t) out_l;
+        buffer[c + 1] += (int32_t) out_r;
+    }
+
+    pas16->opl.reset_buffer(pas16->opl.priv);
+    pas16->opl2.reset_buffer(pas16->opl2.priv);
+}
+
+void
+pas16_get_music_buffer(int32_t *buffer, uint16_t len, void *priv)
 {
     const pas16_t *      pas16   = (const pas16_t *) priv;
     const mv508_mixer_t *mixer   = &pas16->mv508_mixer;
     const int32_t *      opl_buf = pas16->opl.update(pas16->opl.priv);
     double               bass_treble;
 
-    for (int c = 0; c < len * 2; c += 2) {
+    for (uint16_t c = 0; c < len * 2; c += 2) {
         double out_l = (((double) opl_buf[c]) * mixer->fm_l) * 0.7171630859375;
         double out_r = (((double) opl_buf[c + 1]) * mixer->fm_r) * 0.7171630859375;
 
@@ -2311,6 +3472,99 @@ pas16_speed_changed(void *priv)
     pas16_change_pit_clock_speed(priv);
 }
 
+/* Which models carry the SCSI port: all but the 16D. */
+static int
+pas16_has_scsi(uint8_t type)
+{
+    return (!type) || (type == 0x0f);
+}
+
+static uint32_t
+pas16_scsi_buses(const device_t *dev)
+{
+    return pas16_has_scsi(dev->local & 0xff) ? 1 : 0;
+}
+
+static void *
+pas_init(UNUSED(const device_t *info))
+{
+    pas16_t *pas16 = calloc(1, sizeof(pas16_t));
+
+    pas16->type = 0;
+    pas16->is_old_pas = 1;
+    pas16->has_scsi = pas16_has_scsi(pas16->type);
+    fm_driver_get(FM_YM3812, &pas16->opl);
+    fm_driver_get(FM_YM3812, &pas16->opl2);
+    pas16->irq = device_get_config_int("irq");
+    pas16->dma = device_get_config_int("dma");
+
+    /* Original PAS has a fixed base address of 388h */
+    for (uint32_t addr = 0x0000; addr <= 0xffff; addr += 0x0400) {
+        pas16_log("%04X-%04X: 1\n", 0x388 + addr, 0x388 + addr + 3);
+        if (addr != 0x1000)
+            io_handler(1, 0x388 + addr, 0x0004,
+                       pas_in, NULL, NULL, pas_out, NULL, NULL, pas16);
+        else
+                io_handler(1, 0x388 + addr, 0x0001,
+                           NULL, NULL, NULL, pas_out, NULL, NULL, pas16);
+    }
+
+    if (pas16->has_scsi) {
+        pas16->scsi = device_add(&scsi_pas_device);
+        timer_add(&pas16->scsi->timer, pas16_scsi_callback, pas16, 0);
+        timer_add(&pas16->scsi_timer, pas16_timeout_callback, pas16, 0);
+        other_scsi_present++;
+    }
+
+    pas16->pit = device_add(&i8253_ext_io_fast_device);
+    pas16_reset(pas16);
+    pas16->pit->dev_priv = pas16;
+    if (pas16->has_scsi) {
+        pas16->scsi_irq = pas16->type ? 11 : 7;
+        ncr5380_set_irq(&pas16->scsi->ncr, pas16->scsi_irq);
+    }
+    for (uint8_t i = 0; i < 3; i++)
+        pitf_ctr_set_gate(pas16->pit, i, 0);
+
+    pitf_ctr_set_out_func(pas16->pit, 0, pas16_pit_timer0);
+    pitf_ctr_set_out_func(pas16->pit, 1, pas16_pit_timer1);
+    pitf_ctr_set_using_timer(pas16->pit, 0, 1);
+    pitf_ctr_set_using_timer(pas16->pit, 1, 0);
+    pitf_ctr_set_using_timer(pas16->pit, 2, 0);
+
+    sound_add_handler(pas_get_buffer, pas16);
+    sound_in_add_handler(pas16_put_buffer, pas16);
+    sound_in_start_input();
+    music_add_handler(pas_get_music_buffer, pas16);
+    sound_set_cd_audio_filter(pasplus_filter_cd_audio, pas16);
+    if (device_get_config_int("control_pc_speaker"))
+        sound_set_pc_speaker_filter(pasplus_filter_pc_speaker, pas16);
+
+    if (device_get_config_int("receive_input"))
+        midi_in_handler(1, pas_input_msg, pas16_input_sysex, pas16_input_remain, pas16);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        if (i < 6)
+            lmc1982_bass_treble_4bits[i] = pow(10.0, (-((double) (12 - (i << 1))) / 10.0));
+        else if (i == 6)
+            lmc1982_bass_treble_4bits[i] = 0.0;
+        else if ((i > 6) && (i <= 12))
+            lmc1982_bass_treble_4bits[i] = 1.0 - pow(10.0, ((double) ((i - 6) << 1) / 10.0));
+        else
+            lmc1982_bass_treble_4bits[i] = 1.0 - pow(10.0, 1.2);
+    }
+
+    pas16->audio_mixer = 0x10;
+
+    /* YM3802 timer init */
+    timer_add(&pas16->ym3802_gentimer, ym3802_gentimer_poll, pas16, 0);
+
+    /* Gameport init */
+    pas16->gameport = gameport_add(&gameport_201_device);
+
+    return pas16;
+}
+
 static void *
 pas16_init(const device_t *info)
 {
@@ -2324,10 +3578,10 @@ pas16_init(const device_t *info)
     }
 
     pas16->type = info->local & 0xff;
-    pas16->has_scsi = (!pas16->type) || (pas16->type == 0x0f);
-    fm_driver_get(FM_YMF262, &pas16->opl);
+    pas16->has_scsi = pas16_has_scsi(pas16->type);
+    fm_driver_get_cs(FM_YMF262, &pas16->opl);
     sb_dsp_set_real_opl(&pas16->dsp, 1);
-    sb_dsp_init(&pas16->dsp, SB_DSP_201, SB_SUBTYPE_DEFAULT, pas16);
+    sb_dsp_init(&pas16->dsp, SB_DSP_200, SB_SUBTYPE_MVD201, pas16);
     pas16->mpu = (mpu_t *) calloc(1, sizeof(mpu_t));
     mpu401_init(pas16->mpu, 0, 0, M_UART, device_get_config_int("receive_input401"));
     sb_dsp_set_mpu(&pas16->dsp, pas16->mpu);
@@ -2344,7 +3598,7 @@ pas16_init(const device_t *info)
         other_scsi_present++;
     }
 
-    pas16->pit = device_add(&i8254_ext_io_fast_device);
+    pas16->pit = device_add(&i8253_ext_io_fast_device);
     pas16_reset(pas16);
     pas16->pit->dev_priv = pas16;
     pas16->irq = pas16->type ? 10 : 5;
@@ -2366,12 +3620,18 @@ pas16_init(const device_t *info)
 
     if (pas16->type) {
         sound_add_handler(pas16_get_buffer, pas16);
+        sound_add_handler(pas16_get_sb_buffer, pas16);
+        sound_in_add_handler(pas16_put_buffer, pas16);
+        sound_in_start_input();
         music_add_handler(pas16_get_music_buffer, pas16);
         sound_set_cd_audio_filter(pas16_filter_cd_audio, pas16);
         if (device_get_config_int("control_pc_speaker"))
             sound_set_pc_speaker_filter(pas16_filter_pc_speaker, pas16);
     } else {
         sound_add_handler(pasplus_get_buffer, pas16);
+        sound_add_handler(pasplus_get_sb_buffer, pas16);
+        sound_in_add_handler(pas16_put_buffer, pas16);
+        sound_in_start_input();
         music_add_handler(pasplus_get_music_buffer, pas16);
         sound_set_cd_audio_filter(pasplus_filter_cd_audio, pas16);
         if (device_get_config_int("control_pc_speaker"))
@@ -2379,7 +3639,7 @@ pas16_init(const device_t *info)
     }
 
     if (device_get_config_int("receive_input"))
-        midi_in_handler(1, pas16_input_msg, pas16_input_sysex, pas16);
+        midi_in_handler(1, pas16_input_msg, pas16_input_sysex, pas16_input_remain, pas16);
 
     for (uint8_t i = 0; i < 16; i++) {
         if (i < 6)
@@ -2394,6 +3654,10 @@ pas16_init(const device_t *info)
 
     pas16_next++;
 
+    /* Gameport init */
+    pas16->gameport = gameport_add(&gameport_pnp_1io_device);
+    gameport_remap(pas16->gameport, 0x201);
+
     return pas16;
 }
 
@@ -2406,6 +3670,65 @@ pas16_close(void *priv)
 
     pas16_next = 0;
 }
+
+static const device_config_t pas_config[] = {
+    {
+        .name           = "irq",
+        .description    = "IRQ",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = 7,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description = "IRQ 3",  .value =  3 },
+            { .description = "IRQ 5",  .value =  5 },
+            { .description = "IRQ 6",  .value =  6 },
+            { .description = "IRQ 7",  .value =  7 },
+            { .description = ""                    }
+        },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "dma",
+        .description    = "DMA",
+        .type           = CONFIG_SELECTION,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = {
+            { .description = "DMA 1", .value = 1 },
+            { .description = "DMA 2", .value = 2 },
+            { .description = "DMA 3", .value = 3 },
+            { .description = ""                  }
+        },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "control_pc_speaker",
+        .description    = "Control PC speaker",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    {
+        .name           = "receive_input",
+        .description    = "Receive MIDI input",
+        .type           = CONFIG_BINARY,
+        .default_string = NULL,
+        .default_int    = 1,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = { { 0 } }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+};
 
 static const device_config_t pas16_config[] = {
     {
@@ -2444,10 +3767,26 @@ static const device_config_t pas16_config[] = {
     { .name = "", .description = "", .type = CONFIG_END }
 };
 
+const device_t pas_device = {
+    .name          = "Media Vision Pro Audio Spectrum",
+    .internal_name = "pas",
+    .flags         = DEVICE_ISA | DEVICE_AUDIO_IN,
+    .local         = 0,
+    .init          = pas_init,
+    .close         = pas16_close,
+    .reset         = pas16_reset,
+    .available     = NULL,
+    .speed_changed = pas16_speed_changed,
+    .force_redraw  = NULL,
+    .config        = pas_config,
+    .short_name    = "PAS",
+    .scsi_buses    = pas16_scsi_buses
+};
+
 const device_t pasplus_device = {
-    .name          = "Pro Audio Spectrum Plus",
+    .name          = "Media Vision Pro Audio Spectrum Plus",
     .internal_name = "pasplus",
-    .flags         = DEVICE_ISA,
+    .flags         = DEVICE_ISA16 | DEVICE_AUDIO_IN,
     .local         = 0,
     .init          = pas16_init,
     .close         = pas16_close,
@@ -2455,13 +3794,15 @@ const device_t pasplus_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas16_config
+    .config        = pas16_config,
+    .short_name    = "PAS Plus",
+    .scsi_buses    = pas16_scsi_buses
 };
 
 const device_t pas16_device = {
-    .name          = "Pro Audio Spectrum 16",
+    .name          = "Media Vision Pro Audio Spectrum 16",
     .internal_name = "pas16",
-    .flags         = DEVICE_ISA16,
+    .flags         = DEVICE_ISA16 | DEVICE_AUDIO_IN,
     .local         = 0x0f,
     .init          = pas16_init,
     .close         = pas16_close,
@@ -2469,13 +3810,15 @@ const device_t pas16_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas16_config
+    .config        = pas16_config,
+    .short_name    = "PAS16",
+    .scsi_buses    = pas16_scsi_buses
 };
 
 const device_t pas16d_device = {
-    .name          = "Pro Audio Spectrum 16D",
+    .name          = "Media Vision Pro Audio Spectrum 16D",
     .internal_name = "pas16d",
-    .flags         = DEVICE_ISA16,
+    .flags         = DEVICE_ISA16 | DEVICE_AUDIO_IN,
     .local         = 0x0c,
     .init          = pas16_init,
     .close         = pas16_close,
@@ -2483,5 +3826,7 @@ const device_t pas16d_device = {
     .available     = NULL,
     .speed_changed = pas16_speed_changed,
     .force_redraw  = NULL,
-    .config        = pas16_config
+    .config        = pas16_config,
+    .short_name    = "PAS16D",
+    .scsi_buses    = pas16_scsi_buses
 };

@@ -20,6 +20,8 @@
 #ifndef EMU_SERIAL_H
 #define EMU_SERIAL_H
 
+#include <86box/char.h>
+
 #define SERIAL_8250          0
 #define SERIAL_8250_PCJR_3F8 1
 #define SERIAL_8250_PCJR_2F8 2
@@ -76,6 +78,9 @@ typedef struct serial_s {
     uint8_t transmit_enabled;
     uint8_t fifo_enabled;
     uint8_t bits;
+
+    /* Divides the receive timer down for the modem status poll. */
+    uint8_t status_divider;
     uint8_t data_bits;
     uint8_t baud_cycles;
     uint8_t txsr;
@@ -88,6 +93,8 @@ typedef struct serial_s {
     uint16_t out_new;
     uint16_t thr_empty;
 
+    uint8_t *reg_91;
+
     void *rcvr_fifo;
     void *xmit_fifo;
 
@@ -98,6 +105,8 @@ typedef struct serial_s {
     double     transmit_period;
 
     struct serial_device_s *sd;
+
+    char_port_t char_port;
 } serial_t;
 
 typedef struct serial_device_s {
@@ -107,11 +116,14 @@ typedef struct serial_device_s {
     void    (*lcr_callback)(struct serial_s *serial, void *priv, uint8_t lcr);
     void    (*transmit_period_callback)(struct serial_s *serial, void *priv, double transmit_period);
     void     *priv;
-    serial_t *serial;
 } serial_device_t;
 
 typedef struct serial_port_s {
     uint8_t enabled;
+    uint8_t hotunplug;
+    int     device;
+
+    serial_t *serial;
 } serial_port_t;
 
 extern serial_port_t com_ports[SERIAL_MAX];
@@ -132,6 +144,9 @@ extern serial_t *serial_attach_ex_2(int port,
 #define serial_attach(port, rcr_callback, dev_write, priv) \
         serial_attach_ex(port, rcr_callback, dev_write, NULL, NULL, priv);
 
+extern void      serial_devices_init(void);
+extern void      serial_devices_close(int soft);
+extern void      serial_devices_reset(void);
 extern void      serial_remove(serial_t *dev);
 extern void      serial_setup(serial_t *dev, uint16_t addr, uint8_t irq);
 extern void      serial_irq(serial_t *dev, uint8_t irq);
@@ -141,6 +156,7 @@ extern void      serial_set_next_inst(int ni);
 extern void      serial_standalone_init(void);
 extern void      serial_set_clock_src(serial_t *dev, double clock_src);
 extern void      serial_set_type(serial_t *dev, uint8_t type);
+extern void      serial_set_card_selected_feedback(serial_t *dev, uint8_t *reg_91);
 extern void      serial_reset_port(serial_t *dev);
 extern uint8_t   serial_read(uint16_t addr, void *priv);
 extern void      serial_device_timeout(void *priv);

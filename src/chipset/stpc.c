@@ -36,6 +36,7 @@
 #include <86box/serial.h>
 #include <86box/lpt.h>
 #include <86box/chipset.h>
+#include "cpu.h"
 
 #define STPC_CONSUMER2 0x104a020b
 #define STPC_ATLAS     0x104a0210
@@ -213,7 +214,7 @@ stpc_localbus_read(uint16_t addr, void *priv)
 }
 
 static void
-stpc_nb_write(int func, int addr, uint8_t val, void *priv)
+stpc_nb_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     stpc_t *dev = (stpc_t *) priv;
 
@@ -260,7 +261,7 @@ stpc_nb_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-stpc_nb_read(int func, int addr, void *priv)
+stpc_nb_read(int func, int addr, UNUSED(int len), void *priv)
 {
     const stpc_t *dev = (stpc_t *) priv;
     uint8_t       ret;
@@ -337,7 +338,7 @@ stpc_ide_bm_handlers(stpc_t *dev)
 }
 
 static void
-stpc_ide_write(int func, int addr, uint8_t val, void *priv)
+stpc_ide_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     stpc_t *dev = (stpc_t *) priv;
 
@@ -445,7 +446,7 @@ stpc_ide_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-stpc_ide_read(int func, int addr, void *priv)
+stpc_ide_read(int func, int addr, UNUSED(int len), void *priv)
 {
     const stpc_t *dev = (stpc_t *) priv;
     uint8_t       ret;
@@ -466,12 +467,12 @@ stpc_ide_read(int func, int addr, void *priv)
 }
 
 static void
-stpc_isab_write(int func, int addr, uint8_t val, void *priv)
+stpc_isab_write(int func, int addr, int len, uint8_t val, void *priv)
 {
     stpc_t *dev = (stpc_t *) priv;
 
     if ((func == 1) && (dev->local != STPC_ATLAS)) {
-        stpc_ide_write(0, addr, val, priv);
+        stpc_ide_write(0, addr, len, val, priv);
         return;
     }
 
@@ -507,13 +508,13 @@ stpc_isab_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-stpc_isab_read(int func, int addr, void *priv)
+stpc_isab_read(int func, int addr, int len, void *priv)
 {
     const stpc_t *dev = (stpc_t *) priv;
     uint8_t       ret;
 
     if ((func == 1) && (dev->local != STPC_ATLAS))
-        ret = stpc_ide_read(0, addr, priv);
+        ret = stpc_ide_read(0, addr, len, priv);
     else if (func > 0)
         ret = 0xff;
     else
@@ -524,7 +525,7 @@ stpc_isab_read(int func, int addr, void *priv)
 }
 
 static void
-stpc_usb_write(int func, int addr, uint8_t val, void *priv)
+stpc_usb_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     stpc_t *dev = (stpc_t *) priv;
 
@@ -547,6 +548,8 @@ stpc_usb_write(int func, int addr, uint8_t val, void *priv)
         case 0x0b:
         case 0x0e:
         case 0x10:
+        case 0x14 ... 0x27:
+        case 0x3d:
             return;
 
         case 0x05:
@@ -554,7 +557,9 @@ stpc_usb_write(int func, int addr, uint8_t val, void *priv)
             break;
 
         case 0x11:
-            dev->pci_conf[3][addr] = val & 0xf0;
+            /* BAR bits 11-8 read 0: a 4 KB window (PM 8.10.3). */
+            val &= 0xf0;
+            dev->pci_conf[3][addr] = val;
             ohci_update_mem_mapping(dev->usb, dev->pci_conf[3][0x11], dev->pci_conf[3][0x12], dev->pci_conf[3][0x13], 1);
             break;
 
@@ -571,7 +576,7 @@ stpc_usb_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-stpc_usb_read(int func, int addr, void *priv)
+stpc_usb_read(int func, int addr, UNUSED(int len), void *priv)
 {
     const stpc_t *dev = (stpc_t *) priv;
     uint8_t       ret;
@@ -736,6 +741,18 @@ stpc_reg_write(uint16_t addr, uint8_t val, void *priv)
                 stpc_serial_handlers(val);
                 break;
 
+            case 0x71:
+                if (val & 0x02) {
+                    stpc_log("STPC: Software SMI\n");
+                    dev->regs[0x74] = 0x80;
+                    val &= 0xfd;
+                    smi_raise();
+                }
+                break;
+
+            case 0x73 ... 0x79:
+                val &= ~val;
+                break;
             default:
                 break;
         }
@@ -779,6 +796,10 @@ stpc_reset(void *priv)
         dev->regs[0x4c] |= 0x80; /* LPT strap */
     if (stpc_serial_handlers(0x00))
         dev->regs[0x4c] |= 0x03; /* UART straps */
+
+    /* BAR_OHCI resets to 0 (PM 8.10.3); usb_reset unmaps the window. */
+    if (dev->usb)
+        memset(&dev->pci_conf[3][0x10], 0x00, 4);
 }
 
 static void
@@ -791,7 +812,7 @@ stpc_setup(stpc_t *dev)
                   stpc_reg_read, NULL, NULL, stpc_reg_write, NULL, NULL, dev);
 
     /* Northbridge */
-    if (dev->local & STPC_CLIENT) {
+    if (dev->local == STPC_CLIENT) {
         dev->pci_conf[0][0x00] = 0x0e;
         dev->pci_conf[0][0x01] = 0x10;
         dev->pci_conf[0][0x02] = 0x64;
@@ -875,6 +896,9 @@ stpc_setup(stpc_t *dev)
         dev->pci_conf[3][0x02] = 0x30;
         dev->pci_conf[3][0x03] = 0x02;
 
+        /* Bus Master and Memory Enable are hardwired to 1 (PM 8.9.3). */
+        dev->pci_conf[3][0x04] = 0x06;
+
         dev->pci_conf[3][0x06] = 0x80;
         dev->pci_conf[3][0x07] = 0x02;
 
@@ -886,6 +910,9 @@ stpc_setup(stpc_t *dev)
                  STPC chipsets say 0x80, which is indeed multi-function (as the STPC Atlas programming manual
                  indicates as well), and Windows 2000 also issues a 0x7B STOP error if it is 0x40. */
         dev->pci_conf[3][0x0e] = /*0x40*/ 0x80;
+
+        /* The USB function interrupts on INTA# (PM 22.3.1). */
+        dev->pci_conf[3][0x3d] = PCI_INTA;
     }
 
     /* PCI setup */

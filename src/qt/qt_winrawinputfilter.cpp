@@ -46,6 +46,7 @@
 #include <QApplication>
 #include <QTimer>
 
+#include <cmath>
 #include <atomic>
 
 #include <windows.h>
@@ -71,8 +72,11 @@ extern void win_keyboard_handle(uint32_t scancode, int up, int e0, int e1);
 #include "qt_rendererstack.hpp"
 #include "qt_util.hpp"
 #include "ui_qt_mainwindow.h"
+#include "qt_osd.hpp"
 
+#ifdef USE_QDARKSTYLE
 bool NewDarkMode = FALSE;
+#endif
 
 extern MainWindow *main_window;
 
@@ -307,6 +311,9 @@ device_change(WPARAM wParam, LPARAM lParam)
 void
 selectDarkMode()
 {
+#ifndef USE_QDARKSTYLE
+    util::applyColorScheme();
+#else
     bool OldDarkMode = NewDarkMode;
 
     if (!util::isWindowsLightTheme()) {
@@ -315,9 +322,11 @@ selectDarkMode()
         if (!f.exists())
             printf("Unable to set stylesheet, file not found\n");
         else {
-            f.open(QFile::ReadOnly | QFile::Text);
-            QTextStream ts(&f);
-            qApp->setStyleSheet(ts.readAll());
+            if (f.open(QFile::ReadOnly | QFile::Text)) {
+                QTextStream ts(&f);
+                qApp->setStyleSheet(ts.readAll());
+            } else
+                printf("Unable to set stylesheet, unable to open file\n");
         }
         QPalette palette(qApp->palette());
         palette.setColor(QPalette::Link, Qt::white);
@@ -352,6 +361,7 @@ selectDarkMode()
                                                        mon->mon_scrnsz_y, i);
             }
         });
+#endif
 }
 
 bool
@@ -374,6 +384,8 @@ WindowsRawInputFilter::nativeEventFilter(const QByteArray &eventType, void *mess
                         }
                     }
                     return true;
+#ifdef USE_QDARKSTYLE
+                /* Newer Qt follows system color scheme changes by itself */
                 case WM_SETTINGCHANGE:
                     if ((((void *) msg->lParam) != nullptr) && (wcscmp(L"ImmersiveColorSet", (wchar_t *) msg->lParam) == 0) && color_scheme == 0) {
 
@@ -391,9 +403,11 @@ WindowsRawInputFilter::nativeEventFilter(const QByteArray &eventType, void *mess
                             if (!f.exists())
                                 printf("Unable to set stylesheet, file not found\n");
                             else {
-                                f.open(QFile::ReadOnly | QFile::Text);
-                                QTextStream ts(&f);
-                                qApp->setStyleSheet(ts.readAll());
+                                if (f.open(QFile::ReadOnly | QFile::Text)) {
+                                    QTextStream ts(&f);
+                                    qApp->setStyleSheet(ts.readAll());
+                                } else
+                                    printf("Unable to set stylesheet, unable to open file\n");
                             }
                             QPalette palette(qApp->palette());
                             palette.setColor(QPalette::Link, Qt::white);
@@ -437,6 +451,7 @@ WindowsRawInputFilter::nativeEventFilter(const QByteArray &eventType, void *mess
                             });
                     }
                     break;
+#endif
                 case WM_SYSKEYDOWN:
                     /* Stop processing of Alt-F4 */
                     if (msg->wParam == 0x73)
@@ -482,8 +497,9 @@ WindowsRawInputFilter::keyboard_handle(PRAWINPUT raw)
 {
     RAWKEYBOARD rawKB = raw->data.keyboard;
 
-    win_keyboard_handle(rawKB.MakeCode, (rawKB.Flags & RI_KEY_BREAK),
-                        (rawKB.Flags & RI_KEY_E0), (rawKB.Flags & RI_KEY_E1));
+    if (!qt_osd_is_visible())
+        win_keyboard_handle(rawKB.MakeCode, (rawKB.Flags & RI_KEY_BREAK),
+                            (rawKB.Flags & RI_KEY_E0), (rawKB.Flags & RI_KEY_E1));
 }
 
 void
@@ -526,13 +542,13 @@ WindowsRawInputFilter::mouse_handle(RAWMOUSE *raw)
     mouse_set_buttons_ex(b);
 
     if (state.usButtonFlags & RI_MOUSE_WHEEL) {
-        delta_z = (SHORT) state.usButtonData / 120;
+        delta_z = (SHORT) state.usButtonData;
         mouse_set_z(delta_z);
     } else
         delta_z = 0;
 
     if (state.usButtonFlags & RI_MOUSE_HWHEEL) {
-        delta_w = (SHORT) state.usButtonData / 120;
+        delta_w = (SHORT) state.usButtonData;
         mouse_set_w(delta_w);
     } else
         delta_w = 0;

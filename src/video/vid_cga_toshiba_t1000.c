@@ -227,8 +227,8 @@ t1000_recalctimings(t1000_t *t1000)
     disptime           = 651;
     _dispontime        = 640;
     _dispofftime       = disptime - _dispontime;
-    t1000->dispontime  = (uint64_t) (_dispontime * xt_cpu_multi);
-    t1000->dispofftime = (uint64_t) (_dispofftime * xt_cpu_multi);
+    t1000->dispontime  = (uint64_t) (int64_t) (_dispontime * xt_cpu_multi);
+    t1000->dispofftime = (uint64_t) (int64_t) (_dispofftime * xt_cpu_multi);
 }
 
 /* Draw a row of text in 80-column mode */
@@ -489,6 +489,7 @@ t1000_poll(void *priv)
             }
         }
         t1000->displine++;
+        video_lightpen_check_trigger_strobe(8, t1000->cga.displine * (t1000->cga.double_type ? 2 : 1), 0, t1000->cga.firstline + 8, 8. * (1. / (xt_cpu_multi / (cpuclock * (double) (1ULL << 32)))), t1000->cga.monitor_used);
         /* Hardcode a fixed refresh rate and VSYNC timing */
         if (t1000->displine == 200) /* Start of VSYNC */
         {
@@ -505,10 +506,12 @@ t1000_poll(void *priv)
         if (t1000->dispon) {
             t1000->cga.cgastat &= ~1;
         }
+        video_lightpen_hsync();
         timer_advance_u64(&t1000->cga.timer, t1000->dispontime);
         t1000->linepos = 0;
 
         if (t1000->displine == 200) {
+            video_lightpen_vsync();
             /* Hardcode 640x200 window size */
             if ((T1000_XSIZE != xsize) || (T1000_YSIZE != ysize) || video_force_resize_get()) {
                 xsize = T1000_XSIZE;
@@ -660,7 +663,7 @@ t1000_init(UNUSED(const device_t *info))
     t1000->invert    = device_get_config_int("invert");
 
     /* 16k video RAM */
-    t1000->vram = malloc(0x4000);
+    t1000->vram = calloc(1, 0x4000);
 
     timer_set_callback(&t1000->cga.timer, t1000_poll);
     timer_set_p(&t1000->cga.timer, t1000);
@@ -707,8 +710,8 @@ static const device_config_t t1000_config[] = {
         .description = "Language",
         .type = CONFIG_SELECTION,
         .selection = {
-            { .description = "USA", .value = 0 },
-            { .description = "Danish", .value = 1 }
+            { .description = "English (US)", .value = 0 },
+            { .description = "Danish",       .value = 1 }
         },
         .default_int = 0
     },

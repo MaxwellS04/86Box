@@ -19,14 +19,14 @@
 def repository = ['https://github.com/86Box/86Box.git', scm.userRemoteConfigs[0].url]
 def commitBrowser = ['https://github.com/86Box/86Box/commit/%s', null]
 def branch = ['master', scm.branches[0].name]
-def buildType = ['beta', 'alpha']
+def buildType = ['alpha', 'alpha']
 def tarballFlags = ['', '-t']
 def buildBranch = env.JOB_BASE_NAME.contains('-') ? 1 : 0
 
 def osArchs = [
-	'Windows': ['64'],
+	'Windows': ['64', 'ARM64'],
 	'Linux': ['x86_64', 'arm64'],
-	'macOS': ['x86_64+x86_64h+arm64']
+	'macOS': ['x86_64+arm64']
 ]
 
 def osFlags = [
@@ -47,29 +47,12 @@ def archNamesMac = [
 	'x86_64+arm64': 'Universal (Intel and Apple Silicon)'
 ]
 
-def dynarecNames = [
-	'ODR': 'Old Recompiler (recommended)',
-	'NDR': 'New Recompiler (beta)',
-	'NoDR': 'No Dynamic Recompiler'
-]
-
-def dynarecArchs = [
-	'64': ['ODR', 'NDR'],
-	'x86_64': ['ODR', 'NDR'],
-	'arm64': ['NDR'],
-	'x86_64+arm64': ['ODR', 'NDR']
-]
-
 def dynarecFlags = [
-	'ODR': '-D NEW_DYNAREC=OFF',
-	'NDR': '-D NEW_DYNAREC=ON',
-	'NoDR': '-D DYNAREC=OFF'
-]
-
-def dynarecSlugs = [
-	'ODR': '',
-	'NDR': '-NDR',
-	'NoDR': ''
+	'64': '-D DYNAREC=ON',
+	'x86_64': '-D DYNAREC=ON',
+	'arm64': '-D DYNAREC=ON',
+	'x86_64+arm64': '-D DYNAREC=ON',
+	'': '-D DYNAREC=OFF'
 ]
 
 def presets = [
@@ -90,7 +73,7 @@ def presetFlags = [
 
 def gitClone(repository, branch) {
 	/* Clean workspace. */
-	cleanWs()
+	cleanWs(disableDeferredWipeout: true, deleteDirs: true, notFailBuild: true)
 
 	/* Perform git clone if stashed data isn't available yet, or if
 	   this is not debian.citadel where stash is faster than clone. */
@@ -147,7 +130,7 @@ def runBuild(args) {
 	if (isUnix())
 		return sh(returnStatus: true, script: "chmod u+x '$WORKSPACE/.ci/build.sh' && exec '$WORKSPACE/.ci/build.sh' $args")
 	else
-		return bat(returnStatus: true, script: "C:\\msys64\\msys2_shell.cmd -msys2 -defterm -here -no-start -c 'exec \"\$(cygpath -u \\'%WORKSPACE%\\')/.ci/build.sh\" $args'")
+		return bat(returnStatus: true, script: "C:\\msys64\\msys2_shell.cmd -ucrt64 -defterm -here -no-start -c 'exec \"\$(cygpath -u \\'%WORKSPACE%\\')/.ci/build.sh\" $args'")
 }
 
 def failStage() {
@@ -209,7 +192,7 @@ pipeline {
 							gitClone(repository[buildBranch], branch[buildBranch])
 
 							/* Clean workspace, in case this is running in a non-build node. */
-							cleanWs()
+							cleanWs(disableDeferredWipeout: true, deleteDirs: true, notFailBuild: true)
 						}
 					}
 
@@ -255,47 +238,46 @@ pipeline {
 					osArchs.each { os, thisOsArchs ->
 						def combinations = [:]
 						thisOsArchs.each { arch ->
-							def archSlug = arch.replace('+x86_64h', '') /* all instances of arch except the one passed to -b */
-							def thisArchDynarecs = dynarecArchs[archSlug.toLowerCase()]
-							if (!thisArchDynarecs)
-								thisArchDynarecs = ['NoDR']
-							thisArchDynarecs.each { dynarec ->
-								presets.each { preset ->
-									def combination = "$os $archSlug $dynarec $preset"
-									combinations[combination] = {
-										catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
-											retry(10) {
-												node(os) {
-													stage(combination) {
-														/* Run git clone. */
-														gitClone(repository[buildBranch], branch[buildBranch])
+							presets.each { preset ->
+								def combination = "$os $arch $preset"
+								combinations[combination] = {
+									catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
+										retry(10) {
+											node("$os && ($arch || all)") {
+												stage(combination) {
+													/* Run git clone. */
+													gitClone(repository[buildBranch], branch[buildBranch])
 
-														/* Switch to output directory. */
-														dir("${env.WORKSPACE_TMP}/output") {
-															/* Run build process. */
-															def packageName = "${env.JOB_BASE_NAME}${dynarecSlugs[dynarec]}${presetSlugs[preset]}-$os-$archSlug$buildSuffix"
-															def ret = -1
-															def archName = archNames[archSlug]
-															if (os == 'macOS')
-																archName = archNamesMac[archSlug]
-															dir(dynarecNames[dynarec]) {
-																dir("$os - $archName") {
-																	ret = runBuild("-b \"$packageName\" \"$arch\" ${presetFlags[preset]} ${dynarecFlags[dynarec]} ${osFlags[os]} $buildFlags")
-																}
-															}
-
-															if (ret == 0) {
-																/* Archive resulting artifacts. */
-																archiveArtifacts artifacts: "**/$packageName*", defaultExcludes: false
-															} else {
-																/* Fail this stage. */
-																failStage()
-															}
+													/* Switch to output directory. */
+													dir("${env.WORKSPACE_TMP}/output") {
+														/* Run build process. */
+														def packageName = "${env.JOB_BASE_NAME}${presetSlugs[preset]}-$os-$arch$buildSuffix"
+														def ret = -1
+														def archLower = arch.toLowerCase()
+														def archName = (os == 'macOS') ? archNamesMac[archLower] : archNames[archLower]
+														def thisDynarecFlags = dynarecFlags.containsKey(archLower) ? dynarecFlags[archLower] : dynarecFlags['']
+														dir("$os - $archName") {
+															ret = runBuild("-b \"$packageName\" \"$arch\" ${presetFlags[preset]} $thisDynarecFlags ${osFlags[os]} $buildFlags")
 														}
 
-														/* Clean up. */
-														removeDir("${env.WORKSPACE_TMP}/output")
+														if (ret == 0 || ret == 50) {
+															/* Archive resulting artifacts. */
+															archiveArtifacts artifacts: "**/$packageName*", defaultExcludes: false
+
+															/* Notify about macOS notarization failures. */
+															if (ret == 50) {
+																catchError(message: 'macOS notarization failed', buildResult: currentBuild.currentResult, stageResult: 'UNSTABLE') {
+																	def x = 1 / 0
+																}
+															}
+														} else {
+															/* Fail this stage. */
+															failStage()
+														}
 													}
+
+													/* Clean up. */
+													removeDir("${env.WORKSPACE_TMP}/output")
 												}
 											}
 										}
@@ -320,7 +302,7 @@ pipeline {
 						def result = currentBuild.currentResult.toLowerCase()
 						discordSend webhookURL: DISCORD_WEBHOOK_URL,
 							    title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
-							    link: env.BUILD_URL,
+							    link: "https://86box.net/builds#${env.BUILD_NUMBER}",
 							    result: currentBuild.currentResult,
 							    description: "**Status:** ${result}\n\u2060", /* word joiner character forces a blank line */
 							    enableArtifactsList: false,
@@ -328,7 +310,7 @@ pipeline {
 							    scmWebUrl: commitBrowser[buildBranch]
 
 						/* Notify IRC, which needs a node for whatever reason. */
-						node('citadel || rg || master') {
+						node('citadel || newkomi || master') {
 							ircNotify()
 						}
 					} catch (e) {

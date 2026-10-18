@@ -36,6 +36,7 @@
 #include <86box/acpi.h>
 #include <86box/dma.h>
 #include <86box/machine.h>
+#include <86box/sound.h>
 #include <86box/i2c.h>
 #include <86box/video.h>
 #include <86box/smbus.h>
@@ -49,6 +50,7 @@ atomic_int acpi_pwrbut_pressed = 0;
 int        acpi_enabled        = 0;
 
 static double cpu_to_acpi;
+static int    acpi_pmtmr_read_cycles;
 
 static int      acpi_power_on    = 0;
 static uint64_t acpi_last_clock  = 0ULL;
@@ -255,13 +257,15 @@ acpi_raise_smi(void *priv, int do_smi)
                 dev->regs.smi_active = 1;
             }
         } else if ((dev->vendor == VEN_INTEL) || (dev->vendor == VEN_ALI)) {
-            if (do_smi)
+            if (do_smi) {
                 smi_raise();
-            /* Clear bit 16 of GLBCTL. */
-            if (dev->vendor == VEN_INTEL)
-                dev->regs.glbctl &= ~0x00010000;
-            else
-                dev->regs.ali_soft_smi = 1;
+
+                /* Clear bit 16 of GLBCTL. */
+                if (dev->vendor == VEN_INTEL)
+                    dev->regs.glbctl &= ~0x00010000;
+                else
+                    dev->regs.ali_soft_smi = 1;
+            }
         } else if (dev->vendor == VEN_SMC) {
             if (do_smi)
                 smi_raise();
@@ -306,7 +310,7 @@ acpi_reg_read_common_regs(UNUSED(int size), uint16_t addr, void *priv)
         case 0x0a:
         case 0x0b:
             /* PMTMR - Power Management Timer Register (IO) */
-            ret = (acpi_timer_get(dev) >> shift32) & 0xff;
+            ret = (dev->pmtmr_latch >> shift32) & 0xff;
 #ifdef USE_DYNAREC
             if (cpu_use_dynarec)
                 update_tsc();
@@ -466,16 +470,14 @@ acpi_reg_read_intel(int size, uint16_t addr, void *priv)
         case 0x31:
         case 0x32:
             /* GPIREG - General Purpose Input Register (IO) */
-            if (size == 1)
-                ret = dev->regs.gpireg[addr & 3];
+            ret = dev->regs.gpireg[addr & 3];
             break;
         case 0x34:
         case 0x35:
         case 0x36:
         case 0x37:
             /* GPOREG - General Purpose Output Register (IO) */
-            if (size == 1)
-                ret = dev->regs.gporeg[addr & 3];
+            ret = dev->regs.gporeg[addr & 3];
             break;
         default:
             ret = acpi_reg_read_common_regs(size, addr, priv);
@@ -1030,7 +1032,8 @@ acpi_reg_write_common_regs(UNUSED(int size), uint16_t addr, uint8_t val, void *p
                         dma_reset();
                         dma_set_at(1);
 
-                        device_reset_all(DEVICE_PCI);
+                        /* The AGP slot shares the bus RST# signal. */
+                        device_reset_all(DEVICE_PCI | DEVICE_AGP);
                     }
 
                     if (sus_typ & SUS_RESET_CPU)
@@ -1197,6 +1200,11 @@ acpi_reg_write_intel(int size, uint16_t addr, uint8_t val, void *priv)
         case 0x2b:
             /* GLBCTL - Global Control Register (IO) */
             dev->regs.glbctl = ((dev->regs.glbctl & ~(0xff << shift32)) | (val << shift32)) & 0x0701ff07;
+            /* Check if there's anything still pending and re-assert SMI# if it is. */
+            if (((dev->regs.glbctl & 0x00010001) == 0x00010001) &&
+                (((dev->regs.glbsts & 0x20) && dev->apm->do_smi) ||
+                 ((dev->regs.glbsts & 0x01) && (dev->regs.glben & 0x02))))
+                acpi_raise_smi(dev, 1);
             /* Setting BIOS_RLS also sets GBL_STS and generates SMI. */
             if (dev->regs.glbctl & 0x00000002) {
                 dev->regs.pmsts |= 0x20;
@@ -1218,11 +1226,9 @@ acpi_reg_write_intel(int size, uint16_t addr, uint8_t val, void *priv)
         case 0x36:
         case 0x37:
             /* GPOREG - General Purpose Output Register (IO) */
-            if (size == 1) {
-                dev->regs.gporeg[addr & 3] = val;
-                if ((addr == 0x34) && (machines[machine].init == machine_at_cubx_init))
-                    hdc_onboard_enabled = (val & 0x01);
-            }
+            dev->regs.gporeg[addr & 3] = val;
+            if ((addr == 0x34) && (machines[machine].init == machine_at_cubx_init))
+                hdc_onboard_enabled = (val & 0x01);
             break;
         default:
             acpi_reg_write_common_regs(size, addr, val, priv);
@@ -1982,10 +1988,34 @@ acpi_aux_reg_write_common(int size, uint16_t addr, uint8_t val, void *priv)
         acpi_aux_reg_write_smc(size, addr, val, priv);
 }
 
+static void
+acpi_latch_pmtmr(acpi_t *dev)
+{
+    dev->pmtmr_latch = acpi_timer_get(dev);
+
+    /* On real hardware, reading the timer takes longer than one of its ticks, so
+       two reads never return the same value, which Windows Vista and 7 rely on to
+       avoid a division by zero. Charge the read one tick, rather than returning the
+       value plus one when it has not changed: that made the timer go backwards, on
+       a third read within the same tick. */
+    cycles -= acpi_pmtmr_read_cycles;
+
+#ifdef USE_DYNAREC
+    if (cpu_use_dynarec)
+        update_tsc();
+#endif
+}
+
 static uint32_t
 acpi_reg_readl(uint16_t addr, void *priv)
 {
-    uint32_t ret = 0x00000000;
+    acpi_t *       dev = (acpi_t *) priv;
+    const uint16_t reg = addr - dev->io_base;
+
+    uint32_t       ret = 0x00000000;
+
+    if ((reg >= 0x0008) && (reg <= 0x000b))
+        acpi_latch_pmtmr(dev);
 
     ret = acpi_reg_read_common(4, addr, priv);
     ret |= (acpi_reg_read_common(4, addr + 1, priv) << 8);
@@ -2000,7 +2030,13 @@ acpi_reg_readl(uint16_t addr, void *priv)
 static uint16_t
 acpi_reg_readw(uint16_t addr, void *priv)
 {
-    uint16_t ret = 0x0000;
+    acpi_t *       dev = (acpi_t *) priv;
+    const uint16_t reg = addr - dev->io_base;
+
+    uint16_t       ret = 0x0000;
+
+    if ((reg >= 0x0008) && (reg <= 0x000b))
+        acpi_latch_pmtmr(dev);
 
     ret = acpi_reg_read_common(2, addr, priv);
     ret |= (acpi_reg_read_common(2, addr + 1, priv) << 8);
@@ -2013,7 +2049,13 @@ acpi_reg_readw(uint16_t addr, void *priv)
 static uint8_t
 acpi_reg_read(uint16_t addr, void *priv)
 {
-    uint8_t ret = 0x00;
+    acpi_t *       dev = (acpi_t *) priv;
+    const uint16_t reg = addr - dev->io_base;
+
+    uint8_t        ret = 0x00;
+
+    if ((reg >= 0x0008) && (reg <= 0x000b))
+        acpi_latch_pmtmr(dev);
 
     ret = acpi_reg_read_common(1, addr, priv);
 
@@ -2304,7 +2346,7 @@ acpi_apm_out(uint16_t port, uint8_t val, void *priv)
 
     acpi_log("[%04X:%08X] APM write: %04X = %02X (AX = %04X, BX = %04X, CX = %04X)\n", CS, cpu_state.pc, port, val, AX, BX, CX);
 
-    port &= 0x0001;
+    port &= (dev->vendor == VEN_ALI) ? 0x0003 : 0x0001;
 
     if (dev->vendor == VEN_ALI) {
         if (port == 0x0001) {
@@ -2335,7 +2377,7 @@ acpi_apm_in(uint16_t port, void *priv)
     const acpi_t *dev = (acpi_t *) priv;
     uint8_t       ret = 0xff;
 
-    port &= 0x0001;
+    port &= (dev->vendor == VEN_ALI) ? 0x0003 : 0x0001;
 
     if (dev->vendor == VEN_ALI) {
         if (port == 0x0001)
@@ -2364,13 +2406,44 @@ acpi_reset(void *priv)
        - Bit 3: 80-conductor cable on unknown IDE channel (active low)
        - Bit 1: 80-conductor cable on unknown IDE channel (active low) */
     dev->regs.gpireg[0] = (machines[machine].init == machine_at_m773_init) ? 0xf5 : 0xff;
-    dev->regs.gpireg[1] = 0xff;
+    /* Dell OptiPlex E1 and GX1:
+       - Bit 6: Chassis intrusion switch - must be cleared as otherwise POST complains that the chassis was opened
+       - Bit 3: ??? - must be cleared as otherwise POST complains about regulator failure */    
+    dev->regs.gpireg[0] = ((machines[machine].init == machine_at_optiplexe1_init) ||
+                           (machines[machine].init == machine_at_optiplexgx1_init)) ? 0xb7 : dev->regs.gpireg[0];
+    /* AST Bravo MS-T 6233:
+       - Bit 6: Setup access - must be cleared as otherwise F2 is ignored, the F2 prompts are not shown,
+                and the on-board LANDesk boot agent is not initialized
+       - Bit 5: Recovery mode - must be cleared as otherwise the machine enters recovery flash mode */
+    dev->regs.gpireg[0] = (machines[machine].init == machine_at_bravomst6233_init) ? 0x9f : dev->regs.gpireg[0];
+    /* AST Bravo MS-T 6233:
+       - Bits 7-5 (GPI15-13): On-board audio populated when all clear - the BIOS only configures the
+                              ES1869 (through its PnP bypass key) then
+       - Bit 1 (GPI9): Powered on by AC power restore rather than the power button - must be cleared as
+                       otherwise POST applies the AC power loss policy, which powers off on invalid CMOS */
+    if (machines[machine].init == machine_at_bravomst6233_init)
+        dev->regs.gpireg[1] = (sound_card_current[0] == SOUND_INTERNAL) ? 0x1d : 0xfd;
+    else
+        dev->regs.gpireg[1] = 0xff;
     /* A-Trend ATC7020BXII:
        - Bit 3: 80-conductor cable on secondary IDE channel (active low)
        - Bit 2: 80-conductor cable on primary IDE channel (active low)
        Gigabyte GA-686BX:
        - Bit 1: CMOS battery low (active high) */
-    dev->regs.gpireg[2] = dev->gpireg2_default;
+    if ((machines[machine].init == machine_at_al440lx_init) ||
+        (machines[machine].init == machine_at_se440bx2_init) ||
+        (machines[machine].init == machine_at_rc440bx_init) ||
+        (machines[machine].init == machine_at_bl440zx_init))
+        /* ED = Normal, DD (2-3) - Maintenance, BD, FD (none) - Recovery. */
+        dev->regs.gpireg[2] = 0xed;
+    else if ((machines[machine].init == machine_at_in440ex_init) || (machines[machine].init == machine_at_in440exd_init))
+        /* Bit 5: CMOS clear jumper(?) - must be set as otherwise CMOS is not saved */
+        dev->regs.gpireg[2] = 0xfd;
+    else if (machines[machine].init == machine_at_em440_init)
+        /* Bit 4: Recovery mode - must be set as otherwise the machine enters recovery flash mode */
+        dev->regs.gpireg[2] = 0xff;
+    else
+        dev->regs.gpireg[2] = dev->gpireg2_default;
     for (uint8_t i = 0; i < 4; i++)
         dev->regs.gporeg[i] = dev->gporeg_default[i];
     if (dev->vendor == VEN_VIA_596B) {
@@ -2438,15 +2511,20 @@ acpi_reset(void *priv)
         dev->regs.gp_tmr = 0xff;
         dev->regs.gpe_io = 0x00030b9f;
         dev->regs.gpe_mul = 0x1001;
+
+        /* Fix for the IN530 CMOS reset jumper */
+        if (machines[machine].init == machine_at_in530_init)
+            dev->regs.gpe_pin = 0x0003ffff;
     }
 }
 
 static void
 acpi_speed_changed(void *priv)
 {
-    acpi_t *dev        = (acpi_t *) priv;
-    cpu_to_acpi        = ACPI_TIMER_FREQ / cpuclock;
-    bool timer_enabled = timer_is_enabled(&dev->timer);
+    acpi_t *dev            = (acpi_t *) priv;
+    cpu_to_acpi            = ACPI_TIMER_FREQ / cpuclock;
+    acpi_pmtmr_read_cycles = (int) (cpuclock / ACPI_TIMER_FREQ) + 1;
+    bool timer_enabled     = timer_is_enabled(&dev->timer);
     timer_stop(&dev->timer);
 
     if (timer_enabled)
@@ -2505,8 +2583,9 @@ acpi_init(const device_t *info)
     if (dev == NULL)
         return NULL;
 
-    cpu_to_acpi = ACPI_TIMER_FREQ / cpuclock;
-    dev->vendor = info->local;
+    cpu_to_acpi            = ACPI_TIMER_FREQ / cpuclock;
+    acpi_pmtmr_read_cycles = (int) (cpuclock / ACPI_TIMER_FREQ) + 1;
+    dev->vendor            = info->local;
 
     dev->irq_line = 9;
 

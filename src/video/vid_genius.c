@@ -336,8 +336,8 @@ genius_recalctimings(genius_t *genius)
     _dispofftime = disptime - _dispontime;
     _dispontime *= crtcconst;
     _dispofftime *= crtcconst;
-    genius->dispontime  = (uint64_t) (_dispontime);
-    genius->dispofftime = (uint64_t) (_dispofftime);
+    genius->dispontime  = (uint64_t) (int64_t) (_dispontime);
+    genius->dispofftime = (uint64_t) (int64_t) (_dispofftime);
 }
 
 static int
@@ -684,6 +684,7 @@ genius_poll(void *priv)
                 genius_textline(genius, background, 1, 1);
 
             video_process_8(GENIUS_XSIZE, genius->displine);
+            video_lightpen_check_trigger_strobe(0, genius->displine, 0, 0, 53216000.0, monitor_index_global);
         }
         genius->displine++;
         /* Hardcode a fixed refresh rate and VSYNC timing */
@@ -704,9 +705,11 @@ genius_poll(void *priv)
             genius->mda_stat &= ~1;
         }
         timer_advance_u64(&genius->timer, genius->dispontime);
+        video_lightpen_hsync();
         genius->linepos = 0;
 
         if (genius->displine == 1008) {
+            video_lightpen_vsync();
             /* Hardcode GENIUS_XSIZE * GENIUS_YSIZE window size */
             if (GENIUS_XSIZE != xsize || GENIUS_YSIZE != ysize) {
                 xsize = GENIUS_XSIZE;
@@ -736,14 +739,12 @@ genius_poll(void *priv)
 void *
 genius_init(UNUSED(const device_t *info))
 {
-    genius_t *genius = malloc(sizeof(genius_t));
-
-    memset(genius, 0, sizeof(genius_t));
+    genius_t *genius = calloc(1, sizeof(genius_t));
 
     video_inform(VIDEO_FLAG_TYPE_MDA, &timing_genius);
 
     /* 160k video RAM */
-    genius->vram = malloc(0x28000);
+    genius->vram = calloc(1, 0x28000);
 
     video_load_font(BIOS_ROM_PATH, FONT_FORMAT_MDSI_GENIUS, LOAD_FONT_NO_OFFSET);
 

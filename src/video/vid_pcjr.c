@@ -85,8 +85,8 @@ pcjr_recalc_timings(pcjr_t *pcjr)
     _dispofftime = disptime - _dispontime;
     _dispontime *= CGACONST;
     _dispofftime *= CGACONST;
-    pcjr->dispontime  = (uint64_t) (_dispontime);
-    pcjr->dispofftime = (uint64_t) (_dispofftime);
+    pcjr->dispontime  = (uint64_t) (int64_t) (_dispontime);
+    pcjr->dispofftime = (uint64_t) (int64_t) (_dispofftime);
 }
 
 static int
@@ -139,8 +139,10 @@ vid_out(uint16_t addr, uint8_t val, void *priv)
                 if (pcjr->array_index & 0x10)
                     val &= 0x0f;
                 pcjr->array[pcjr->array_index & 0x1f] = val;
-                if (!(pcjr->array_index & 0x1f))
-                    update_cga16_color(val);
+                if ((pcjr->array_index & 0x1f) == 0x02)
+                    update_cga16_color(pcjr->array[0], val & 0xf);
+                else if (!(pcjr->array_index & 0x1f))
+                    update_cga16_color(val, pcjr->array[2] & 0xf);
             }
             pcjr->array_ff = !pcjr->array_ff;
             break;
@@ -233,43 +235,44 @@ vid_read(uint32_t addr, void *priv)
 static int
 vid_get_h_overscan_delta(pcjr_t *pcjr)
 {
-    int def;
+    int def; /* Reference sync-start-to-display delay from the PCjr BIOS. */
     int coef;
     int ret;
 
     switch ((pcjr->array[0] & 0x13) | ((pcjr->array[3] & 0x08) << 5)) {
         case 0x13: /*320x200x16*/
-            def = 0x56;
+            def = 28;
             coef = 8;
             break;
         case 0x12: /*160x200x16*/
-            def = 0x2c; /* I'm going to assume a datasheet erratum here. */
+            def = 14;
             coef = 16;
             break;
         case 0x03: /*640x200x4*/
-            def = 0x56;
+            def = 28;
             coef = 8;
             break;
         case 0x01: /*80 column text*/
-            def = 0x5a;
+            def = 24;
             coef = 8;
             break;
         case 0x00: /*40 column text*/
         default:
-            def = 0x2c;
+            def = 13;
             coef = 16;
             break;
         case 0x02: /*320x200x4*/
-            def = 0x2b;
+            def = 14;
             coef = 16;
             break;
         case 0x102: /*640x200x2*/
-            def = 0x2b;
+            def = 14;
             coef = 16;
             break;
     }
 
-    ret = def - pcjr->crtc[0x02];
+    /* Preserve PCjr sync-start alignment; raw R3 width is not a viewport offset. */
+    ret = video_6845_get_hsync_delay(pcjr->crtc, 0) - def;
 
     if (ret < -8)
         ret = -8;
@@ -747,10 +750,12 @@ pcjr_vid_init(pcjr_t *pcjr)
                   vid_in, NULL, NULL, vid_out, NULL, NULL, pcjr);
     timer_add(&pcjr->timer, vid_poll, pcjr, 1);
 
-    if (pcjr->composite)
-        cga_palette = 0;
-    else
-        cga_palette = (display_type << 1);
+    if (&(cga_palette) != NULL) {
+        if (pcjr->composite)
+            cga_palette = 0;
+        else
+            cga_palette = (display_type << 1);
+    }
     cgapal_rebuild();
 
     pcjr->double_type = device_get_config_int("double_type");

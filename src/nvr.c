@@ -100,10 +100,14 @@ nvr_is_leap(int year)
 int
 nvr_get_days(int month, int year)
 {
-    if (month != 2)
-        return (days_in_month[month - 1]);
+    int ret;
 
-    return (nvr_is_leap(year) ? 29 : 28);
+    if (month == 2)
+        ret = (nvr_is_leap(year) ? 29 : 28);
+    else
+        ret = (int) (days_in_month[month - 1]);
+
+    return ret;
 }
 
 /* One more second has passed, update the internal clock. */
@@ -160,7 +164,7 @@ nvr_init(nvr_t *nvr)
 
     /* Set up the NVR file's name. */
     c       = strlen(machine_get_nvr_name()) + 5;
-    nvr->fn = (char *) malloc(c + 1);
+    nvr->fn = (char *) calloc(1, c + 1);
     sprintf(nvr->fn, "%s.nvr", machine_get_nvr_name());
 
     /* Initialize the internal clock as needed. */

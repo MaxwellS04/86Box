@@ -68,24 +68,34 @@
      <addaction name="actionPen"/>
      <addaction name="actionCursor_Puck"/>
     </widget>
-    <addaction name="menuTablet_tool"/>
-    <addaction name="separator"/>
+    <widget class="QMenu" name="menuInput_device">
+     <property name="title">
+      <string>Input &amp;device</string>
+     </property>
+     <addaction name="actionMouse"/>
+     <addaction name="actionTablet"/>
+     <addaction name="actionTablet_Crosshair"/>
+    </widget>
     <addaction name="actionKeyboard_requires_capture"/>
     <addaction name="actionRight_CTRL_is_left_ALT"/>
     <addaction name="separator"/>
     <addaction name="actionUpdate_mouse_every_CPU_frame"/>
+    <addaction name="menuInput_device"/>
+    <addaction name="menuTablet_tool"/>
     <addaction name="separator"/>
-    <addaction name="actionAuto_pause"/>
     <addaction name="actionPause"/>
     <addaction name="separator"/>
-    <addaction name="actionFast_forward"/>
+    <addaction name="actionFullscreen"/>
+    <addaction name="actionToggle_OSD"/>
     <addaction name="separator"/>
+    <addaction name="actionFast_forward"/>
     <addaction name="actionForce_interpretation"/>
     <addaction name="separator"/>
     <addaction name="actionHard_Reset"/>
     <addaction name="actionCtrl_Alt_Del"/>
     <addaction name="separator"/>
     <addaction name="actionCtrl_Alt_Esc"/>
+    <addaction name="actionNon_maskable_interrupt"/>
     <addaction name="separator"/>
     <addaction name="actionACPI_Shutdown"/>
     <addaction name="actionExit"/>
@@ -133,7 +143,7 @@
       <string>Re&amp;nderer</string>
      </property>
      <addaction name="actionSoftware_Renderer"/>
-     <addaction name="actionOpenGL_3_0_Core"/>
+     <addaction name="actionOpenGL"/>
      <addaction name="actionVulkan"/>
      <addaction name="actionVNC"/>
     </widget>
@@ -169,32 +179,6 @@
      <addaction name="actionFullScreen_int"/>
      <addaction name="actionFullScreen_int43"/>
     </widget>
-    <widget class="QMenu" name="menuEGA_S_VGA_settings">
-     <property name="title">
-      <string>EGA/(S)&amp;VGA settings</string>
-     </property>
-     <widget class="QMenu" name="menuVGA_screen_type">
-      <property name="title">
-       <string>VGA screen &amp;type</string>
-      </property>
-      <addaction name="actionRGB_Color"/>
-      <addaction name="actionRGB_Grayscale"/>
-      <addaction name="actionAmber_monitor"/>
-      <addaction name="actionGreen_monitor"/>
-      <addaction name="actionWhite_monitor"/>
-     </widget>
-     <widget class="QMenu" name="menuGrayscale_conversion_type">
-      <property name="title">
-       <string>Grayscale &amp;conversion type</string>
-      </property>
-      <addaction name="actionBT601_NTSC_PAL"/>
-      <addaction name="actionBT709_HDTV"/>
-      <addaction name="actionAverage"/>
-     </widget>
-     <addaction name="actionInverted_VGA_monitor"/>
-     <addaction name="menuVGA_screen_type"/>
-     <addaction name="menuGrayscale_conversion_type"/>
-    </widget>
     <widget class="QMenu" name="menuOpenGL_input_stretch_mode">
      <property name="title">
       <string>OpenGL input stretch mode</string>
@@ -222,30 +206,27 @@
     </widget>
     <addaction name="actionHide_tool_bar"/>
     <addaction name="actionHide_status_bar"/>
-    <addaction name="separator"/>
     <addaction name="actionShow_non_primary_monitors"/>
+    <addaction name="separator"/>
     <addaction name="actionResizable_window"/>
     <addaction name="actionRemember_size_and_position"/>
+    <addaction name="actionSpecify_dimensions"/>
+    <addaction name="actionForce_4_3_display_ratio"/>
+    <addaction name="actionForce_device_aspect_ratio"/>
+    <addaction name="separator"/>
+    <addaction name="menuFullscreen_stretch_mode"/>
+    <addaction name="actionApply_fullscreen_stretch_mode_when_maximized"/>
+    <addaction name="actionCGA_composite_settings"/>
+    <addaction name="separator"/>
+    <addaction name="menuWindow_scale_factor"/>
+    <addaction name="actionHiDPI_scaling"/>
+    <addaction name="separator"/>
+    <addaction name="menuFilter_method"/>
     <addaction name="separator"/>
     <addaction name="menuRenderer"/>
     <addaction name="actionRenderer_options"/>
     <addaction name="menuOpenGL_input_stretch_mode"/>
     <addaction name="menuOpenGL_input_scale"/>
-    <addaction name="separator"/>
-    <addaction name="actionSpecify_dimensions"/>
-    <addaction name="actionForce_4_3_display_ratio"/>
-    <addaction name="menuWindow_scale_factor"/>
-    <addaction name="menuFilter_method"/>
-    <addaction name="actionHiDPI_scaling"/>
-    <addaction name="separator"/>
-    <addaction name="actionFullscreen"/>
-    <addaction name="menuFullscreen_stretch_mode"/>
-    <addaction name="actionApply_fullscreen_stretch_mode_when_maximized"/>
-    <addaction name="actionCGA_composite_settings"/>
-    <addaction name="menuEGA_S_VGA_settings"/>
-    <addaction name="separator"/>
-    <addaction name="actionCGA_PCjr_Tandy_EGA_S_VGA_overscan"/>
-    <addaction name="actionChange_contrast_for_monochrome_display"/>
    </widget>
    <widget class="QMenu" name="menuMedia">
     <property name="title">
@@ -331,14 +312,6 @@
     <string>&amp;Update mouse every CPU frame</string>
    </property>
   </action>
-  <action name="actionAuto_pause">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Auto-pause on focus loss</string>
-   </property>
-  </action>
   <action name="actionKeyboard_requires_capture">
    <property name="checkable">
     <bool>true</bool>
@@ -391,6 +364,14 @@
     <string>Press Ctrl+Alt+Esc</string>
    </property>
   </action>
+  <action name="actionNon_maskable_interrupt">
+   <property name="text">
+    <string>&amp;Non-maskable interrupt</string>
+   </property>
+   <property name="toolTip">
+    <string>Non-maskable interrupt</string>
+   </property>
+  </action>
   <action name="actionPause">
    <property name="icon">
     <iconset resource="../qt_resources.qrc">
@@ -426,6 +407,11 @@
   <action name="actionFullscreen">
    <property name="text">
     <string>&amp;Fullscreen</string>
+   </property>
+  </action>
+  <action name="actionToggle_OSD">
+   <property name="text">
+    <string>Toggle &amp;on-screen display</string>
    </property>
   </action>
   <action name="actionSoftware_Renderer">
@@ -476,28 +462,23 @@
     <string>Force &amp;4:3 display ratio</string>
    </property>
   </action>
+  <action name="actionForce_device_aspect_ratio">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Force &amp;machine display ratio</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
   <action name="actionHiDPI_scaling">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
     <string>Hi&amp;DPI scaling</string>
-   </property>
-  </action>
-  <action name="actionCGA_PCjr_Tandy_EGA_S_VGA_overscan">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>CGA/PCjr/Tandy/E&amp;GA/(S)VGA overscan</string>
-   </property>
-  </action>
-  <action name="actionChange_contrast_for_monochrome_display">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Change contrast for &amp;monochrome display</string>
    </property>
   </action>
   <action name="action0_5x">
@@ -636,78 +617,6 @@
     <string>4:&amp;3 Integer scale</string>
    </property>
   </action>
-  <action name="actionInverted_VGA_monitor">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Inverted VGA monitor</string>
-   </property>
-  </action>
-  <action name="actionRGB_Color">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>RGB &amp;Color</string>
-   </property>
-  </action>
-  <action name="actionRGB_Grayscale">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;RGB Grayscale</string>
-   </property>
-  </action>
-  <action name="actionAmber_monitor">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Amber monitor</string>
-   </property>
-  </action>
-  <action name="actionGreen_monitor">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Green monitor</string>
-   </property>
-  </action>
-  <action name="actionWhite_monitor">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;White monitor</string>
-   </property>
-  </action>
-  <action name="actionBT601_NTSC_PAL">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>BT&amp;601 (NTSC/PAL)</string>
-   </property>
-  </action>
-  <action name="actionBT709_HDTV">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>BT&amp;709 (HDTV)</string>
-   </property>
-  </action>
-  <action name="actionAverage">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Average</string>
-   </property>
-  </action>
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About &amp;Qt</string>
@@ -744,6 +653,9 @@
    <property name="text">
     <string>Take s&amp;creenshot</string>
    </property>
+   <property name="toolTip">
+    <string>Take screenshot</string>
+   </property>
    <property name="icon">
     <iconset resource="../qt_resources.qrc">
      <normaloff>:/menuicons/qt/icons/take_screenshot.ico</normaloff>:/menuicons/qt/icons/take_screenshot.ico</iconset>
@@ -752,6 +664,9 @@
   <action name="actionTake_raw_screenshot">
    <property name="text">
     <string>Take &amp;raw screenshot</string>
+   </property>
+   <property name="toolTip">
+    <string>Take raw screenshot</string>
    </property>
    <property name="icon">
     <iconset resource="../qt_resources.qrc">
@@ -762,6 +677,9 @@
    <property name="text">
     <string>C&amp;opy screenshot</string>
    </property>
+   <property name="toolTip">
+    <string>Copy screenshot</string>
+   </property>
    <property name="icon">
     <iconset resource="../qt_resources.qrc">
      <normaloff>:/menuicons/qt/icons/copy_screenshot.ico</normaloff>:/menuicons/qt/icons/copy_screenshot.ico</iconset>
@@ -770,6 +688,9 @@
   <action name="actionCopy_raw_screenshot">
    <property name="text">
     <string>Copy r&amp;aw screenshot</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy raw screenshot</string>
    </property>
    <property name="icon">
     <iconset resource="../qt_resources.qrc">
@@ -786,12 +707,12 @@
     <string>Sound &amp;gain…</string>
    </property>
   </action>
-  <action name="actionOpenGL_3_0_Core">
+  <action name="actionOpenGL">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Open&amp;GL (3.0 Core)</string>
+    <string>Open&amp;GL</string>
    </property>
    <property name="vid_api" stdset="0">
     <number>1</number>
@@ -898,7 +819,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;VNC</string>
+    <string>V&amp;NC</string>
    </property>
    <property name="vid_api" stdset="0">
     <number>3</number>
@@ -1081,6 +1002,33 @@
    </property>
    <property name="text">
     <string>&amp;Fast forward</string>
+   </property>
+   <property name="toolTip">
+    <string>Fast forward</string>
+   </property>
+  </action>
+  <action name="actionMouse">
+   <property name="text">
+    <string>&amp;Mouse</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionTablet">
+   <property name="text">
+    <string>&amp;Tablet</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionTablet_Crosshair">
+   <property name="text">
+    <string>Tablet (&amp;Crosshair)</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
   </action>
  </widget>

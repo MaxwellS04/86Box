@@ -14,10 +14,15 @@
  */
 #include "qt_renderercommon.hpp"
 #include "qt_mainwindow.hpp"
+#include "qt_osd.hpp"
+#include "osd_core.hpp"
 
 #include <QPainter>
 #include <QWidget>
 #include <QEvent>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QWheelEvent>
 #include <QApplication>
 
 #include <cmath>
@@ -126,7 +131,16 @@ RendererCommon::onResize(int width, int height)
     width  = round(pixelRatio * width);
     height = round(pixelRatio * height);
 
-    if (is_fs && (video_fullscreen_scale_maximized ? (parent_max && main_is_max) : 1) && !(force_43 && vid_resize))
+    const auto &monitor = monitors[r_monitor_index];
+    if (!force_43 && force_device_aspect && monitor.mon_device_aspect_x > 0 && monitor.mon_device_aspect_y > 0) {
+        int dw = width;
+        int dh = qRound((double) width * monitor.mon_device_aspect_y / monitor.mon_device_aspect_x);
+        if (dh > height) {
+            dh = height;
+            dw = qRound((double) height * monitor.mon_device_aspect_x / monitor.mon_device_aspect_y);
+        }
+        destination.setRect((width - dw) / 2, (height - dh) / 2, dw, dh);
+    } else if (is_fs && (video_fullscreen_scale_maximized ? (parent_max && main_is_max) : 1) && !(force_43 && vid_resize))
         destination.setRect(0, 0, width, height);
     else {
         auto   temp_fullscreen_scale = video_fullscreen_scale;
@@ -200,11 +214,23 @@ RendererCommon::onResize(int width, int height)
         }
     }
 
+    if (destination.width() == 0) destination.setWidth(256);
+    if (destination.height() == 0) destination.setHeight(256);
+
     monitors[r_monitor_index].mon_res_x = (double) destination.width();
     monitors[r_monitor_index].mon_res_y = (double) destination.height();
 
     destinationF.setRect((double) destination.x() / (double) width, (double) destination.y() / (double) height,
                          (double) destination.width() / (double) width, (double) destination.height() / (double) height);
+}
+
+float
+RendererCommon::osdLayoutScaleHint() const
+{
+    const double dpr = std::max(1.0, pixelRatio);
+    const int logical_w = std::max(1, (int) std::lround((double) destination.width() / dpr));
+    const int logical_h = std::max(1, (int) std::lround((double) destination.height() / dpr));
+    return osd_core_layout_scale_for_output(logical_w, logical_h);
 }
 
 bool
@@ -215,18 +241,46 @@ RendererCommon::eventDelegate(QEvent *event, bool &result)
             return false;
         case QEvent::KeyPress:
         case QEvent::KeyRelease:
+            /* Keyboard for the OSD is intercepted centrally in
+             * MainWindow::eventFilter (the render window has no focus), so here
+             * we only forward to the machine as usual. */
             result = QApplication::sendEvent(main_window, event);
             return true;
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
         case QEvent::MouseButtonRelease:
+            if (qt_osd_is_visible()) {
+                auto *me = static_cast<QMouseEvent *>(event);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                qt_osd_mouse_pos((float) me->position().x(), (float) me->position().y());
+#else
+                qt_osd_mouse_pos((float) me->x(), (float) me->y());
+#endif
+                if (event->type() == QEvent::MouseButtonPress)
+                    qt_osd_mouse_button(me->button(), true);
+                else if (event->type() == QEvent::MouseButtonRelease)
+                    qt_osd_mouse_button(me->button(), false);
+                result = true;
+                return true;
+            }
+            result = QApplication::sendEvent(parentWidget, event);
+            return true;
+        case QEvent::Wheel:
+            if (qt_osd_is_visible()) {
+                auto *we = static_cast<QWheelEvent *>(event);
+                qt_osd_mouse_wheel((float) we->angleDelta().x() / 120.0f,
+                                   (float) we->angleDelta().y() / 120.0f);
+                result = true;
+                return true;
+            }
+            result = QApplication::sendEvent(parentWidget, event);
+            return true;
 #ifdef TOUCH_PR
         case QEvent::TouchBegin:
         case QEvent::TouchEnd:
         case QEvent::TouchCancel:
         case QEvent::TouchUpdate:
 #endif
-        case QEvent::Wheel:
         case QEvent::Enter:
         case QEvent::Leave:
             result = QApplication::sendEvent(parentWidget, event);

@@ -25,13 +25,15 @@
 
 #include "qt_specifydimensions.h"
 #include "qt_soundgain.hpp"
-#include "qt_progsettings.hpp"
+#include "qt_preferences.hpp"
 #include "qt_mcadevicelist.hpp"
 
 #include "qt_rendererstack.hpp"
 #include "qt_renderercommon.hpp"
 
 #include "qt_cgasettingsdialog.hpp"
+
+#include "qt_defs.hpp"
 
 extern "C" {
 #include <86box/86box.h>
@@ -64,6 +66,9 @@ extern int qt_nvr_save(void);
 #    include <minitrace/minitrace.h>
 #endif
 
+/* to avoid including the entire cpu.h */
+extern void nmi_raise(void);
+
 extern bool cpu_thread_running;
 extern bool fast_forward;
 };
@@ -88,6 +93,7 @@ extern bool fast_forward;
 #include <QString>
 #include <QDir>
 #include <QSysInfo>
+#include <QEventLoop>
 #if QT_CONFIG(vulkan)
 #    include <QVulkanInstance>
 #    include <QVulkanFunctions>
@@ -104,6 +110,7 @@ void qt_set_sequence_auto_mnemonic(bool b);
 #include "qt_machinestatus.hpp"
 #include "qt_mediamenu.hpp"
 #include "qt_util.hpp"
+#include "qt_osd.hpp"
 
 #if defined __unix__ && !defined __HAIKU__
 #    ifndef Q_OS_MACOS
@@ -165,12 +172,33 @@ keyb_filter(BMessage *message, BHandler **target, BMessageFilter *filter)
 static BMessageFilter *filter;
 #endif
 
-extern int      cpu_force_interpreter;
+extern int cpu_force_interpreter;
 
 extern void     qt_mouse_capture(int);
 extern "C" void qt_blit(int x, int y, int w, int h, int monitor_index);
 
 extern MainWindow *main_window;
+
+int main_window_blocked = 0;
+int exiting_manually    = 0;
+
+#ifdef Q_OS_WINDOWS
+static bool
+canProcessUiEventsInCurrentState()
+{
+    const bool has_modal_widget  = QApplication::activeModalWidget() != nullptr;
+    const bool has_settings_open = main_window && (main_window->findChild<Settings *>() != nullptr);
+    return !cpu_thread_run || dopause || has_modal_widget || has_settings_open || main_window_blocked;
+}
+
+static void
+processEventsOnlyWhenPausedOrModal()
+{
+    if (!canProcessUiEventsInCurrentState())
+        return;
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+}
+#endif
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -189,8 +217,10 @@ MainWindow::MainWindow(QWidget *parent)
     main_window = this;
     ui->setupUi(this);
     status->setSoundMenu(ui->menuSound);
+    dynarecMenu = new QMenu(this);
+    dynarecMenu->addAction(ui->actionForce_interpretation);
+    status->setDynarecMenu(dynarecMenu);
     ui->actionMute_Unmute->setText(sound_muted ? tr("&Unmute") : tr("&Mute"));
-    ui->menuEGA_S_VGA_settings->menuAction()->setMenuRole(QAction::NoRole);
     ui->stackedWidget->setMouseTracking(true);
     statusBar()->setVisible(!hide_status_bar);
 
@@ -199,11 +229,17 @@ MainWindow::MainWindow(QWidget *parent)
     frameRateTimer->setInterval(1000);
     frameRateTimer->setSingleShot(false);
     connect(frameRateTimer, &QTimer::timeout, [hertz_label] {
-        auto hz = monitors[0].mon_actualrenderedframes.load();
+        if (monitors[0].mon_dpms) {
+            hertz_label->setText(tr("Monitor in sleep mode"));
+            hertz_label->setToolTip(tr("Monitor in sleep mode"));
+        } else {
+            auto hz = monitors[0].mon_actualrenderedframes.load();
 #ifdef SCREENSHOT_MODE
-        hz = ((hz + 2) / 5) * 5;
+            hz = ((hz + 2) / 5) * 5;
 #endif
-        hertz_label->setText(tr("%1 Hz").arg(QString::number(hz) + (monitors[0].mon_interlace ? "i" : "")));
+            hertz_label->setText(tr("%1 Hz").arg(QString::number(hz) + (monitors[0].mon_interlace ? "i" : "")));
+            hertz_label->setToolTip(tr("Refresh rate"));
+        }
     });
     statusBar()->addPermanentWidget(hertz_label);
     frameRateTimer->start(1000);
@@ -239,10 +275,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     QTimer *ledKeyboardTimer = new QTimer(this);
     ledKeyboardTimer->setTimerType(Qt::CoarseTimer);
-    ledKeyboardTimer->setInterval(20);
+    ledKeyboardTimer->setInterval(100);
     connect(ledKeyboardTimer, &QTimer::timeout, this, [this]() {
-        uint8_t prev_caps = 255, prev_num = 255, prev_scroll = 255, prev_kana = 255;
-        uint8_t caps, num, scroll, kana;
+        static uint8_t prev_caps = 255, prev_num = 255, prev_scroll = 255, prev_kana = 255;
+        uint8_t        caps, num, scroll, kana;
         keyboard_get_states(&caps, &num, &scroll, &kana);
 
         if (num_label->isVisible() && prev_num != num)
@@ -268,19 +304,26 @@ MainWindow::MainWindow(QWidget *parent)
     statusBar()->setStyleSheet("QStatusBar::item {border: None; } QStatusBar QLabel { margin-right: 2px; margin-bottom: 1px; }");
     this->centralWidget()->setStyleSheet("background-color: black;");
     ui->toolBar->setVisible(!hide_tool_bar);
-#ifdef _WIN32
-    ui->toolBar->setBackgroundRole(QPalette::Light);
-#endif
     renderers[0].reset(nullptr);
-    auto toolbar_spacer = new QWidget();
-    toolbar_spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ui->toolBar->addWidget(toolbar_spacer);
 
-    auto toolbar_label = new QLabel();
-    ui->toolBar->addWidget(toolbar_label);
+    auto toolbar_label_widget = new QWidget();
+    auto toolbar_label_layout = new QHBoxLayout(toolbar_label_widget);
+    toolbar_label_layout->setContentsMargins(0, 0, 0, 0);
 
+    toolbar_label = new QLabel();
+    toolbar_label->setMinimumWidth(0);
+    toolbar_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    toolbar_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    toolbar_label_layout->addWidget(toolbar_label);
+    toolbar_label_widget->setMinimumWidth(0);
+    toolbar_label_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    ui->toolBar->addWidget(toolbar_label_widget);
+
+    this->setWindowFlag(Qt::CustomizeWindowHint, true);
     this->setWindowFlag(Qt::MSWindowsFixedSizeDialogHint, vid_resize != 1);
     this->setWindowFlag(Qt::WindowMaximizeButtonHint, vid_resize == 1);
+    this->setWindowFlag(Qt::WindowFullscreenButtonHint, vid_resize == 1);
 
     QString vmname(vm_name);
     if (vmname.at(vmname.size() - 1) == '"' || vmname.at(vmname.size() - 1) == '\'')
@@ -288,12 +331,9 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowTitle(QString("%1 - %2 %3").arg(vmname, EMU_NAME, EMU_VERSION_FULL));
 
     connect(this, &MainWindow::forceInterpretationCompleted, this, [this]() {
-        const auto fi_icon      = cpu_force_interpreter ? QIcon(":/menuicons/qt/icons/recompiler.ico") :
-                                                          QIcon(":/menuicons/qt/icons/interpreter.ico");
-        const auto tooltip_text = cpu_force_interpreter ? QString(tr("Allow recompilation")) :
-                                                          QString(tr("Force interpretation"));
-        const auto menu_text    = cpu_force_interpreter ? QString(tr("&Allow recompilation")) :
-                                                          QString(tr("&Force interpretation"));
+        const auto fi_icon      = cpu_force_interpreter ? QIcon(":/menuicons/qt/icons/recompiler.ico") : QIcon(":/menuicons/qt/icons/interpreter.ico");
+        const auto tooltip_text = cpu_force_interpreter ? QString(tr("Allow recompilation")) : QString(tr("Force interpretation"));
+        const auto menu_text    = cpu_force_interpreter ? QString(tr("&Allow recompilation")) : QString(tr("&Force interpretation"));
 
         ui->actionForce_interpretation->setIcon(fi_icon);
         ui->actionForce_interpretation->setToolTip(tooltip_text);
@@ -303,18 +343,42 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(this, &MainWindow::hardResetCompleted, this, [this]() {
+        refreshDisplayRatioActions();
         ui->actionMCA_devices->setVisible(machine_has_bus(machine, MACHINE_BUS_MCA));
         ui_update_force_interpreter();
+        updateMouseStrings();
         num_label->setVisible(machine_has_bus(machine, MACHINE_BUS_PS2_PORTS | MACHINE_BUS_AT_KBD));
         scroll_label->setVisible(machine_has_bus(machine, MACHINE_BUS_PS2_PORTS | MACHINE_BUS_AT_KBD));
         caps_label->setVisible(machine_has_bus(machine, MACHINE_BUS_PS2_PORTS | MACHINE_BUS_AT_KBD));
         int ext_ax_kbd = machine_has_bus(machine, MACHINE_BUS_PS2_PORTS | MACHINE_BUS_AT_KBD) && (keyboard_type == KEYBOARD_TYPE_AX);
-        int int_ax_kbd = machine_has_flags(machine, MACHINE_KEYBOARD_JIS) && !machine_has_bus(machine, MACHINE_BUS_PS2_PORTS);
+        int int_ax_kbd = machine_has_flags(machine, MACHINE_KEYBOARD_AX) && !machine_has_bus(machine, MACHINE_BUS_PS2_PORTS);
         kana_label->setVisible(ext_ax_kbd || int_ax_kbd);
-        while (QApplication::overrideCursor())
-            QApplication::restoreOverrideCursor();
+
+        ui->actionMouse->setEnabled(true);
+        ui->actionTablet->setEnabled(true);
+        ui->actionTablet_Crosshair->setEnabled(true);
+        if (!mouse_both_enabled()) {
+            if (!mouse_type) {
+                ui->actionMouse->setDisabled(true);
+                if (mouse_input_mode == 0)
+                    mouse_input_mode = 1;
+            }
+
+            if (!tablet_type) {
+                ui->actionTablet->setDisabled(true);
+                ui->actionTablet_Crosshair->setDisabled(true);
+                if (mouse_input_mode > 0)
+                    mouse_input_mode = 0;
+            }
+        }
+
+        ui->menuInput_device->menuAction()->setVisible(tablet_type);
+
+        if (mouse_input_mode >= 1 && QApplication::overrideCursor())
+            while (QApplication::overrideCursor())
+                QApplication::restoreOverrideCursor();
 #ifdef USE_WACOM
-        ui->menuTablet_tool->menuAction()->setVisible(mouse_input_mode >= 1);
+        ui->menuTablet_tool->menuAction()->setVisible(tablet_type && (strstr(tablet_get_internal_name(tablet_type), "wacom") != NULL));
 #else
         ui->menuTablet_tool->menuAction()->setVisible(false);
 #endif
@@ -328,19 +392,24 @@ MainWindow::MainWindow(QWidget *parent)
         }
 
         ui->actionCGA_composite_settings->setEnabled(enable_comp_option);
+
+        if (mouse_input_mode == 0)
+            ui->actionMouse->setChecked(1);
+        if (mouse_input_mode == 1)
+            ui->actionTablet->setChecked(1);
+        if (mouse_input_mode == 2)
+            ui->actionTablet_Crosshair->setChecked(1);
     });
 
     connect(this, &MainWindow::showMessageForNonQtThread, this, &MainWindow::showMessage_, Qt::QueuedConnection);
 
-    connect(this, &MainWindow::setTitle, this, [toolbar_label](const QString &title) {
-        if (dopause && !hide_tool_bar) {
-            toolbar_label->setText(toolbar_label->text() + tr(" - PAUSED"));
+    connect(this, &MainWindow::setTitle, this, [this](const QString &title) {
+        if (hide_tool_bar)
             return;
-        }
-        if (!hide_tool_bar)
-            toolbar_label->setText(title);
+        else
+            toolbar_text = title;
+        toolbar_label->setText(toolbar_label->fontMetrics().elidedText(toolbar_text, Qt::ElideRight, toolbar_label->width()));
     });
-    connect(this, &MainWindow::getTitleForNonQtThread, this, &MainWindow::getTitle_, Qt::BlockingQueuedConnection);
 
     connect(this, &MainWindow::updateMenuResizeOptions, [this]() {
         ui->actionResizable_window->setEnabled(vid_resize != 2);
@@ -355,13 +424,24 @@ MainWindow::MainWindow(QWidget *parent)
     emit updateMenuResizeOptions();
 
     connect(this, &MainWindow::setMouseCapture, this, [this](bool state) {
-        mouse_capture = state ? 1 : 0;
+        const int old_mouse_capture = mouse_capture;
+        mouse_capture               = state ? 1 : 0;
+
+        if (mouse_capture == old_mouse_capture)
+            return;
+
         qt_mouse_capture(mouse_capture);
         if (mouse_capture) {
             if (hook_enabled)
                 this->grabKeyboard();
-            if (ui->stackedWidget->mouse_capture_func)
+            if (ui->stackedWidget->mouse_capture_func) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                auto *win = ui->stackedWidget->captureWindow();
+                ui->stackedWidget->mouse_capture_func(win ? win : this->windowHandle());
+#else
                 ui->stackedWidget->mouse_capture_func(this->windowHandle());
+#endif
+            }
         } else {
             this->releaseKeyboard();
             if (ui->stackedWidget->mouse_uncapture_func) {
@@ -405,6 +485,14 @@ MainWindow::MainWindow(QWidget *parent)
             if (resizableonce == false)
                 ui->stackedWidget->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
             resizableonce = true;
+        }
+        if (!hide_status_bar) {
+            statusBar()->hide();
+            statusBar()->show();
+        }
+        if (!hide_tool_bar) {
+            ui->toolBar->hide();
+            ui->toolBar->show();
         }
         if (!QApplication::platformName().contains("eglfs") && vid_resize != 1) {
             w = static_cast<int>(w / (!dpi_scale ? util::screenOfWidget(this)->devicePixelRatio() : 1.));
@@ -459,6 +547,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionEnable_Discord_integration->setChecked(enable_discord);
     ui->actionApply_fullscreen_stretch_mode_when_maximized->setChecked(video_fullscreen_scale_maximized);
 
+#ifdef Q_OS_MACOS
+    ui->actionApply_fullscreen_stretch_mode_when_maximized->setVisible(false);
+#endif
+
 #ifndef DISCORD
     ui->actionEnable_Discord_integration->setVisible(false);
 #else
@@ -470,7 +562,7 @@ MainWindow::MainWindow(QWidget *parent)
             fprintf(stderr, "OpenGL renderers are unsupported on %s.\n", QApplication::platformName().toUtf8().data());
         vid_api = RENDERER_SOFTWARE;
         ui->actionVulkan->setVisible(false);
-        ui->actionOpenGL_3_0_Core->setVisible(false);
+        ui->actionOpenGL->setVisible(false);
     }
 
 #ifndef USE_VNC
@@ -502,7 +594,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     auto actGroup = new QActionGroup(this);
     actGroup->addAction(ui->actionSoftware_Renderer);
-    actGroup->addAction(ui->actionOpenGL_3_0_Core);
+    actGroup->addAction(ui->actionOpenGL);
     actGroup->addAction(ui->actionVulkan);
     actGroup->addAction(ui->actionVNC);
     actGroup->setExclusive(true);
@@ -686,6 +778,35 @@ MainWindow::MainWindow(QWidget *parent)
             ui->actionFullScreen_int43->setChecked(true);
             break;
     }
+
+    actGroup = new QActionGroup(this);
+    actGroup->addAction(ui->actionMouse);
+    actGroup->addAction(ui->actionTablet);
+    actGroup->addAction(ui->actionTablet_Crosshair);
+    actGroup->setExclusive(true);
+
+    connect(actGroup, &QActionGroup::triggered, this, [this](QAction *action) {
+        while (QApplication::overrideCursor())
+            QApplication::restoreOverrideCursor();
+        if (action == ui->actionMouse)
+            mouse_input_mode = 0;
+        if (action == ui->actionTablet)
+            mouse_input_mode = 1;
+        if (action == ui->actionTablet_Crosshair)
+            mouse_input_mode = 2;
+    });
+
+    auto orig_mouse_input_mode_initial = mouse_input_mode_initial;
+
+    if (orig_mouse_input_mode_initial == 0)
+        ui->actionMouse->setChecked(1);
+    if (orig_mouse_input_mode_initial == 1)
+        ui->actionTablet->setChecked(1);
+    if (orig_mouse_input_mode_initial == 2)
+        ui->actionTablet_Crosshair->setChecked(1);
+
+    mouse_input_mode_initial = orig_mouse_input_mode_initial;
+
     actGroup = new QActionGroup(this);
     actGroup->addAction(ui->actionFullScreen_stretch);
     actGroup->addAction(ui->actionFullScreen_43);
@@ -729,60 +850,7 @@ MainWindow::MainWindow(QWidget *parent)
         if (action == ui->action4_3_Integer_scale_gl)
             video_gl_input_scale_mode = FULLSCR_SCALE_INT43;
     });
-    switch (video_grayscale) {
-        default:
-            break;
-        case 0:
-            ui->actionRGB_Color->setChecked(true);
-            break;
-        case 1:
-            ui->actionRGB_Grayscale->setChecked(true);
-            break;
-        case 2:
-            ui->actionAmber_monitor->setChecked(true);
-            break;
-        case 3:
-            ui->actionGreen_monitor->setChecked(true);
-            break;
-        case 4:
-            ui->actionWhite_monitor->setChecked(true);
-            break;
-    }
-    actGroup = new QActionGroup(this);
-    actGroup->addAction(ui->actionRGB_Grayscale);
-    actGroup->addAction(ui->actionAmber_monitor);
-    actGroup->addAction(ui->actionGreen_monitor);
-    actGroup->addAction(ui->actionWhite_monitor);
-    actGroup->addAction(ui->actionRGB_Color);
-    switch (video_graytype) {
-        default:
-            break;
-        case 0:
-            ui->actionBT601_NTSC_PAL->setChecked(true);
-            break;
-        case 1:
-            ui->actionBT709_HDTV->setChecked(true);
-            break;
-        case 2:
-            ui->actionAverage->setChecked(true);
-            break;
-    }
-    actGroup = new QActionGroup(this);
-    actGroup->addAction(ui->actionBT601_NTSC_PAL);
-    actGroup->addAction(ui->actionBT709_HDTV);
-    actGroup->addAction(ui->actionAverage);
-    if (force_43 > 0) {
-        ui->actionForce_4_3_display_ratio->setChecked(true);
-    }
-    if (enable_overscan > 0) {
-        ui->actionCGA_PCjr_Tandy_EGA_S_VGA_overscan->setChecked(true);
-    }
-    if (vid_cga_contrast > 0) {
-        ui->actionChange_contrast_for_monochrome_display->setChecked(true);
-    }
-    if (do_auto_pause > 0) {
-        ui->actionAuto_pause->setChecked(true);
-    }
+    refreshDisplayRatioActions();
     if (force_constant_mouse > 0) {
         ui->actionUpdate_mouse_every_CPU_frame->setChecked(true);
     }
@@ -837,9 +905,9 @@ MainWindow::MainWindow(QWidget *parent)
     setContextMenuPolicy(Qt::PreventContextMenu);
     /* Remove default Shift+F10 handler, which unfocuses keyboard input even with no context menu. */
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    connect(new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F10), this), &QShortcut::activated, this, []() {});
+    connect(new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F10), this), &QShortcut::activated, this, []() { });
 #else
-    connect(new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F10), this), &QShortcut::activated, this, []() {});
+    connect(new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F10), this), &QShortcut::activated, this, []() { });
 #endif
 
     connect(this, &MainWindow::initRendererMonitor, this, &MainWindow::initRendererMonitorSlot);
@@ -925,18 +993,22 @@ MainWindow::MainWindow(QWidget *parent)
 void
 MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (mouse_capture) {
+    if (!exiting_manually && mouse_capture) {
         event->ignore();
         return;
     }
+    exiting_manually = 0;
 
-    if (confirm_exit && confirm_exit_cmdl && cpu_thread_run) {
+    const bool skip_confirmation = skip_exit_confirmation;
+    skip_exit_confirmation       = false;
+
+    if (!skip_confirmation && confirm_exit && confirm_exit_cmdl && cpu_thread_run) {
         QMessageBox questionbox(QMessageBox::Icon::Question, "86Box", tr("Are you sure you want to exit 86Box?"), QMessageBox::Yes | QMessageBox::No, this);
         auto        chkbox = new QCheckBox(tr("Don't show this message again"));
         questionbox.setCheckBox(chkbox);
         chkbox->setChecked(!confirm_exit);
 
-        QObject::connect(chkbox, &QCheckBox::stateChanged, [](int state) {
+        QObject::connect(chkbox, &QCheckBox::CHECK_STATE_CHANGED, [](int state) {
             confirm_exit = (state == Qt::CheckState::Unchecked);
         });
         questionbox.exec();
@@ -946,7 +1018,7 @@ MainWindow::closeEvent(QCloseEvent *event)
             return;
         }
     }
-    if (window_remember) {
+    if (window_remember && !video_fullscreen) {
         window_w = ui->stackedWidget->width();
         window_h = ui->stackedWidget->height();
         if (!QApplication::platformName().contains("wayland")) {
@@ -972,15 +1044,11 @@ MainWindow::closeEvent(QCloseEvent *event)
     for (int i = 1; i < MONITORS_NUM; i++) {
         if (renderers[i] && renderers[i]->isHidden()) {
             renderers[i]->show();
-            QApplication::processEvents();
             renderers[i]->switchRenderer(RendererStack::Renderer::Software);
-            QApplication::processEvents();
         }
     }
 
     qt_nvr_save();
-    config_save();
-    QApplication::processEvents();
     cpu_thread_run = 0;
     event->accept();
 }
@@ -1004,12 +1072,20 @@ MainWindow::updateShortcuts()
     // First we need to wipe all existing accelerators, otherwise Qt will
     // run into conflicts with old ones.
     ui->actionTake_screenshot->setShortcut(QKeySequence());
+    ui->actionTake_raw_screenshot->setShortcut(QKeySequence());
+    ui->actionCopy_screenshot->setShortcut(QKeySequence());
+    ui->actionCopy_raw_screenshot->setShortcut(QKeySequence());
     ui->actionCtrl_Alt_Del->setShortcut(QKeySequence());
     ui->actionCtrl_Alt_Esc->setShortcut(QKeySequence());
+    ui->actionNon_maskable_interrupt->setShortcut(QKeySequence());
     ui->actionHard_Reset->setShortcut(QKeySequence());
+    ui->actionFast_forward->setShortcut(QKeySequence());
+    ui->actionFullscreen->setShortcut(QKeySequence());
     ui->actionPause->setShortcut(QKeySequence());
     ui->actionMute_Unmute->setShortcut(QKeySequence());
     ui->actionForce_interpretation->setShortcut(QKeySequence());
+    ui->actionToggle_OSD->setShortcut(QKeySequence());
+    ui->actionExit->setShortcut(QKeySequence());
 
     int          accID;
     QKeySequence seq;
@@ -1017,6 +1093,18 @@ MainWindow::updateShortcuts()
     accID = FindAccelerator("screenshot");
     seq   = QKeySequence::fromString(acc_keys[accID].seq);
     ui->actionTake_screenshot->setShortcut(seq);
+
+    accID = FindAccelerator("raw_screenshot");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionTake_raw_screenshot->setShortcut(seq);
+
+    accID = FindAccelerator("copy_screenshot");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionCopy_screenshot->setShortcut(seq);
+
+    accID = FindAccelerator("copy_raw_screenshot");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionCopy_raw_screenshot->setShortcut(seq);
 
     accID = FindAccelerator("send_ctrl_alt_del");
     seq   = QKeySequence::fromString(acc_keys[accID].seq);
@@ -1026,9 +1114,17 @@ MainWindow::updateShortcuts()
     seq   = QKeySequence::fromString(acc_keys[accID].seq);
     ui->actionCtrl_Alt_Esc->setShortcut(seq);
 
+    accID = FindAccelerator("nmi");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionNon_maskable_interrupt->setShortcut(seq);
+
     accID = FindAccelerator("hard_reset");
     seq   = QKeySequence::fromString(acc_keys[accID].seq);
     ui->actionHard_Reset->setShortcut(seq);
+
+    accID = FindAccelerator("fast_forward");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionFast_forward->setShortcut(seq);
 
     accID = FindAccelerator("fullscreen");
     seq   = QKeySequence::fromString(acc_keys[accID].seq);
@@ -1045,14 +1141,38 @@ MainWindow::updateShortcuts()
     accID = FindAccelerator("force_interpretation");
     seq   = QKeySequence::fromString(acc_keys[accID].seq);
     ui->actionForce_interpretation->setShortcut(seq);
+
+    accID = FindAccelerator("toggle_osd");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionToggle_OSD->setShortcut(seq);
+
+    accID = FindAccelerator("exit");
+    seq   = QKeySequence::fromString(acc_keys[accID].seq);
+    ui->actionExit->setShortcut(seq);
+}
+
+void
+MainWindow::updateMouseStrings()
+{
+    const int     release_buttons = mouse_get_release_buttons();
+    const QString seq             = QKeySequence(acc_keys[FindAccelerator("release_mouse")].seq, QKeySequence::PortableText).toString(QKeySequence::NativeText);
+
+    if (release_buttons & MOUSE_RELEASE_MIDDLE)
+        mouseStringCaptured = tr("Press %1 or middle button to release mouse").arg(seq);
+    else if (release_buttons & MOUSE_RELEASE_THUMB)
+        mouseStringCaptured = tr("Press %1 or side button to release mouse").arg(seq);
+    else
+        mouseStringCaptured = tr("Press %1 to release mouse").arg(seq);
+
+    mouseStringUncaptured = tr("Click to capture mouse");
 }
 
 void
 MainWindow::resizeEvent(QResizeEvent *event)
 {
 #ifdef MOVE_WINDOW
-    //qDebug() << pos().x() + event->size().width();
-    //qDebug() << pos().y() + event->size().height();
+    // qDebug() << pos().x() + event->size().width();
+    // qDebug() << pos().y() + event->size().height();
     if (vid_resize == 1 || video_fullscreen)
         return;
 
@@ -1073,6 +1193,8 @@ MainWindow::resizeEvent(QResizeEvent *event)
     }
     move(newX, newY);
 #endif /*MOVE_WINDOW*/
+
+    toolbar_label->setText(toolbar_label->fontMetrics().elidedText(toolbar_text, Qt::ElideRight, toolbar_label->width()));
 }
 
 void
@@ -1167,9 +1289,6 @@ MainWindow::showEvent(QShowEvent *event)
     }
     if (window_remember && vid_resize == 1) {
         ui->stackedWidget->setFixedSize(window_w, window_h);
-#ifndef Q_OS_MACOS
-        QApplication::processEvents();
-#endif
         this->adjustSize();
     }
 }
@@ -1198,18 +1317,16 @@ void
 MainWindow::on_actionHard_Reset_triggered()
 {
     if (confirm_reset) {
-        QMessageBox questionbox(QMessageBox::Icon::Question, "86Box", tr("Are you sure you want to hard reset the emulated machine?"), QMessageBox::NoButton, this);
-        questionbox.addButton(tr("Reset"), QMessageBox::AcceptRole);
-        questionbox.addButton(tr("Don't reset"), QMessageBox::RejectRole);
-        const auto chkbox = new QCheckBox(tr("Don't show this message again"));
+        QMessageBox questionbox(QMessageBox::Icon::Question, EMU_NAME, tr("Are you sure you want to hard reset the emulated machine?"), QMessageBox::Yes | QMessageBox::No, this);
+        const auto  chkbox = new QCheckBox(tr("Don't show this message again"));
         questionbox.setCheckBox(chkbox);
         chkbox->setChecked(!confirm_reset);
 
-        QObject::connect(chkbox, &QCheckBox::stateChanged, [](int state) {
+        QObject::connect(chkbox, &QCheckBox::CHECK_STATE_CHANGED, [](int state) {
             confirm_reset = (state == Qt::CheckState::Unchecked);
         });
         questionbox.exec();
-        if (questionbox.result() == QDialog::Accepted) {
+        if (questionbox.result() == QMessageBox::No) {
             confirm_reset = true;
             return;
         }
@@ -1231,15 +1348,34 @@ MainWindow::on_actionCtrl_Alt_Esc_triggered()
 }
 
 void
+MainWindow::on_actionNon_maskable_interrupt_triggered()
+{
+    nmi_raise();
+}
+
+void
 MainWindow::on_actionPause_triggered()
 {
     plat_pause(dopause ^ 1);
 }
 
 void
+MainWindow::on_actionToggle_OSD_triggered()
+{
+    qt_osd_toggle();
+}
+
+void
 MainWindow::on_actionExit_triggered()
 {
+    exiting_manually = 1;
     close();
+}
+
+void
+MainWindow::emitVmmSignal()
+{
+    emit vmmConfigurationChanged();
 }
 
 void
@@ -1259,11 +1395,18 @@ MainWindow::on_actionSettings_triggered()
         default:
             break;
         case QDialog::Accepted:
-            settings.save();
+            settings.save(0);
             config_changed = 2;
-            updateShortcuts();
             emit vmmConfigurationChanged();
             pc_reset_hard();
+            video_copy = (video_grayscale || invert_display) ? video_transform_copy : memcpy;
+            config_save();
+            reset_screen_size();
+            device_force_redraw();
+            for (int i = 0; i < MONITORS_NUM; i++) {
+                if (monitors[i].target_buffer)
+                    video_force_resize_set_monitor(1, i);
+            }
             break;
         case QDialog::Rejected:
             break;
@@ -1292,6 +1435,11 @@ MainWindow::processKeyboardInput(bool down, uint32_t keycode)
     keycode = 0;
 #    endif
 #endif
+
+    bool skip = main_window_blocked || (keycode < 0) || (kbd_req_capture && !mouse_capture) || qt_osd_is_visible();
+
+    if (skip)
+        return;
 
     /* Apply special cases. */
     switch (keycode) {
@@ -1472,19 +1620,22 @@ void
 MainWindow::on_actionFullscreen_triggered()
 {
     if (video_fullscreen > 0) {
+        video_fullscreen = 0;
         showNormal();
         ui->menubar->show();
         if (!hide_status_bar)
             ui->statusbar->show();
         if (!hide_tool_bar)
             ui->toolBar->show();
-        video_fullscreen = 0;
         fullscreen_ui_visible = 0;
         if (vid_resize != 1) {
             emit resizeContents(vid_resize == 2 ? fixed_size_x : monitors[0].mon_scrnsz_x, vid_resize == 2 ? fixed_size_y : monitors[0].mon_scrnsz_y);
         }
     } else {
+        if ((mouse_type != MOUSE_TYPE_NONE) || machine_has_mouse())
+            emit setMouseCapture(true);
         video_fullscreen = 1;
+        pclog("Full screen: %ix%i\n", QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
         setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
         ui->menubar->hide();
         ui->statusbar->hide();
@@ -1494,23 +1645,13 @@ MainWindow::on_actionFullscreen_triggered()
     }
     fs_on_signal  = false;
     fs_off_signal = false;
-    ui->stackedWidget->onResize(width(), height());
+    ui->stackedWidget->onResize(ui->stackedWidget->width(), ui->stackedWidget->height());
 }
 
-void
-MainWindow::getTitle_(wchar_t *title)
+QString
+MainWindow::getTitle()
 {
-    this->windowTitle().toWCharArray(title);
-}
-
-void
-MainWindow::getTitle(wchar_t *title)
-{
-    if (QThread::currentThread() == this->thread()) {
-        getTitle_(title);
-    } else {
-        emit getTitleForNonQtThread(title);
-    }
+    return toolbar_label->text();
 }
 
 // Helper to find an accelerator key and return it's sequence
@@ -1520,62 +1661,120 @@ MainWindow::FindAcceleratorSeq(const char *name)
 {
     int accID = FindAccelerator(name);
     if (accID == -1)
-        return false;
+        return QKeySequence();
 
     return (QKeySequence::fromString(acc_keys[accID].seq));
 }
 
+// Check whether a key event triggers an accelerator
+bool
+MainWindow::keyMatchesAccelerator(const QKeyEvent *ke, const char *name)
+{
+    const QKeySequence seq = FindAcceleratorSeq(name);
+
+    /* An unbound accelerator never matches. Some key events carry no key code
+       (such as the second character from a doubled dead key on Windows), and
+       those would otherwise compare equal to every empty sequence. */
+    if (seq.isEmpty())
+        return false;
+
+    return ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == seq)
+        || ((QKeySequence) (ke->key() | ke->modifiers()) == seq);
+}
+
+#include <iostream>
+
 bool
 MainWindow::eventFilter(QObject *receiver, QEvent *event)
 {
+    if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
+        auto      *ke   = static_cast<QKeyEvent *>(event);
+        const bool down = event->type() == QEvent::KeyPress;
+
+        /* While the OSD is open, route all key input to it, except for the
+         * toggle accelerator itself so it can still close the overlay. */
+        if (qt_osd_is_visible()) {
+            const QKeySequence osdSeq = ui->actionToggle_OSD->shortcut();
+            if (down && !ke->isAutoRepeat() && !osdSeq.isEmpty()
+                && (((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == osdSeq)
+                    || ((QKeySequence) (ke->key() | ke->modifiers()) == osdSeq))) {
+                ui->actionToggle_OSD->trigger();
+                event->accept();
+                return true;
+            }
+
+            if (qt_osd_key(ke->key(), ke->modifiers(), down, ke->isAutoRepeat(), ke->text().toUtf8().data())) {
+                event->accept();
+                return true;
+            }
+        }
+    }
+
     // Detect shortcuts when menubar is hidden
     // TODO: Could this be simplified by proxying the event and manually
     // shoving it into the menubar?
     if (event->type() == QEvent::KeyPress) {
-        this->keyPressEvent((QKeyEvent *) event);
-
         // We check for mouse release even if we aren't fullscreen,
         // because it's not a menu accelerator.
-        if (event->type() == QEvent::KeyPress) {
-            QKeyEvent *ke = (QKeyEvent *) event;
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("release_mouse") || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("release_mouse")) {
+        QKeyEvent *ke = (QKeyEvent *) event;
+        if (mouse_capture) {
+            if (keyMatchesAccelerator(ke, "release_mouse")) {
+                /* Prevent an Alt-based shortcut from looking like a standalone
+                 * Alt press to the guest when the held modifiers are released. */
+                this->keyReleaseEvent(ke);
+                keyboard_all_up();
                 plat_mouse_capture(0);
+                event->accept();
+                return true;
             }
         }
 
-        if (event->type() == QEvent::KeyPress && video_fullscreen != 0) {
-            QKeyEvent *ke = (QKeyEvent *) event;
+        this->keyPressEvent(ke);
 
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("screenshot")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("screenshot")) {
+        if (event->type() == QEvent::KeyPress && video_fullscreen != 0) {
+            if (keyMatchesAccelerator(ke, "screenshot")) {
                 ui->actionTake_screenshot->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("fullscreen")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("fullscreen")) {
+            if (keyMatchesAccelerator(ke, "raw_screenshot")) {
+                ui->actionTake_raw_screenshot->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "copy_screenshot")) {
+                ui->actionCopy_screenshot->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "copy_raw_screenshot")) {
+                ui->actionCopy_raw_screenshot->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "fullscreen")) {
                 ui->actionFullscreen->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("hard_reset")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("hard_reset")) {
+            if (keyMatchesAccelerator(ke, "toggle_osd")) {
+                ui->actionToggle_OSD->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "hard_reset")) {
                 ui->actionHard_Reset->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("send_ctrl_alt_del")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("send_ctrl_alt_del")) {
+            if (keyMatchesAccelerator(ke, "fast_forward")) {
+                ui->actionFast_forward->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "send_ctrl_alt_del")) {
                 ui->actionCtrl_Alt_Del->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("send_ctrl_alt_esc")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("send_ctrl_alt_esc")) {
+            if (keyMatchesAccelerator(ke, "send_ctrl_alt_esc")) {
                 ui->actionCtrl_Alt_Esc->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("pause")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("pause")) {
+            if (keyMatchesAccelerator(ke, "nmi")) {
+                ui->actionNon_maskable_interrupt->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "pause")) {
                 ui->actionPause->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("mute")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("mute")) {
+            if (keyMatchesAccelerator(ke, "mute")) {
                 ui->actionMute_Unmute->trigger();
             }
-            if ((QKeySequence) (ke->key() | (ke->modifiers() & ~Qt::KeypadModifier)) == FindAcceleratorSeq("toggle_ui_fullscreen")
-                || (QKeySequence) (ke->key() | ke->modifiers()) == FindAcceleratorSeq("toggle_ui_fullscreen")) {
+            if (keyMatchesAccelerator(ke, "exit")) {
+                ui->actionExit->trigger();
+            }
+            if (keyMatchesAccelerator(ke, "toggle_ui_fullscreen")) {
                 toggleFullscreenUI();
             }
 
@@ -1583,7 +1782,8 @@ MainWindow::eventFilter(QObject *receiver, QEvent *event)
         }
     }
 
-    if (!dopause && (!kbd_req_capture || mouse_capture)) {
+    if (!main_window_blocked && !dopause && (!kbd_req_capture || mouse_capture)) {
+#if 0
         if (event->type() == QEvent::Shortcut) {
             auto shortcutEvent = (QShortcutEvent *) event;
             if (shortcutEvent->key() == ui->actionExit->shortcut()) {
@@ -1591,6 +1791,7 @@ MainWindow::eventFilter(QObject *receiver, QEvent *event)
                 return true;
             }
         }
+#endif
         if (event->type() == QEvent::KeyPress) {
             event->accept();
 
@@ -1606,14 +1807,29 @@ MainWindow::eventFilter(QObject *receiver, QEvent *event)
     if (receiver == this) {
         static auto curdopause = dopause;
         if (event->type() == QEvent::WindowBlocked) {
-            window_blocked = true;
-            curdopause     = dopause;
-            plat_pause(isNonPause ? dopause : (isShowMessage ? 2 : 1));
-            emit setMouseCapture(false);
+            if (qt_osd_is_visible())
+                qt_osd_toggle();
+            window_blocked     = true;
+            mouse_was_captured = (mouse_capture != 0);
+            if (do_auto_dialog_pause > 0) {
+                curdopause = dopause;
+                plat_pause(isNonPause ? dopause : (isShowMessage ? 2 : 1));
+            }
+            if (mouse_was_captured)
+                plat_mouse_capture(0);
             releaseKeyboard();
+            main_window_blocked = 1;
         } else if (event->type() == QEvent::WindowUnblocked) {
             window_blocked = false;
-            plat_pause(curdopause);
+            if (do_auto_dialog_pause > 0)
+                plat_pause(curdopause);
+            if (mouse_was_captured) {
+                plat_mouse_capture(1);
+            }
+            main_window_blocked = 0;
+        } else if (event->type() == QEvent::WindowStateChange) {
+            if ((this->isFullScreen() && (video_fullscreen == 0)) || (!this->isFullScreen() && (video_fullscreen == 1)))
+                this->on_actionFullscreen_triggered();
         }
     }
 
@@ -1625,9 +1841,18 @@ MainWindow::refreshMediaMenu()
 {
     mm->refresh(ui->menuMedia);
     status->setSoundMenu(ui->menuSound);
+    status->setDynarecMenu(dynarecMenu);
     status->refresh(ui->statusbar);
     ui->actionMCA_devices->setVisible(machine_has_bus(machine, MACHINE_BUS_MCA));
-    ui->actionACPI_Shutdown->setEnabled(!!acpi_enabled);
+    const bool has_power_button = device_has_power_button();
+    if (acpi_enabled || has_power_button) {
+        ui->actionACPI_Shutdown->setText(tr("Power &off (soft)"));
+        ui->actionACPI_Shutdown->setToolTip(tr("Power off (soft)"));
+    } else {
+        ui->actionACPI_Shutdown->setText((confirm_exit && confirm_exit_cmdl) ? tr("Power &off…") : tr("Power &off"));
+        ui->actionACPI_Shutdown->setToolTip(tr("Power off"));
+    }
+    ui->actionACPI_Shutdown->setEnabled(true);
     ui_update_force_interpreter();
 
     num_label->setToolTip(QShortcut::tr("Num Lock"));
@@ -1638,7 +1863,7 @@ MainWindow::refreshMediaMenu()
     caps_label->setVisible(machine_has_bus(machine, MACHINE_BUS_PS2_PORTS | MACHINE_BUS_AT_KBD));
     kana_label->setToolTip(QShortcut::tr("Kana Lock"));
     int ext_ax_kbd = machine_has_bus(machine, MACHINE_BUS_PS2_PORTS | MACHINE_BUS_AT_KBD) && (keyboard_type == KEYBOARD_TYPE_AX);
-    int int_ax_kbd = machine_has_flags(machine, MACHINE_KEYBOARD_JIS) && !machine_has_bus(machine, MACHINE_BUS_PS2_PORTS);
+    int int_ax_kbd = machine_has_flags(machine, MACHINE_KEYBOARD_AX) && !machine_has_bus(machine, MACHINE_BUS_PS2_PORTS);
     kana_label->setVisible(ext_ax_kbd || int_ax_kbd);
 
     bool enable_comp_option = false;
@@ -1650,6 +1875,23 @@ MainWindow::refreshMediaMenu()
     }
 
     ui->actionCGA_composite_settings->setEnabled(enable_comp_option);
+    refreshDisplayRatioActions();
+}
+
+void
+MainWindow::refreshDisplayRatioActions()
+{
+    ui->actionForce_4_3_display_ratio->setChecked(force_43 > 0);
+    ui->actionForce_device_aspect_ratio->setChecked(force_device_aspect > 0);
+
+    const int dev_x = monitors[0].mon_device_aspect_x;
+    const int dev_y = monitors[0].mon_device_aspect_y;
+    const bool has_device_aspect = dev_x > 0 && dev_y > 0;
+    ui->actionForce_device_aspect_ratio->setVisible(has_device_aspect);
+    if (has_device_aspect) {
+        ui->actionForce_device_aspect_ratio->setText(
+            tr("Force &%1:%2 display ratio").arg(dev_x).arg(dev_y));
+    }
 }
 
 void
@@ -1676,11 +1918,22 @@ MainWindow::showMessage_(int flags, const QString &header, const QString &messag
         *done = false;
     }
     isShowMessage = true;
-    QMessageBox box(QMessageBox::Warning, header, message, QMessageBox::NoButton, this);
-    if (flags & (MBX_FATAL)) {
+
+    auto defaultheader = QString();
+    if (header.isEmpty()) {
+        if (flags & (MBX_ERROR | MBX_FATAL))
+            defaultheader = (flags & MBX_FATAL) ? tr("Fatal error") : tr("Error");
+        else
+            defaultheader = EMU_NAME;
+    }
+    QMessageBox box(QMessageBox::Information, (defaultheader.isEmpty() ? header : defaultheader), message, QMessageBox::Ok, this);
+
+    if (flags & (MBX_ERROR | MBX_FATAL)) {
         box.setIcon(QMessageBox::Critical);
-    } else if (!(flags & (MBX_ERROR | MBX_WARNING))) {
+    } else if (flags & MBX_WARNING) {
         box.setIcon(QMessageBox::Warning);
+        //    } else if (flags & MBX_QUESTION) {
+        //        box.setIcon(QMessageBox::Question);
     }
     if (richText)
         box.setTextFormat(Qt::TextFormat::RichText);
@@ -1764,6 +2017,7 @@ MainWindow::on_actionResizable_window_triggered(bool checked)
         setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
         setWindowFlag(Qt::MSWindowsFixedSizeDialogHint, false);
         setWindowFlag(Qt::WindowMaximizeButtonHint, true);
+        setWindowFlag(Qt::WindowFullscreenButtonHint, true);
         for (int i = 1; i < MONITORS_NUM; i++) {
             if (monitors[i].target_buffer) {
                 renderers[i]->setWindowFlag(Qt::WindowMaximizeButtonHint, true);
@@ -1772,11 +2026,13 @@ MainWindow::on_actionResizable_window_triggered(bool checked)
         }
     } else {
         vid_resize = 0;
+        setWindowFlag(Qt::WindowFullscreenButtonHint, false);
         setWindowFlag(Qt::WindowMaximizeButtonHint, false);
         setWindowFlag(Qt::MSWindowsFixedSizeDialogHint);
         for (int i = 1; i < MONITORS_NUM; i++) {
             if (monitors[i].target_buffer) {
                 renderers[i]->setWindowFlag(Qt::WindowMaximizeButtonHint, false);
+                renderers[i]->setWindowFlag(Qt::WindowFullscreenButtonHint, false);
                 emit resizeContentsMonitor(monitors[i].mon_scrnsz_x, monitors[i].mon_scrnsz_y, i);
             }
         }
@@ -1789,7 +2045,6 @@ MainWindow::on_actionResizable_window_triggered(bool checked)
         if (monitors[i].target_buffer && show_second_monitors) {
             renderers[i]->show();
             renderers[i]->switchRenderer((RendererStack::Renderer) vid_api);
-            QApplication::processEvents();
         }
     }
 }
@@ -1809,12 +2064,6 @@ video_toggle_option(QAction *action, int *val)
         if (monitors[i].target_buffer)
             video_force_resize_set_monitor(1, i);
     }
-}
-
-void
-MainWindow::on_actionInverted_VGA_monitor_triggered()
-{
-    video_toggle_option(ui->actionInverted_VGA_monitor, &invert_display);
 }
 
 void
@@ -1990,83 +2239,6 @@ MainWindow::on_actionFullScreen_int43_triggered()
     update_fullscreen_scale_checkboxes(ui, ui->actionFullScreen_int43);
 }
 
-static void
-update_greyscale_checkboxes(Ui::MainWindow *ui, QAction *selected, int value)
-{
-    ui->actionRGB_Color->setChecked(ui->actionRGB_Color == selected);
-    ui->actionRGB_Grayscale->setChecked(ui->actionRGB_Grayscale == selected);
-    ui->actionAmber_monitor->setChecked(ui->actionAmber_monitor == selected);
-    ui->actionGreen_monitor->setChecked(ui->actionGreen_monitor == selected);
-    ui->actionWhite_monitor->setChecked(ui->actionWhite_monitor == selected);
-
-    startblit();
-    video_grayscale = value;
-    video_copy      = (video_grayscale || invert_display) ? video_transform_copy : memcpy;
-    endblit();
-    device_force_redraw();
-    config_save();
-}
-
-void
-MainWindow::on_actionRGB_Color_triggered()
-{
-    update_greyscale_checkboxes(ui, ui->actionRGB_Color, 0);
-}
-
-void
-MainWindow::on_actionRGB_Grayscale_triggered()
-{
-    update_greyscale_checkboxes(ui, ui->actionRGB_Grayscale, 1);
-}
-
-void
-MainWindow::on_actionAmber_monitor_triggered()
-{
-    update_greyscale_checkboxes(ui, ui->actionAmber_monitor, 2);
-}
-
-void
-MainWindow::on_actionGreen_monitor_triggered()
-{
-    update_greyscale_checkboxes(ui, ui->actionGreen_monitor, 3);
-}
-
-void
-MainWindow::on_actionWhite_monitor_triggered()
-{
-    update_greyscale_checkboxes(ui, ui->actionWhite_monitor, 4);
-}
-
-static void
-update_greyscale_type_checkboxes(Ui::MainWindow *ui, QAction *selected, int value)
-{
-    ui->actionBT601_NTSC_PAL->setChecked(ui->actionBT601_NTSC_PAL == selected);
-    ui->actionBT709_HDTV->setChecked(ui->actionBT709_HDTV == selected);
-    ui->actionAverage->setChecked(ui->actionAverage == selected);
-
-    video_graytype = value;
-    device_force_redraw();
-    config_save();
-}
-
-void
-MainWindow::on_actionBT601_NTSC_PAL_triggered()
-{
-    update_greyscale_type_checkboxes(ui, ui->actionBT601_NTSC_PAL, 0);
-}
-
-void
-MainWindow::on_actionBT709_HDTV_triggered()
-{
-    update_greyscale_type_checkboxes(ui, ui->actionBT709_HDTV, 1);
-}
-
-void
-MainWindow::on_actionAverage_triggered()
-{
-    update_greyscale_type_checkboxes(ui, ui->actionAverage, 2);
-}
-
 void
 MainWindow::on_actionAbout_Qt_triggered()
 {
@@ -2087,26 +2259,12 @@ MainWindow::on_actionDocumentation_triggered()
 }
 
 void
-MainWindow::on_actionCGA_PCjr_Tandy_EGA_S_VGA_overscan_triggered()
-{
-    update_overscan = 1;
-    video_toggle_option(ui->actionCGA_PCjr_Tandy_EGA_S_VGA_overscan, &enable_overscan);
-}
-
-void
-MainWindow::on_actionChange_contrast_for_monochrome_display_triggered()
-{
-    startblit();
-    vid_cga_contrast ^= 1;
-    for (int i = 0; i < MONITORS_NUM; i++)
-        cgapal_rebuild_monitor(i);
-    config_save();
-    endblit();
-}
-
-void
 MainWindow::on_actionForce_4_3_display_ratio_triggered()
 {
+    if (!force_43) {
+        force_device_aspect = 0;
+        ui->actionForce_device_aspect_ratio->setChecked(false);
+    }
     video_toggle_option(ui->actionForce_4_3_display_ratio, &force_43);
     if (vid_resize) {
         const auto widget = ui->stackedWidget->currentWidget();
@@ -2117,13 +2275,26 @@ MainWindow::on_actionForce_4_3_display_ratio_triggered()
                 renderers[i]->onResize(renderers[i]->width(), renderers[i]->height());
         }
     }
+    config_save();
 }
 
 void
-MainWindow::on_actionAuto_pause_triggered()
+MainWindow::on_actionForce_device_aspect_ratio_triggered()
 {
-    do_auto_pause ^= 1;
-    ui->actionAuto_pause->setChecked(do_auto_pause > 0 ? true : false);
+    if (!force_device_aspect) {
+        force_43 = 0;
+        ui->actionForce_4_3_display_ratio->setChecked(false);
+    }
+    video_toggle_option(ui->actionForce_device_aspect_ratio, &force_device_aspect);
+    if (vid_resize) {
+        const auto widget = ui->stackedWidget->currentWidget();
+        ui->stackedWidget->onResize(widget->width(), widget->height());
+
+        for (int i = 1; i < MONITORS_NUM; i++) {
+            if (renderers[i])
+                renderers[i]->onResize(renderers[i]->width(), renderers[i]->height());
+        }
+    }
     config_save();
 }
 
@@ -2163,6 +2334,7 @@ MainWindow::on_actionRemember_size_and_position_triggered()
         }
     }
     ui->actionRemember_size_and_position->setChecked(window_remember);
+    config_save();
 }
 
 void
@@ -2183,6 +2355,7 @@ MainWindow::on_actionHiDPI_scaling_triggered()
         if (renderers[i])
             emit resizeContentsMonitor(monitors[i].mon_scrnsz_x, monitors[i].mon_scrnsz_y, i);
     }
+    config_save();
 }
 
 void
@@ -2207,6 +2380,7 @@ MainWindow::on_actionHide_status_bar_triggered()
         if (vid_resize == 1)
             setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
     }
+    config_save();
 }
 
 void
@@ -2228,6 +2402,7 @@ MainWindow::on_actionHide_tool_bar_triggered()
         if (vid_resize == 1)
             setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
     }
+    config_save();
 }
 
 void
@@ -2238,6 +2413,8 @@ MainWindow::on_actionUpdate_status_bar_icons_triggered()
 
     /* Prevent icons staying when disabled during activity. */
     status->clearActivity();
+
+    config_save();
 }
 
 void
@@ -2340,6 +2517,13 @@ MainWindow::updateUiPauseState()
     emit vmmRunningStateChanged(static_cast<VMManagerProtocol::RunningState>(window_blocked ? (dopause ? VMManagerProtocol::RunningState::PausedWaiting : VMManagerProtocol::RunningState::RunningWaiting) : (VMManagerProtocol::RunningState) dopause));
 }
 
+/* The menu's check follows fast forward set from elsewhere (automation). */
+void
+MainWindow::updateUiFastForwardState()
+{
+    ui->actionFast_forward->setChecked(fast_forward);
+}
+
 void
 MainWindow::updateStatusEmptyIcons()
 {
@@ -2350,9 +2534,23 @@ MainWindow::updateStatusEmptyIcons()
 void
 MainWindow::on_actionPreferences_triggered()
 {
-    ProgSettings progsettings(this);
-    if (progsettings.exec() == QDialog::Accepted) {
-        emit vmmGlobalConfigurationChanged();
+    Preferences preferences(this);
+    preferences.setModal(true);
+    preferences.setWindowModality(Qt::WindowModal);
+    preferences.setWindowFlag(Qt::CustomizeWindowHint, true);
+    preferences.setWindowFlag(Qt::WindowTitleHint, true);
+    preferences.setWindowFlag(Qt::WindowSystemMenuHint, false);
+    preferences.exec();
+
+    switch (preferences.result()) {
+        default:
+            break;
+        case QDialog::Accepted:
+            updateShortcuts();
+            emit vmmGlobalConfigurationChanged();
+            break;
+        case QDialog::Rejected:
+            break;
     }
 }
 
@@ -2370,6 +2568,7 @@ MainWindow::on_actionEnable_Discord_integration_triggered(bool checked)
         discordupdate.stop();
     }
 #endif
+    config_save();
 }
 
 void
@@ -2397,10 +2596,10 @@ MainWindow::changeEvent(QEvent *event)
 #ifdef Q_OS_WINDOWS
     if (event->type() == QEvent::LanguageChange) {
         auto size = this->centralWidget()->size();
-        QApplication::setFont(QFont(ProgSettings::getFontName(lang_id), 9));
-        QApplication::processEvents();
+        QApplication::setFont(Preferences::getUIFont());
+        processEventsOnlyWhenPausedOrModal();
         main_window->centralWidget()->setFixedSize(size);
-        QApplication::processEvents();
+        processEventsOnlyWhenPausedOrModal();
         if (vid_resize == 1) {
             main_window->centralWidget()->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
         }
@@ -2438,6 +2637,7 @@ MainWindow::on_actionRenderer_options_triggered()
                     if (renderers[i] && renderers[i]->hasOptions())
                         renderers[i]->reloadOptions();
                 }
+            config_save();
         } else if (reload_renderers && ui->stackedWidget->reloadRendererOption()) {
             reload_renderers = false;
             ui->stackedWidget->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
@@ -2476,8 +2676,9 @@ MainWindow::on_actionShow_non_primary_monitors_triggered()
                                                monitor_settings[monitor_index].mon_window_w > 2048 ? 2048 : monitor_settings[monitor_index].mon_window_w,
                                                monitor_settings[monitor_index].mon_window_h > 2048 ? 2048 : monitor_settings[monitor_index].mon_window_h);
             }
-            secondaryRenderer->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
             ui->stackedWidget->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
+            secondaryRenderer->switchRenderer(static_cast<RendererStack::Renderer>(vid_api));
+            secondaryRenderer->show();
         }
     } else {
         for (int monitor_index = 1; monitor_index < MONITORS_NUM; monitor_index++) {
@@ -2493,6 +2694,7 @@ MainWindow::on_actionShow_non_primary_monitors_triggered()
             }
         }
     }
+    config_save();
 }
 
 void
@@ -2534,6 +2736,30 @@ MainWindow::on_actionCursor_Puck_triggered()
 }
 
 void
+MainWindow::on_actionMouse_triggered()
+{
+    mouse_input_mode         = 0;
+    mouse_input_mode_initial = 0;
+    config_save();
+}
+
+void
+MainWindow::on_actionTablet_triggered()
+{
+    mouse_input_mode         = 1;
+    mouse_input_mode_initial = 1;
+    config_save();
+}
+
+void
+MainWindow::on_actionTablet_Crosshair_triggered()
+{
+    mouse_input_mode         = 2;
+    mouse_input_mode_initial = 2;
+    config_save();
+}
+
+void
 MainWindow::on_actionPen_triggered()
 {
     tablet_tool_type = 1;
@@ -2543,7 +2769,31 @@ MainWindow::on_actionPen_triggered()
 void
 MainWindow::on_actionACPI_Shutdown_triggered()
 {
-    acpi_pwrbut_pressed = 1;
+    if (acpi_enabled) {
+        acpi_pwrbut_pressed = 1;
+        return;
+    }
+
+    if (device_has_power_button()) {
+        const int was_paused = dopause;
+        plat_pause(1); /* Wait for CPU acknowledgement before changing device state. */
+        device_power_button();
+        plat_pause(was_paused);
+        return;
+    }
+
+    /* Without a soft-power method the only way to power the machine off is to
+     * stop the emulator: a hard power off is equivalent to exiting 86Box. */
+    if (confirm_exit && confirm_exit_cmdl) {
+        QMessageBox questionbox(QMessageBox::Icon::Warning, EMU_NAME, tr("Powering off the emulated machine may cause data loss. Are you sure you want to continue?"), QMessageBox::Yes | QMessageBox::No, this);
+        questionbox.setDefaultButton(QMessageBox::No);
+        questionbox.exec();
+        if (questionbox.result() != QMessageBox::Yes)
+            return;
+    }
+
+    skip_exit_confirmation = true;
+    on_actionExit_triggered();
 }
 
 void

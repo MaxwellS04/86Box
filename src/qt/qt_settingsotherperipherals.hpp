@@ -2,10 +2,19 @@
 #define QT_SETTINGSOTHERPERIPHERALS_HPP
 
 #include <QWidget>
+#ifdef USE_VFIO
+#    include <QList>
+#    include <QPair>
+#    include <QString>
+#endif
 
 namespace Ui {
 class SettingsOtherPeripherals;
 }
+
+#ifdef USE_VFIO
+class VFIODeviceModel;
+#endif
 
 class SettingsOtherPeripherals : public QWidget {
     Q_OBJECT
@@ -14,7 +23,10 @@ public:
     explicit SettingsOtherPeripherals(QWidget *parent = nullptr);
     ~SettingsOtherPeripherals();
 
-    void save();
+    int  changed();
+
+    void restore();
+    void save(int soft);
 
 public slots:
     void onCurrentMachineChanged(int machineId);
@@ -23,14 +35,14 @@ private slots:
     void on_comboBoxRTC_currentIndexChanged(int index);
     void on_pushButtonConfigureRTC_clicked();
 
-    void on_comboBoxIsaMemCard1_currentIndexChanged(int index);
-    void on_pushButtonConfigureIsaMemCard1_clicked();
-    void on_comboBoxIsaMemCard2_currentIndexChanged(int index);
-    void on_pushButtonConfigureIsaMemCard2_clicked();
-    void on_comboBoxIsaMemCard3_currentIndexChanged(int index);
-    void on_pushButtonConfigureIsaMemCard3_clicked();
-    void on_comboBoxIsaMemCard4_currentIndexChanged(int index);
-    void on_pushButtonConfigureIsaMemCard4_clicked();
+    void on_comboBoxMemExpCard1_currentIndexChanged(int index);
+    void on_pushButtonConfigureMemExpCard1_clicked();
+    void on_comboBoxMemExpCard2_currentIndexChanged(int index);
+    void on_pushButtonConfigureMemExpCard2_clicked();
+    void on_comboBoxMemExpCard3_currentIndexChanged(int index);
+    void on_pushButtonConfigureMemExpCard3_clicked();
+    void on_comboBoxMemExpCard4_currentIndexChanged(int index);
+    void on_pushButtonConfigureMemExpCard4_clicked();
 
     void on_comboBoxIsaRomCard1_currentIndexChanged(int index);
     void on_pushButtonConfigureIsaRomCard1_clicked();
@@ -47,9 +59,40 @@ private slots:
     void on_checkBoxKeyCard_stateChanged(int arg1);
     void on_pushButtonConfigureKeyCard_clicked();
 
+    void on_checkBoxSoftPower_stateChanged(int arg1);
+    void on_pushButtonConfigureSoftPower_clicked();
+
 private:
     Ui::SettingsOtherPeripherals *ui;
     int                           machineId { 0 };
+
+    int                           memexp_cfg_changed[4]      = { 0, 0, 0, 0 };
+    int                           isarom_cfg_changed[4]      = { 0, 0, 0, 0 };
+    int                           isartc_cfg_changed         = 0;
+    int                           unittester_cfg_changed     = 0;
+    int                           novell_keycard_cfg_changed = 0;
+    int                           softpower_cfg_changed      = 0;
+    bool                          softpower_card_enabled     = false;
+
+    SettingsCompleter            *scRTC;
+
+    SettingsCompleter            *scMemExpCard[4];
+    SettingsCompleter            *scIsaRomCard[4];
+
+#ifdef USE_VFIO
+    /* Location and custom ROM file of each device to pass through. */
+    using VFIODeviceList = QList<QPair<QString, QString>>;
+
+    void           vfioEnumerate();
+    void           vfioRestore();
+    void           vfioUpdateControls();
+    VFIODeviceList vfioSelectedDevices() const;
+    int            vfioChanged() const;
+    void           vfioSave();
+
+    VFIODeviceModel              *vfioModel;
+    bool                          vfioUpdating = false;
+#endif
 };
 
 #endif // QT_SETTINGSOTHERPERIPHERALS_HPP

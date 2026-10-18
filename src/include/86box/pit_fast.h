@@ -55,6 +55,7 @@ typedef struct ctrf_t {
     uint32_t l;
 
     uint64_t pit_const;
+    int      clock_div; /* see ctr_t; the constant above already includes it */
 
     pc_timer_t timer;
 
@@ -90,6 +91,7 @@ extern const pit_intf_t pit_fast_intf;
 
 #ifdef EMU_DEVICE_H
 extern const device_t i8253_fast_device;
+extern const device_t i8253_ext_io_fast_device;
 extern const device_t i8254_fast_device;
 extern const device_t i8254_sec_fast_device;
 extern const device_t i8254_ext_io_fast_device;

@@ -86,7 +86,7 @@ vt82c686_lpt_handler(vt82c686_t *dev)
 
     lpt_set_ext(dev->lpt, !!(dev->regs[0x10] & 0x80));
 
-    switch (dev->regs[0x10] & 0x03) {
+    switch (dev->regs[0x02] & 0x03) {
         case 0x01:
             lpt_set_epp(dev->lpt, !!(dev->regs[0x10] & 0x20));
             lpt_set_ecp(dev->lpt, 1);
@@ -303,7 +303,7 @@ vt82c686_init(UNUSED(const device_t *info))
 {
     vt82c686_t *dev = (vt82c686_t *) calloc(1, sizeof(vt82c686_t));
 
-    dev->fdc     = device_add(&fdc_at_smc_device);
+    dev->fdc     = device_add_params(&fdc_at_smc_device, (void *) FDC_FLAG_PNP);
     dev->fdc_dma = 2;
 
     dev->uart[0] = device_add_inst(&ns16550_device, 1);

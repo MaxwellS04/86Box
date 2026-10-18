@@ -72,7 +72,7 @@ machine_at_cs4031_init(const machine_t *model)
     return ret;
 }
 
-/* OPTi 381 */
+/* OPTi 481 */
 int
 machine_at_ga486l_init(const machine_t *model)
 {
@@ -86,7 +86,30 @@ machine_at_ga486l_init(const machine_t *model)
 
     machine_at_common_init(model);
 
-    device_add(&opti381_device);
+    device_add(&opti481_device);
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_vantage4865c_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/vantage4865c/nmc27c512-69cc9b5ad7639879340132.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&opti481_device);
 
     device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
 
@@ -97,6 +120,109 @@ machine_at_ga486l_init(const machine_t *model)
 }
 
 /* OPTi 493 */
+static const device_config_t precisionv486_config[] = {
+    // clang-format off
+    {
+        .name           = "bios",
+        .description    = "BIOS Version",
+        .type           = CONFIG_BIOS,
+        .default_string = "precisionv486",
+        .default_int    = 0,
+        .file_filter    = NULL,
+        .spinner        = { 0 },
+        .selection      = { { 0 } },
+        .bios           = {
+            {
+                .name          = "AMIBIOS 070791 (stock)",
+                .internal_name = "precisionv486",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 65536,
+                .files         = { "roms/machines/precisionv486/dell-486sx.bin", "" }
+            },
+            {
+                .name          = "AMIBIOS 070791 (modded, all setup options unhidden)",
+                .internal_name = "precisionv486_modded",
+                .bios_type     = BIOS_NORMAL,
+                .files_no      = 1,
+                .local         = 0,
+                .size          = 65536,
+                .files         = { "roms/machines/precisionv486/dellmod.rom", "" }
+            },
+            { .files_no = 0 }
+        }
+    },
+    { .name = "", .description = "", .type = CONFIG_END }
+    // clang-format on
+};
+
+const device_t precisionv486_device = {
+    .name          = "Dell Precision V486/xx",
+    .internal_name = "precisionv486",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = precisionv486_config
+};
+int
+machine_at_precisionv486_init(const machine_t *model)
+{
+    int         ret = 0;
+    const char *fn;
+
+    /* No ROMs available */
+    if (!device_available(model->device))
+        return ret;
+
+    device_context(model->device);
+    fn  = device_get_bios_file(machine_get_device(machine), device_get_config_bios("bios"), 0);
+    ret = bios_load_linear(fn, 0x000f0000, 65536, 0);
+    device_context_restore();
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&opti493_device);
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
+int
+machine_at_cpc2000le_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/cpc2000le/cpc-2000le.bin",
+                           0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+
+    device_add(&opti493_device);
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
+
 int
 machine_at_svc486wb_init(const machine_t *model)
 {
@@ -113,10 +239,35 @@ machine_at_svc486wb_init(const machine_t *model)
     device_add(&opti493_device);
 
     device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
-    device_add(&ide_isa_device);
 
     if (fdc_current[0] == FDC_INTERNAL)
         device_add(&fdc_at_device);
+
+    return ret;
+}
+
+/* OPTi 495SX */
+int
+machine_at_pb400_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/pb400/PB_400_SYSTEM_VGA_BIOS.BIN",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+    device_add(&opti495sx_device);
+
+    device_add(&phoenix_486_jumper_pb400_device);
+    device_add_params(&um866x_device, (void *) (UM82C862F | UM866X_IDE_PRI));
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
 
     return ret;
 }
@@ -241,7 +392,7 @@ machine_at_advantage40xxd_init(const machine_t *model)
     return ret;
 }
 
-/* Symphony SL42C460 */
+/* Symphony SL82C460 */
 int
 machine_at_dtk461_init(const machine_t *model)
 {
@@ -294,15 +445,17 @@ machine_at_vect486vl_init(const machine_t *model) // has HDC problems
     int ret;
 
     ret = bios_load_linear("roms/machines/vect486vl/aa0500.ami",
-                           0x000e0000, 131072, 0);
+                           0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
         return ret;
 
+    memcpy(&rom[0x00020000], rom, 131072);
+
     if (gfxcard[0] == VID_INTERNAL)
         device_add(machine_get_vid_device(machine));
 
-    machine_at_common_init_ex(model, 2);
+    machine_at_common_init(model);
 
     device_add(&vl82c480_device);
 
@@ -310,6 +463,15 @@ machine_at_vect486vl_init(const machine_t *model) // has HDC problems
 
     device_add(&ide_isa_device);
     device_add_params(&fdc37c6xx_device, (void *) (FDC37C651 | FDC37C6XX_IDE_PRI));
+
+    video_reset(gfxcard[0]);
+
+    if (gfxcard[0] != VID_INTERNAL) {
+        for (uint16_t i = 0; i < 32768; i++)
+            rom[i] = mem_readb_phys(0x000c0000 + i);
+    }
+    mem_mapping_set_addr(&bios_mapping, 0x0c0000, 0x40000);
+    mem_mapping_set_exec(&bios_mapping, rom);
 
     return ret;
 }
@@ -321,15 +483,17 @@ machine_at_d824_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/d824/fts-biosupdated824noflashbiosepromv320-320334-160.bin",
-                           0x000e0000, 131072, 0);
+                           0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
         return ret;
 
+    memcpy(&rom[0x00020000], rom, 131072);
+
     if (gfxcard[0] == VID_INTERNAL)
         device_add(machine_get_vid_device(machine));
 
-    machine_at_common_init_ex(model, 2);
+    machine_at_common_init(model);
 
     device_add(&vl82c480_device);
 
@@ -341,6 +505,15 @@ machine_at_d824_init(const machine_t *model)
 
     device_add(&ide_isa_device);
     device_add_params(&fdc37c6xx_device, (void *) FDC37C651);
+
+    video_reset(gfxcard[0]);
+
+    if (gfxcard[0] != VID_INTERNAL) {
+        for (uint16_t i = 0; i < 32768; i++)
+            rom[i] = mem_readb_phys(0x000c0000 + i);
+    }
+    mem_mapping_set_addr(&bios_mapping, 0x0c0000, 0x40000);
+    mem_mapping_set_exec(&bios_mapping, rom);
 
     return ret;
 }
@@ -357,7 +530,7 @@ machine_at_pcs44c_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init_ex(model, 2);
+    machine_at_common_init(model);
 
     device_add(&vl82c486_device);
     device_add(&tulip_jumper_device);
@@ -376,6 +549,36 @@ machine_at_pcs44c_init(const machine_t *model)
 }
 
 int
+machine_at_sensation1_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/sensation1/P1033PCD_01.10.01_11-11-92_E687_Sensation_1_BIOS.bin",
+                           0x000e0000, 131072, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_ide_init(model);
+
+    device_add(&vl82c486_device);
+    device_add(&vl82c113_device);
+
+    device_add(&pssj_1e0_device);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_nsc_dp8473_device);
+
+    if (gfxcard[0] == VID_INTERNAL)
+        device_add(machine_get_vid_device(machine));
+
+    if (sound_card_current[0] == SOUND_INTERNAL)
+        machine_snd = device_add(machine_get_snd_device(machine));
+
+    return ret;
+}
+
+int
 machine_at_tuliptc38_init(const machine_t *model)
 {
     int ret;
@@ -386,7 +589,7 @@ machine_at_tuliptc38_init(const machine_t *model)
     if (bios_only || !ret)
         return ret;
 
-    machine_at_common_init_ex(model, 2);
+    machine_at_common_init(model);
 
     device_add(&vl82c486_device);
     device_add(&tulip_jumper_device);
@@ -395,6 +598,8 @@ machine_at_tuliptc38_init(const machine_t *model)
 
     device_add(&ide_isa_device);
     device_add_params(&fdc37c6xx_device, (void *) (FDC37C651 | FDC37C6XX_IDE_PRI));
+
+    video_reset(gfxcard[0]);
 
     if (gfxcard[0] == VID_INTERNAL) {
         bios_load_aux_linear("roms/machines/tuliptc38/VBIOS.BIN",
@@ -412,6 +617,30 @@ machine_at_tuliptc38_init(const machine_t *model)
 }
 
 /* ZyMOS Poach */
+int
+machine_at_asus48625_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_interleaved("roms/machines/asus48625/Mainboard_Asus_486-25_Rev211_LOW_EVEN_AM27C256-DIP28.bin",
+	                            "roms/machines/asus48625/Mainboard_Asus_486-25_Rev211_HIGH_ODD_AM27C256-DIP28.bin",
+                                0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+        return ret;
+
+    machine_at_common_init(model);
+	
+    device_add(&asus48625_device);
+    device_add(&port_92_key_device);
+
+    device_add_params(machine_get_kbc_device(machine), (void *) model->kbc_params);
+
+    if (fdc_current[0] == FDC_INTERNAL)
+        device_add(&fdc_at_device);
+
+    return ret;
+}
 int
 machine_at_isa486c_init(const machine_t *model)
 {

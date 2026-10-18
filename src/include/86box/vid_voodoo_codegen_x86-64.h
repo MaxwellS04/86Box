@@ -64,6 +64,16 @@ static int next_block_to_write[4] = { 0, 0 };
         block_pos += 8;                             \
     } while (0)
 
+#define VOODOO_OFFSETOF_ARRAY(type, field, index) \
+    (offsetof(type, field[0]) + ((index) * sizeof(((type *) 0)->field[0])))
+
+#define VOODOO_OFFSETOF_ARRAY_MEMBER(type, field, index, member) \
+    (offsetof(type, field[0].member) + ((index) * sizeof(((type *) 0)->field[0])))
+
+#if _WIN64
+/* The callee-saved XMM registers the generated code uses. */
+static const int voodoo_win64_xmm_saved[] = { 6, 7, 8, 9, 10, 11, 15 };
+#endif
 static __m128i xmm_01_w; // = 0x0001000100010001ull;
 static __m128i xmm_ff_w; // = 0x00ff00ff00ff00ffull;
 static __m128i xmm_ff_b; // = 0x00000000ffffffffull;
@@ -141,9 +151,9 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
         addlong(offsetof(voodoo_state_t, tex_t));
         addbyte(0x89); /*MOV ECX, EDX*/
         addbyte(0xd1);
-        addbyte(0x83); /*SUB EDX, 19*/
+        addbyte(0x83); /*SUB EDX, W_RECIPROCAL_LOG2_OFFSET*/
         addbyte(0xea);
-        addbyte(19);
+        addbyte(W_RECIPROCAL_LOG2_OFFSET);
         addbyte(0x48); /*SHR RAX, CL*/
         addbyte(0xd3);
         addbyte(0xe8);
@@ -164,21 +174,28 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
         addbyte(0xd0);
         addbyte(0x03); /*ADD EAX, state->lod*/
         addbyte(0x87);
-        addlong(offsetof(voodoo_state_t, tmu[tmu].lod));
+        addlong(VOODOO_OFFSETOF_ARRAY_MEMBER(voodoo_state_t, tmu, tmu, lod));
         addbyte(0x3b); /*CMP EAX, state->lod_min*/
         addbyte(0x87);
-        addlong(offsetof(voodoo_state_t, lod_min[tmu]));
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_min, tmu));
         addbyte(0x0f); /*CMOVL EAX, state->lod_min*/
         addbyte(0x4c);
         addbyte(0x87);
-        addlong(offsetof(voodoo_state_t, lod_min[tmu]));
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_min, tmu));
         addbyte(0x3b); /*CMP EAX, state->lod_max*/
         addbyte(0x87);
-        addlong(offsetof(voodoo_state_t, lod_max[tmu]));
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_max, tmu));
         addbyte(0x0f); /*CMOVNL EAX, state->lod_max*/
         addbyte(0x4d);
         addbyte(0x87);
-        addlong(offsetof(voodoo_state_t, lod_max[tmu]));
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_max, tmu));
+        addbyte(0x89); /*MOV state->lod_frac[tmu], EAX*/
+        addbyte(0x87);
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_frac, tmu));
+        addbyte(0x81); /*AND state->lod_frac[tmu], 0xff (LOD fraction for trilinear LOD_FRAC blending)*/
+        addbyte(0xa7);
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_frac, tmu));
+        addlong(0xff);
         addbyte(0xc1); /*SHR EAX, 8*/
         addbyte(0xe8);
         addbyte(8);
@@ -200,7 +217,7 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
         addbyte(28);
         addbyte(0x8b); /*MOV EBX, state->lod_min*/
         addbyte(0x9f);
-        addlong(offsetof(voodoo_state_t, lod_min[tmu]));
+        addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, lod_min, tmu));
         addbyte(0x48); /*SHR RCX, 28*/
         addbyte(0xc1);
         addbyte(0xe9);
@@ -228,6 +245,14 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             addbyte(0x8b); /*MOV ECX, state->lod[RDI]*/
             addbyte(0x8f);
             addlong(offsetof(voodoo_state_t, lod));
+            /*The shifts need the stored mip level, which differs from the LOD index for split (trilinear) textures*/
+            addbyte(0x48); /*MOV RAX, state->tex_lod[tmu]*/
+            addbyte(0x8b);
+            addbyte(0x87);
+            addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, tex_lod, tmu));
+            addbyte(0x8b); /*MOV ECX, [RAX+RCX*4]*/
+            addbyte(0x0c);
+            addbyte(0x88);
             addbyte(0xbd); /*MOV EBP, 1*/
             addlong(1);
             addbyte(0x28); /*SUB DL, CL*/
@@ -313,7 +338,7 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             addbyte(0x8b);
             addbyte(0xac);
             addbyte(0xcf);
-            addlong(offsetof(voodoo_state_t, tex[tmu]));
+            addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, tex, tmu));
             addbyte(0x88); /*MOV CL, DL*/
             addbyte(0xd1);
             addbyte(0x89); /*MOV EDX, EBX*/
@@ -321,7 +346,7 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             if (!state->clamp_s[tmu]) {
                 addbyte(0x23); /*AND EAX, params->tex_w_mask[ESI]*/
                 addbyte(0x86);
-                addlong(offsetof(voodoo_params_t, tex_w_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_w_mask, tmu));
             }
             addbyte(0x83); /*ADD EDX, 1*/
             addbyte(0xc2);
@@ -333,11 +358,11 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
                 addbyte(0x12);
                 addbyte(0x3b); /*CMP EDX, params->tex_h_mask[ESI]*/
                 addbyte(0x96);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu));
                 addbyte(0x0f); /*CMOVA EDX, params->tex_h_mask[ESI]*/
                 addbyte(0x47);
                 addbyte(0x96);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu));
                 addbyte(0x85); /*TEST EBX,EBX*/
                 addbyte(0xdb);
                 addbyte(0x41); /*CMOVS EBX, R10(alookup[0](zero))*/
@@ -346,18 +371,18 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
                 addbyte(0x1a);
                 addbyte(0x3b); /*CMP EBX, params->tex_h_mask[ESI]*/
                 addbyte(0x9e);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu));
                 addbyte(0x0f); /*CMOVA EBX, params->tex_h_mask[ESI]*/
                 addbyte(0x47);
                 addbyte(0x9e);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu));
             } else {
                 addbyte(0x23); /*AND EDX, params->tex_h_mask[ESI]*/
                 addbyte(0x96);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu));
                 addbyte(0x23); /*AND EBX, params->tex_h_mask[ESI]*/
                 addbyte(0x9e);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu));
             }
             /*EAX = S, EBX = T0, EDX = T1*/
             addbyte(0xd3); /*SHL EBX, CL*/
@@ -377,7 +402,7 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             if (state->clamp_s[tmu]) {
                 addbyte(0x8b); /*MOV EBP, params->tex_w_mask[ESI]*/
                 addbyte(0xae);
-                addlong(offsetof(voodoo_params_t, tex_w_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_w_mask, tmu));
                 addbyte(0x85); /*TEST EAX, EAX*/
                 addbyte(0xc0);
                 addbyte(0x8b); /*MOV ebp_store2, RSI*/
@@ -399,7 +424,7 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             } else {
                 addbyte(0x3b); /*CMP EAX, params->tex_w_mask[ESI] - is S at texture edge (ie will wrap/clamp)?*/
                 addbyte(0x86);
-                addlong(offsetof(voodoo_params_t, tex_w_mask[tmu]));
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_w_mask, tmu));
                 addbyte(0x8b); /*MOV ebp_store2, ESI*/
                 addbyte(0xb7);
                 addlong(offsetof(voodoo_state_t, ebp_store));
@@ -551,7 +576,15 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             addbyte(0x8b);
             addbyte(0xac);
             addbyte(0xcf);
-            addlong(offsetof(voodoo_state_t, tex[tmu]));
+            addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, tex, tmu));
+            /*The shifts need the stored mip level, which differs from the LOD index for split (trilinear) textures*/
+            addbyte(0x48); /*MOV RAX, state->tex_lod[tmu]*/
+            addbyte(0x8b);
+            addbyte(0x87);
+            addlong(VOODOO_OFFSETOF_ARRAY(voodoo_state_t, tex_lod, tmu));
+            addbyte(0x8b); /*MOV ECX, [RAX+RCX*4]*/
+            addbyte(0x0c);
+            addbyte(0x88);
             addbyte(0x28); /*SUB DL, CL*/
             addbyte(0xca);
             addbyte(0x80); /*ADD CL, 4*/
@@ -584,6 +617,13 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
             addbyte(0xe8);
             addbyte(0xd3); /*SHR EBX, CL*/
             addbyte(0xeb);
+            /*The mask arrays below are indexed by LOD index + 4 (hence the -0x10 displacement)*/
+            addbyte(0x8b); /*MOV ECX, state->lod[RDI]*/
+            addbyte(0x8f);
+            addlong(offsetof(voodoo_state_t, lod));
+            addbyte(0x83); /*ADD ECX, 4*/
+            addbyte(0xc1);
+            addbyte(4);
             if (state->clamp_s[tmu]) {
                 addbyte(0x85); /*TEST EAX, EAX*/
                 addbyte(0xc0);
@@ -594,18 +634,18 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
                 addbyte(0x3b); /*CMP EAX, params->tex_w_mask[ESI+ECX*4]*/
                 addbyte(0x84);
                 addbyte(0x8e);
-                addlong(offsetof(voodoo_params_t, tex_w_mask[tmu]) - 0x10);
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_w_mask, tmu) - 0x10);
                 addbyte(0x0f); /*CMOVAE EAX, params->tex_w_mask[ESI+ECX*4]*/
                 addbyte(0x43);
                 addbyte(0x84);
                 addbyte(0x8e);
-                addlong(offsetof(voodoo_params_t, tex_w_mask[tmu]) - 0x10);
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_w_mask, tmu) - 0x10);
 
             } else {
                 addbyte(0x23); /*AND EAX, params->tex_w_mask-0x10[ESI+ECX*4]*/
                 addbyte(0x84);
                 addbyte(0x8e);
-                addlong(offsetof(voodoo_params_t, tex_w_mask[tmu]) - 0x10);
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_w_mask, tmu) - 0x10);
             }
             if (state->clamp_t[tmu]) {
                 addbyte(0x85); /*TEST EBX, EBX*/
@@ -617,17 +657,17 @@ codegen_texture_fetch(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *pa
                 addbyte(0x3b); /*CMP EBX, params->tex_h_mask[ESI+ECX*4]*/
                 addbyte(0x9c);
                 addbyte(0x8e);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]) - 0x10);
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu) - 0x10);
                 addbyte(0x0f); /*CMOVAE EBX, params->tex_h_mask[ESI+ECX*4]*/
                 addbyte(0x43);
                 addbyte(0x9c);
                 addbyte(0x8e);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]) - 0x10);
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu) - 0x10);
             } else {
                 addbyte(0x23); /*AND EBX, params->tex_h_mask-0x10[ESI+ECX*4]*/
                 addbyte(0x9c);
                 addbyte(0x8e);
-                addlong(offsetof(voodoo_params_t, tex_h_mask[tmu]) - 0x10);
+                addlong(VOODOO_OFFSETOF_ARRAY(voodoo_params_t, tex_h_mask, tmu) - 0x10);
             }
             addbyte(0x88); /*MOV CL, DL*/
             addbyte(0xd1);
@@ -693,6 +733,27 @@ voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *params, 
     addbyte(0x56);
     addbyte(0x41); /*PUSH R15*/
     addbyte(0x57);
+#if _WIN64
+    /* This code uses XMM6-XMM11 and XMM15, which the Windows x64 ABI makes
+       the caller's: keep them for it. 0x78 bytes keep RSP 16-byte aligned
+       after the eight pushes. */
+    addbyte(0x48); /*SUB RSP, 0x78*/
+    addbyte(0x83);
+    addbyte(0xec);
+    addbyte(0x78);
+    for (int i = 0; i < (int) (sizeof(voodoo_win64_xmm_saved) / sizeof(voodoo_win64_xmm_saved[0])); i++) {
+        int xmm = voodoo_win64_xmm_saved[i];
+
+        addbyte(0xf3); /*MOVDQU [RSP+i*16], XMMn*/
+        if (xmm >= 8)
+            addbyte(0x44);
+        addbyte(0x0f);
+        addbyte(0x7f);
+        addbyte(0x44 | ((xmm & 7) << 3));
+        addbyte(0x24);
+        addbyte(i * 16);
+    }
+#endif
 
     addbyte(0x49); /*MOV R15, xmm_01_w*/
     addbyte(0xbf);
@@ -1300,7 +1361,7 @@ voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *params, 
                 addbyte(0x35); /*XOR EAX, 0xff*/
                 addlong(0xff);
             }
-            addbyte(0x8e); /*ADD EAX, 1*/
+            addbyte(0x83); /*ADD EAX, 1*/
             addbyte(0xc0);
             addbyte(1);
             addbyte(0x0f); /*IMUL EAX, EBX*/
@@ -2327,7 +2388,7 @@ voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *params, 
                     addlong(offsetof(voodoo_state_t, z));
                     addbyte(0xc1); /*SHR EAX, 12*/
                     addbyte(0xe8);
-                    addbyte(12);
+                    addbyte(20);
                     addbyte(0x25); /*AND EAX, 0xff*/
                     addlong(0xff);
 #if 0
@@ -2736,6 +2797,11 @@ voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *params, 
                 addbyte(8);
                 break;
             case AFUNC_ACOLORBEFOREFOG:
+                addbyte(0x66); /*PUNPCKLBW XMM15, XMM2*/
+                addbyte(0x44);
+                addbyte(0x0f);
+                addbyte(0x60);
+                addbyte(0xfa);
                 addbyte(0x66); /*PMULLW XMM4, XMM15(colbfog)*/
                 addbyte(0x41);
                 addbyte(0x0f);
@@ -3468,6 +3534,25 @@ voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo_params_t *params, 
     addbyte(0x85);
     addlong(loop_jump_pos - (block_pos + 4));
 
+#if _WIN64
+    for (int i = 0; i < (int) (sizeof(voodoo_win64_xmm_saved) / sizeof(voodoo_win64_xmm_saved[0])); i++) {
+        int xmm = voodoo_win64_xmm_saved[i];
+
+        addbyte(0xf3); /*MOVDQU XMMn, [RSP+i*16]*/
+        if (xmm >= 8)
+            addbyte(0x44);
+        addbyte(0x0f);
+        addbyte(0x6f);
+        addbyte(0x44 | ((xmm & 7) << 3));
+        addbyte(0x24);
+        addbyte(i * 16);
+    }
+    addbyte(0x48); /*ADD RSP, 0x78*/
+    addbyte(0x83);
+    addbyte(0xc4);
+    addbyte(0x78);
+#endif
+
     addbyte(0x41); /*POP R15*/
     addbyte(0x5f);
     addbyte(0x41); /*POP R14*/
@@ -3529,7 +3614,7 @@ voodoo_get_block(voodoo_t *voodoo, voodoo_params_t *params, voodoo_state_t *stat
 void
 voodoo_codegen_init(voodoo_t *voodoo)
 {
-    voodoo->codegen_data = plat_mmap(sizeof(voodoo_x86_data_t) * BLOCK_NUM * 4, 1);
+    voodoo->codegen_data = plat_mmap(sizeof(voodoo_x86_data_t) * BLOCK_NUM * 4, 1, NULL);
 
     for (uint16_t c = 0; c < 256; c++) {
         int d[4];

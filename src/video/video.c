@@ -27,11 +27,15 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <math.h>
+#ifdef __APPLE__
+#    include <pthread/qos.h>
+#endif
 #define HAVE_STDARG_H
 #include <86box/86box.h>
 #include "cpu.h"
 #include <86box/device.h>
 #include <86box/io.h>
+#include <86box/machine.h>
 #include <86box/mem.h>
 #include <86box/rom.h>
 #include <86box/config.h>
@@ -42,6 +46,7 @@
 #include <86box/thread.h>
 #include <86box/video.h>
 #include <86box/vid_svga.h>
+#include <86box/automation.h>
 
 #include <minitrace/minitrace.h>
 
@@ -52,7 +57,8 @@ uint8_t      fontdat[2048][8];            /* IBM CGA font */
 uint8_t      fontdatm[2048][16];          /* IBM MDA font */
 uint8_t      fontdatw[512][32];           /* Wyse700 font */
 uint8_t      fontdat8x12[256][16];        /* MDSI Genius font */
-uint8_t      fontdat12x18[256][36];       /* IM1024 font */
+uint8_t      fontdat12x18[256][36];       /* IM1024 12x18 font */
+uint8_t      fontdat8x12im1024[256][12];  /* IM1024 8x12 font */
 dbcs_font_t *fontdatksc5601       = NULL; /* Korean KSC-5601 font */
 dbcs_font_t *fontdatksc5601_user  = NULL; /* Korean KSC-5601 user defined font */
 int          herc_blend           = 0;
@@ -311,7 +317,7 @@ video_take_screenshot_monitor(const char *fn, uint32_t *buf, int start_x, int st
                  8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-    b_rgb = (png_bytep *) malloc(sizeof(png_bytep) * blit_data_ptr->h);
+    b_rgb = (png_bytep *) calloc(blit_data_ptr->h, sizeof(png_bytep));
     if (b_rgb == NULL) {
         video_log("[video_take_screenshot] Unable to Allocate RGB Bitmap Memory");
         fclose(fp);
@@ -319,7 +325,7 @@ video_take_screenshot_monitor(const char *fn, uint32_t *buf, int start_x, int st
     }
 
     for (int y = 0; y < blit_data_ptr->h; ++y) {
-        b_rgb[y] = (png_byte *) malloc(png_get_rowbytes(png_ptr[monitor_index], info_ptr[monitor_index]));
+        b_rgb[y] = (png_byte *) calloc(1, png_get_rowbytes(png_ptr[monitor_index], info_ptr[monitor_index]));
         for (int x = 0; x < blit_data_ptr->w; ++x) {
             if (buf == NULL)
                 memset(&(b_rgb[y][x * 3]), 0x00, 3);
@@ -412,6 +418,12 @@ static void
 blit_thread(void *param)
 {
     blit_data_t *data = param;
+
+#ifdef __APPLE__
+    /* The emulation thread blocks on this thread twice per displayed
+       frame; default QoS makes those waits E-core-latency-bound. */
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+#endif
     while (data->thread_run) {
         thread_wait_event(data->wake_blit_thread, -1);
         thread_reset_event(data->wake_blit_thread);
@@ -437,6 +449,8 @@ video_blit_memtoscreen_monitor(int x, int y, int w, int h, int monitor_index)
 
     video_wait_for_blit_monitor(monitor_index);
 
+    automation_frame(x, y, w, h, monitor_index);
+
     monitors[monitor_index].mon_blit_data_ptr->busy          = 1;
     monitors[monitor_index].mon_blit_data_ptr->buffer_in_use = 1;
     monitors[monitor_index].mon_blit_data_ptr->x             = x;
@@ -447,6 +461,14 @@ video_blit_memtoscreen_monitor(int x, int y, int w, int h, int monitor_index)
 
     thread_set_event(monitors[monitor_index].mon_blit_data_ptr->wake_blit_thread);
     MTR_END("video", "video_blit_memtoscreen");
+}
+
+/* Character clocks from the selected HSYNC edge to the next line.
+   Pass zero for sync start, or the effective pulse width for sync end. */
+int
+video_6845_get_hsync_delay(const uint8_t *crtc, int hsync_width)
+{
+    return (crtc[0] + 1) - crtc[2] - hsync_width;
 }
 
 uint8_t
@@ -598,6 +620,10 @@ video_inform_monitor(int type, const video_timings_t *ptr, int monitor_index)
     monitor_t *monitor       = &monitors[monitor_index];
     monitor->mon_vid_type    = type;
     monitor->mon_vid_timings = ptr;
+    /* The built-in panel belongs to the machine, not to a video controller
+     * that may also drive displays in other machines or secondary monitors. */
+    monitor->mon_device_aspect_x = (monitor_index == 0) ? machines[machine].display_aspect_x : 0;
+    monitor->mon_device_aspect_y = (monitor_index == 0) ? machines[machine].display_aspect_y : 0;
 }
 
 int
@@ -775,7 +801,7 @@ destroy_bitmap(bitmap_t *b)
 bitmap_t *
 create_bitmap(int x, int y)
 {
-    bitmap_t *b = calloc(sizeof(bitmap_t), (y * sizeof(uint32_t *)));
+    bitmap_t *b = calloc(1, sizeof(bitmap_t));
 
     b->dat = calloc((size_t) x * y, 4);
     for (int c = 0; c < y; c++)
@@ -812,6 +838,7 @@ video_monitor_init(int index)
     monitors[index].mon_cga_palette                      = calloc(1, sizeof(int));
     monitors[index].mon_force_resize                     = 1;
     monitors[index].mon_vid_type                         = VIDEO_FLAG_TYPE_NONE;
+    monitors[index].mon_dpms                             = 0;
     atomic_init(&doresize_monitors[index], 0);
     atomic_init(&monitors[index].mon_screenshots, 0);
     atomic_init(&monitors[index].mon_screenshots_clipboard, 0);
@@ -894,23 +921,23 @@ video_init(void)
             egaremap2bpp[c] |= 0x08;
     }
 
-    video_6to8 = malloc(4 * 256);
+    video_6to8 = calloc(4, 256);
     for (uint16_t c = 0; c < 256; c++)
         video_6to8[c] = calc_6to8(c);
 
-    video_8togs = malloc(4 * 256);
+    video_8togs = calloc(4, 256);
     for (uint16_t c = 0; c < 256; c++)
         video_8togs[c] = c | (c << 16) | (c << 24);
 
-    video_8to32 = malloc(4 * 256);
+    video_8to32 = calloc(4, 256);
     for (uint16_t c = 0; c < 256; c++)
         video_8to32[c] = calc_8to32(c);
 
-    video_15to32 = malloc(4 * 65536);
+    video_15to32 = calloc(4, 65536);
     for (uint32_t c = 0; c < 65536; c++)
         video_15to32[c] = calc_15to32(c & 0x7fff);
 
-    video_16to32 = malloc(4 * 65536);
+    video_16to32 = calloc(4, 65536);
     for (uint32_t c = 0; c < 65536; c++)
         video_16to32[c] = calc_16to32(c);
 
@@ -1033,10 +1060,10 @@ video_load_font(char *fn, int format, int offset)
 
         case FONT_FORMAT_KSC6501: /* Korean KSC-5601 */
             if (!fontdatksc5601)
-                fontdatksc5601 = malloc(16384 * sizeof(dbcs_font_t));
+                fontdatksc5601 = calloc(16384, sizeof(dbcs_font_t));
 
             if (!fontdatksc5601_user)
-                fontdatksc5601_user = malloc(192 * sizeof(dbcs_font_t));
+                fontdatksc5601_user = calloc(192, sizeof(dbcs_font_t));
 
             for (uint32_t c = 0; c < 16384; c++) {
                 for (uint8_t d = 0; d < 32; d++)
@@ -1066,6 +1093,11 @@ video_load_font(char *fn, int format, int offset)
         case FONT_FORMAT_IM1024: /* Image Manager 1024 native font */
             for (uint16_t c = 0; c < 256; c++)
                 (void) !fread(&fontdat12x18[c][0], 1, 36, fp);
+            break;
+
+        case FONT_FORMAT_IM1024_8X12: /* Image Manager 1024 native 8x12 font */
+            for (uint16_t c = 0; c < 256; c++)
+                (void) !fread(&fontdat8x12im1024[c][0], 1, 12, fp);
             break;
 
         case FONT_FORMAT_PRAVETZ: /* Pravetz */
@@ -1111,4 +1143,26 @@ video_color_transform(uint32_t color)
     if (invert_display)
         color ^= 0x00ffffff;
     return color;
+}
+
+void
+video_clamp_vram(const uint64_t bios_flags, int *vram)
+{
+    const int min_ram = (uint16_t) (bios_flags & 0xff);
+    const int max_ram = (uint16_t) ((bios_flags >> 8) & 0xff);
+    if ((bios_flags & BIOS_LIMIT_MIN_MEMORY) && (*vram < min_ram))
+        *vram = min_ram;
+    if ((bios_flags & BIOS_LIMIT_MAX_MEMORY) && (*vram > max_ram))
+        *vram = max_ram;
+}
+
+void
+video_clamp_vram_2(const uint64_t bios_flags, int *vram)
+{
+    const int min_ram = (uint16_t) ((bios_flags >> 16) & 0xff);
+    const int max_ram = (uint16_t) ((bios_flags >> 24) & 0xff);
+    if ((bios_flags & BIOS_LIMIT_MIN_MEMORY_2) && (*vram < min_ram))
+        *vram = min_ram;
+    if ((bios_flags & BIOS_LIMIT_MAX_MEMORY_2) && (*vram > max_ram))
+        *vram = max_ram;
 }

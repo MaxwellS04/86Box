@@ -1,0 +1,41 @@
+#ifndef QT_SETTINGS_COMPLETER
+#define QT_SETTINGS_COMPLETER
+
+#include <QWidget>
+#include <QPointer>
+#include <QComboBox>
+#include <QCompleter>
+#include <QLineEdit>
+#include <QStandardItemModel>
+
+namespace Ui {
+class SettingsCompleter;
+}
+
+class SettingsCompleter : public QObject {
+public:
+    explicit SettingsCompleter(QComboBox *cb, QComboBox *cbSort);
+    SettingsCompleter()  = default;
+    ~SettingsCompleter();
+
+    void addMachine(int i, int j);
+    void addDevice(const void *device, QString name);
+
+    void removeRows();
+
+private:
+    QPointer<QComboBox> comboBoxMain;
+    QPointer<QComboBox> comboBoxSort;
+
+    QCompleter *        completer    = nullptr;
+    QStandardItemModel *model        = nullptr;
+
+    /* Rows added since the model was last filled; they go in together. */
+    QList<QStandardItem *> pending;
+
+    bool                eventFilter(QObject *watched, QEvent *event);
+    void                addRow(QString name, QString alias, int special, int id);
+    void                flush();
+};
+
+#endif // QT_SETTINGS_COMPLETER

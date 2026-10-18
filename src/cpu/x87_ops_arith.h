@@ -1,3 +1,13 @@
+#ifdef FPU_8087
+#define x87_div_register(dst, a, b) x87_div(dst, a, b)
+#else
+#define x87_div_register(dst, a, b) \
+    do { \
+        if (x87_legacy_divide(&(dst), (a), (b), \
+            X87_ST_EMPTY(0) || X87_ST_EMPTY(fetchdat & 7))) \
+            return 0; \
+    } while (0)
+#endif
 
 #ifdef X87_INLINE_ASM
 static inline double float_add(double src, double val, int round)
@@ -51,7 +61,7 @@ static inline double float_add(double src, double val, int round)
         load_var = get();                                                                                                                          \
         if (cpu_state.abrt)                                                                                                                        \
             return 1;                                                                                                                              \
-        DO_FADD(use_var);                                                                                                                          \
+        DO_FADD(use_var); FP_ROUND_PC(ST(0));                                                                                                                          \
         FP_TAG_VALID;                                                                                                                              \
         CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd##cycle_postfix) : ((x87_timings.fadd##cycle_postfix) * cpu_multi));           \
         CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd##cycle_postfix) : ((x87_concurrency.fadd##cycle_postfix) * cpu_multi)); \
@@ -97,7 +107,7 @@ static inline double float_add(double src, double val, int round)
         load_var = get();                                                                                                                          \
         if (cpu_state.abrt)                                                                                                                        \
             return 1;                                                                                                                              \
-        x87_div(ST(0), ST(0), use_var);                                                                                                            \
+        x87_div_memory(ST(0), ST(0), use_var, use_var); FP_ROUND_PC(ST(0)); \
         FP_TAG_VALID;                                                                                                                              \
         CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv##cycle_postfix) : ((x87_timings.fdiv##cycle_postfix) * cpu_multi));           \
         CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd##cycle_postfix) : ((x87_concurrency.fadd##cycle_postfix) * cpu_multi)); \
@@ -112,7 +122,7 @@ static inline double float_add(double src, double val, int round)
         load_var = get();                                                                                                                          \
         if (cpu_state.abrt)                                                                                                                        \
             return 1;                                                                                                                              \
-        x87_div(ST(0), use_var, ST(0));                                                                                                            \
+        x87_div_memory(ST(0), use_var, ST(0), use_var); FP_ROUND_PC(ST(0)); \
         FP_TAG_VALID;                                                                                                                              \
         CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv##cycle_postfix) : ((x87_timings.fdiv##cycle_postfix) * cpu_multi));           \
         CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fdiv##cycle_postfix) : ((x87_concurrency.fdiv##cycle_postfix) * cpu_multi)); \
@@ -127,7 +137,7 @@ static inline double float_add(double src, double val, int round)
         load_var = get();                                                                                                                          \
         if (cpu_state.abrt)                                                                                                                        \
             return 1;                                                                                                                              \
-        ST(0) *= use_var;                                                                                                                          \
+        ST(0) *= use_var; FP_ROUND_PC(ST(0));                                                                                                                          \
         FP_TAG_VALID;                                                                                                                              \
         CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fmul##cycle_postfix) : ((x87_timings.fmul##cycle_postfix) * cpu_multi));           \
         CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fmul##cycle_postfix) : ((x87_concurrency.fmul##cycle_postfix) * cpu_multi)); \
@@ -142,7 +152,7 @@ static inline double float_add(double src, double val, int round)
         load_var = get();                                                                                                                          \
         if (cpu_state.abrt)                                                                                                                        \
             return 1;                                                                                                                              \
-        ST(0) -= use_var;                                                                                                                          \
+        ST(0) -= use_var; FP_ROUND_PC(ST(0));                                                                                                                          \
         FP_TAG_VALID;                                                                                                                              \
         CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd##cycle_postfix) : ((x87_timings.fadd##cycle_postfix) * cpu_multi));           \
         CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd##cycle_postfix) : ((x87_concurrency.fadd##cycle_postfix) * cpu_multi)); \
@@ -157,7 +167,7 @@ static inline double float_add(double src, double val, int round)
         load_var = get();                                                                                                                          \
         if (cpu_state.abrt)                                                                                                                        \
             return 1;                                                                                                                              \
-        ST(0) = use_var - ST(0);                                                                                                                   \
+        ST(0) = use_var - ST(0); FP_ROUND_PC(ST(0));                                                                                                                   \
         FP_TAG_VALID;                                                                                                                              \
         CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd##cycle_postfix) : ((x87_timings.fadd##cycle_postfix) * cpu_multi));           \
         CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd##cycle_postfix) : ((x87_concurrency.fadd##cycle_postfix) * cpu_multi)); \
@@ -188,7 +198,7 @@ static int opFADD(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(0) = ST(0) + ST(fetchdat & 7);
+    ST(0) = ST(0) + ST(fetchdat & 7); FP_ROUND_PC(ST(0));
     FP_TAG_VALID;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
@@ -199,7 +209,7 @@ opFADDr(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0);
+    ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
@@ -210,12 +220,24 @@ opFADDP(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0);
+    ST(fetchdat & 7) = ST(fetchdat & 7) + ST(0); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
     return 0;
+}
+
+/* FCOMI/FUCOMI: ZF, PF and CF are C3, C2 and C0 of the compare */
+static inline void
+x87_eflags_from_compare(uint32_t c)
+{
+    if (c & FPU_SW_C3)
+        cpu_state.flags |= Z_FLAG;
+    if (c & FPU_SW_C2)
+        cpu_state.flags |= P_FLAG;
+    if (c & FPU_SW_C0)
+        cpu_state.flags |= C_FLAG;
 }
 
 static int
@@ -224,10 +246,7 @@ opFCOM(uint32_t fetchdat)
     FP_ENTER();
     cpu_state.pc++;
     cpu_state.npxs &= ~(FPU_SW_C0 | FPU_SW_C2 | FPU_SW_C3);
-    if (ST(0) == ST(fetchdat & 7))
-        cpu_state.npxs |= FPU_SW_C3;
-    else if (ST(0) < ST(fetchdat & 7))
-        cpu_state.npxs |= FPU_SW_C0;
+    cpu_state.npxs |= x87_compare(ST(0), ST(fetchdat & 7)); /* unordered: 111 */
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fcom) : (x87_timings.fcom * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fcom) : (x87_concurrency.fcom * cpu_multi));
     return 0;
@@ -289,10 +308,7 @@ opFCOMI(uint32_t fetchdat)
     cpu_state.pc++;
     flags_rebuild();
     cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-    if (ST(0) == ST(fetchdat & 7))
-        cpu_state.flags |= Z_FLAG;
-    else if (ST(0) < ST(fetchdat & 7))
-        cpu_state.flags |= C_FLAG;
+    x87_eflags_from_compare(x87_compare(ST(0), ST(fetchdat & 7)));
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fcom) : (x87_timings.fcom * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fcom) : (x87_concurrency.fcom * cpu_multi));
     return 0;
@@ -304,10 +320,7 @@ opFCOMIP(uint32_t fetchdat)
     cpu_state.pc++;
     flags_rebuild();
     cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-    if (ST(0) == ST(fetchdat & 7))
-        cpu_state.flags |= Z_FLAG;
-    else if (ST(0) < ST(fetchdat & 7))
-        cpu_state.flags |= C_FLAG;
+    x87_eflags_from_compare(x87_compare(ST(0), ST(fetchdat & 7)));
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fcom) : (x87_timings.fcom * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fcom) : (x87_concurrency.fcom * cpu_multi));
@@ -321,7 +334,7 @@ opFDIV(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    x87_div(ST(0), ST(0), ST(fetchdat & 7));
+    x87_div_register(ST(0), ST(0), ST(fetchdat & 7)); FP_ROUND_PC(ST(0));
     FP_TAG_VALID;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv) : (x87_timings.fdiv * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fdiv) : (x87_concurrency.fdiv * cpu_multi));
@@ -332,7 +345,7 @@ opFDIVr(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    x87_div(ST(fetchdat & 7), ST(fetchdat & 7), ST(0));
+    x87_div_register(ST(fetchdat & 7), ST(fetchdat & 7), ST(0)); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv) : (x87_timings.fdiv * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fdiv) : (x87_concurrency.fdiv * cpu_multi));
@@ -343,7 +356,7 @@ opFDIVP(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    x87_div(ST(fetchdat & 7), ST(fetchdat & 7), ST(0));
+    x87_div_register(ST(fetchdat & 7), ST(fetchdat & 7), ST(0)); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv) : (x87_timings.fdiv * cpu_multi));
@@ -356,7 +369,7 @@ opFDIVR(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    x87_div(ST(0), ST(fetchdat & 7), ST(0));
+    x87_div_register(ST(0), ST(fetchdat & 7), ST(0)); FP_ROUND_PC(ST(0));
     FP_TAG_VALID;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv) : (x87_timings.fdiv * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fdiv) : (x87_concurrency.fdiv * cpu_multi));
@@ -367,7 +380,7 @@ opFDIVRr(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    x87_div(ST(fetchdat & 7), ST(0), ST(fetchdat & 7));
+    x87_div_register(ST(fetchdat & 7), ST(0), ST(fetchdat & 7)); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv) : (x87_timings.fdiv * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fdiv) : (x87_concurrency.fdiv * cpu_multi));
@@ -378,7 +391,7 @@ opFDIVRP(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    x87_div(ST(fetchdat & 7), ST(0), ST(fetchdat & 7));
+    x87_div_register(ST(fetchdat & 7), ST(0), ST(fetchdat & 7)); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fdiv) : (x87_timings.fdiv * cpu_multi));
@@ -391,7 +404,7 @@ opFMUL(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(0) = ST(0) * ST(fetchdat & 7);
+    ST(0) = ST(0) * ST(fetchdat & 7); FP_ROUND_PC(ST(0));
     FP_TAG_VALID;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fmul) : (x87_timings.fmul * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fmul) : (x87_concurrency.fmul * cpu_multi));
@@ -402,7 +415,7 @@ opFMULr(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7);
+    ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fmul) : (x87_timings.fmul * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fmul) : (x87_concurrency.fmul * cpu_multi));
@@ -413,7 +426,7 @@ opFMULP(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7);
+    ST(fetchdat & 7) = ST(0) * ST(fetchdat & 7); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fmul) : (x87_timings.fmul * cpu_multi));
@@ -426,7 +439,7 @@ opFSUB(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(0) = ST(0) - ST(fetchdat & 7);
+    ST(0) = ST(0) - ST(fetchdat & 7); FP_ROUND_PC(ST(0));
     FP_TAG_VALID;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
@@ -437,7 +450,7 @@ opFSUBr(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0);
+    ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
@@ -448,7 +461,7 @@ opFSUBP(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0);
+    ST(fetchdat & 7) = ST(fetchdat & 7) - ST(0); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
@@ -461,7 +474,7 @@ opFSUBR(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(0) = ST(fetchdat & 7) - ST(0);
+    ST(0) = ST(fetchdat & 7) - ST(0); FP_ROUND_PC(ST(0));
     FP_TAG_VALID;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
@@ -472,7 +485,7 @@ opFSUBRr(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7);
+    ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fadd) : (x87_concurrency.fadd * cpu_multi));
@@ -483,7 +496,7 @@ opFSUBRP(uint32_t fetchdat)
 {
     FP_ENTER();
     cpu_state.pc++;
-    ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7);
+    ST(fetchdat & 7) = ST(0) - ST(fetchdat & 7); FP_ROUND_PC(ST(fetchdat & 7));
     FP_TAG_VALID_F;
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fadd) : (x87_timings.fadd * cpu_multi));
@@ -525,10 +538,7 @@ opFUCOMI(uint32_t fetchdat)
     cpu_state.pc++;
     flags_rebuild();
     cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-    if (ST(0) == ST(fetchdat & 7))
-        cpu_state.flags |= Z_FLAG;
-    else if (ST(0) < ST(fetchdat & 7))
-        cpu_state.flags |= C_FLAG;
+    x87_eflags_from_compare(x87_ucompare(ST(0), ST(fetchdat & 7)));
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fucom) : (x87_timings.fucom * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fucom) : (x87_concurrency.fucom * cpu_multi));
     return 0;
@@ -540,10 +550,7 @@ opFUCOMIP(uint32_t fetchdat)
     cpu_state.pc++;
     flags_rebuild();
     cpu_state.flags &= ~(Z_FLAG | P_FLAG | C_FLAG);
-    if (ST(0) == ST(fetchdat & 7))
-        cpu_state.flags |= Z_FLAG;
-    else if (ST(0) < ST(fetchdat & 7))
-        cpu_state.flags |= C_FLAG;
+    x87_eflags_from_compare(x87_ucompare(ST(0), ST(fetchdat & 7)));
     x87_pop();
     CLOCK_CYCLES_FPU((fpu_type >= FPU_487SX) ? (x87_timings.fucom) : (x87_timings.fucom * cpu_multi));
     CONCURRENCY_CYCLES((fpu_type >= FPU_487SX) ? (x87_concurrency.fucom) : (x87_concurrency.fucom * cpu_multi));

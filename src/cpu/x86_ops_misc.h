@@ -290,9 +290,8 @@ opF7_w_a16(uint32_t fetchdat)
 {
     uint32_t templ;
     uint32_t templ2 = 0;
-    int      tempws;
-    int      tempws2 = 0;
-    int16_t  temps16;
+    int32_t  tempws;
+    int64_t  tempws2 = 0;
     uint16_t src;
     uint16_t dst;
 
@@ -376,11 +375,12 @@ opF7_w_a16(uint32_t fetchdat)
             PREFETCH_RUN((is486 && !cpu_iscyrix) ? 24 : 22, 2, rmdat, (cpu_mod == 3) ? 0 : 1, 0, 0, 0, 0);
             break;
         case 0x38: /*IDIV AX,w*/
-            tempws = (int) ((DX << 16) | AX);
+            tempws = (int32_t) (((uint32_t) DX << 16) | AX);
             if (dst)
-                tempws2 = tempws / (int) ((int16_t) dst);
-            temps16 = tempws2 & 0xffff;
-            if ((dst != 0) && ((int) temps16 == tempws2)) {
+                tempws2 = (int64_t) tempws / (int16_t) dst;
+            /* Keep the quotient wide until the architectural range check:
+               80000000h / -1 must #DE, without overflowing host arithmetic. */
+            if ((dst != 0) && (tempws2 >= -32768) && (tempws2 <= 32767)) {
                 DX = tempws % (int) ((int16_t) dst);
                 AX = tempws2 & 0xffff;
                 if (!cpu_iscyrix && !is6117)
@@ -403,9 +403,8 @@ opF7_w_a32(uint32_t fetchdat)
 {
     uint32_t templ;
     uint32_t templ2 = 0;
-    int      tempws;
-    int      tempws2 = 1;
-    int16_t  temps16;
+    int32_t  tempws;
+    int64_t  tempws2 = 0;
     uint16_t src;
     uint16_t dst;
 
@@ -490,11 +489,12 @@ opF7_w_a32(uint32_t fetchdat)
             PREFETCH_RUN((is486 && !cpu_iscyrix) ? 24 : 22, 2, rmdat, (cpu_mod == 3) ? 0 : 1, 0, 0, 0, 1);
             break;
         case 0x38: /*IDIV AX,w*/
-            tempws = (int) ((DX << 16) | AX);
+            tempws = (int32_t) (((uint32_t) DX << 16) | AX);
             if (dst)
-                tempws2 = tempws / (int) ((int16_t) dst);
-            temps16 = tempws2 & 0xffff;
-            if ((dst != 0) && ((int) temps16 == tempws2)) {
+                tempws2 = (int64_t) tempws / (int16_t) dst;
+            /* Keep the quotient wide until the architectural range check:
+               80000000h / -1 must #DE, without overflowing host arithmetic. */
+            if ((dst != 0) && (tempws2 >= -32768) && (tempws2 <= 32767)) {
                 DX = tempws % (int) ((int16_t) dst);
                 AX = tempws2 & 0xffff;
                 if (!cpu_iscyrix && !is6117)
@@ -711,8 +711,10 @@ opHLT(UNUSED(uint32_t fetchdat))
         enter_smm_check(1);
     else if (!((cpu_state.flags & I_FLAG) && pic.int_pending)) {
         CLOCK_CYCLES_ALWAYS(100);
-        if (!((cpu_state.flags & I_FLAG) && pic.int_pending))
+        if (!((cpu_state.flags & I_FLAG) && pic.int_pending)) {
             cpu_state.pc--;
+            cpu_halted = 1; /* an interrupt taken here returns past the HLT */
+        }
     } else {
         CLOCK_CYCLES(5);
     }
@@ -740,6 +742,15 @@ opLOCK(uint32_t fetchdat)
 
     ILLEGAL_ON(legal == 0);
 
+    /* The 80286 locks any instruction, but in protected mode only at a
+       CPL no greater than IOPL: "#GP(0) if the current privilege level is
+       bigger (less privileged) than the I/O privilege level" (80286 PRM,
+       LOCK) */
+    if (!is386 && (msw & 1) && (CPL > ((cpu_state.flags >> 12) & 3))) {
+        x86gpf(NULL, 0);
+        return 1;
+    }
+
     CLOCK_CYCLES(4);
     PREFETCH_PREFIX();
     return x86_2386_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
@@ -748,12 +759,39 @@ opLOCK(uint32_t fetchdat)
 static int
 opLOCK(uint32_t fetchdat)
 {
+    uint32_t pc = cpu_state.pc;
+    uint8_t  opcode;
+    int      is_0f = 0;
+    int      legal = 0;
+
     fetchdat = fastreadl(cs + cpu_state.pc);
     if (cpu_state.abrt)
         return 0;
+
+    /* Past any prefixes after the LOCK to the opcode it applies to */
+    opcode = fetchdat & 0xff;
+    while ((pc - cpu_state.pc) < 14) {
+        if ((opcode != 0x26) && (opcode != 0x2e) && (opcode != 0x36) && (opcode != 0x3e) && (opcode != 0x64) &&
+            (opcode != 0x65) && (opcode != 0x66) && (opcode != 0x67) && (opcode != 0xf0) && (opcode != 0xf2) && (opcode != 0xf3))
+            break;
+        opcode = fastreadb(cs + ++pc);
+        if (cpu_state.abrt)
+            return 0;
+    }
+    if (opcode == 0x0f) {
+        is_0f  = 1;
+        opcode = fastreadb(cs + ++pc);
+        if (cpu_state.abrt)
+            return 0;
+    }
+    if (x86_lock_opcode(is_0f, opcode)) {
+        legal = x86_lock_legal(is_0f, opcode, fastreadb(cs + pc + 1));
+        if (cpu_state.abrt)
+            return 0;
+    }
     cpu_state.pc++;
 
-    ILLEGAL_ON(((fetchdat & 0xff) == 0x90) || ((fetchdat & 0xff) == 0xec));
+    ILLEGAL_ON(!legal);
 
     CLOCK_CYCLES(4);
     PREFETCH_PREFIX();
@@ -770,6 +808,7 @@ opBOUND_w_a16(uint32_t fetchdat)
     fetch_ea_16(fetchdat);
     ILLEGAL_ON(cpu_mod == 3);
     SEG_CHECK_READ(cpu_state.ea_seg);
+    CHECK_READ_EA(4);
     low  = geteaw();
     high = readmemw(easeg, cpu_state.eaaddr + 2);
     if (cpu_state.abrt)
@@ -793,6 +832,7 @@ opBOUND_w_a32(uint32_t fetchdat)
     fetch_ea_32(fetchdat);
     ILLEGAL_ON(cpu_mod == 3);
     SEG_CHECK_READ(cpu_state.ea_seg);
+    CHECK_READ_EA(4);
     low  = geteaw();
     high = readmemw(easeg, cpu_state.eaaddr + 2);
     if (cpu_state.abrt)
@@ -817,6 +857,7 @@ opBOUND_l_a16(uint32_t fetchdat)
     fetch_ea_16(fetchdat);
     ILLEGAL_ON(cpu_mod == 3);
     SEG_CHECK_READ(cpu_state.ea_seg);
+    CHECK_READ_EA(8);
     low  = geteal();
     high = readmeml(easeg, cpu_state.eaaddr + 4);
     if (cpu_state.abrt)
@@ -840,6 +881,7 @@ opBOUND_l_a32(uint32_t fetchdat)
     fetch_ea_32(fetchdat);
     ILLEGAL_ON(cpu_mod == 3);
     SEG_CHECK_READ(cpu_state.ea_seg);
+    CHECK_READ_EA(8);
     low  = geteal();
     high = readmeml(easeg, cpu_state.eaaddr + 4);
     if (cpu_state.abrt)
@@ -871,6 +913,10 @@ opCLTS(UNUSED(uint32_t fetchdat))
 static int
 opINVD(UNUSED(uint32_t fetchdat))
 {
+    if ((CPL || (cpu_state.eflags & VM_FLAG)) && (cr0 & 1)) {
+        x86gpf(NULL, 0);
+        return 1;
+    }
     CLOCK_CYCLES(1000);
     CPU_BLOCK_END();
     return 0;
@@ -884,66 +930,6 @@ opWBINVD(UNUSED(uint32_t fetchdat))
     }
     CLOCK_CYCLES(10000);
     CPU_BLOCK_END();
-    return 0;
-}
-
-static int
-opLOADALL(UNUSED(uint32_t fetchdat))
-{
-    if (CPL && (cr0 & 1)) {
-        x86gpf(NULL, 0);
-        return 1;
-    }
-    msw             = (msw & 1) | readmemw(0, 0x806);
-    cpu_state.flags = (readmemw(0, 0x818) & 0xffd5) | 2;
-    flags_extract();
-    tr.seg                  = readmemw(0, 0x816);
-    cpu_state.pc            = readmemw(0, 0x81A);
-    ldt.seg                 = readmemw(0, 0x81C);
-    DS                      = readmemw(0, 0x81E);
-    SS                      = readmemw(0, 0x820);
-    CS                      = readmemw(0, 0x822);
-    ES                      = readmemw(0, 0x824);
-    DI                      = readmemw(0, 0x826);
-    SI                      = readmemw(0, 0x828);
-    BP                      = readmemw(0, 0x82A);
-    SP                      = readmemw(0, 0x82C);
-    BX                      = readmemw(0, 0x82E);
-    DX                      = readmemw(0, 0x830);
-    CX                      = readmemw(0, 0x832);
-    AX                      = readmemw(0, 0x834);
-    es                      = readmemw(0, 0x836) | (readmemb(0, 0x838) << 16);
-    cpu_state.seg_es.access = readmemb(0, 0x839);
-    cpu_state.seg_es.limit  = readmemw(0, 0x83A);
-    cs                      = readmemw(0, 0x83C) | (readmemb(0, 0x83E) << 16);
-    cpu_state.seg_cs.access = readmemb(0, 0x83F);
-    cpu_state.seg_cs.limit  = readmemw(0, 0x840);
-    ss                      = readmemw(0, 0x842) | (readmemb(0, 0x844) << 16);
-    cpu_state.seg_ss.access = readmemb(0, 0x845);
-    cpu_state.seg_ss.limit  = readmemw(0, 0x846);
-    if (cpu_state.seg_ss.base == 0 && cpu_state.seg_ss.limit_low == 0 && cpu_state.seg_ss.limit_high == 0xffffffff)
-        cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
-    else
-        cpu_cur_status |= CPU_STATUS_NOTFLATSS;
-    ds                      = readmemw(0, 0x848) | (readmemb(0, 0x84A) << 16);
-    cpu_state.seg_ds.access = readmemb(0, 0x84B);
-    cpu_state.seg_ds.limit  = readmemw(0, 0x84C);
-    if (cpu_state.seg_ds.base == 0 && cpu_state.seg_ds.limit_low == 0 && cpu_state.seg_ds.limit_high == 0xffffffff)
-        cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
-    else
-        cpu_cur_status |= CPU_STATUS_NOTFLATDS;
-    gdt.base   = readmemw(0, 0x84E) | (readmemb(0, 0x850) << 16);
-    gdt.limit  = readmemw(0, 0x852);
-    ldt.base   = readmemw(0, 0x854) | (readmemb(0, 0x856) << 16);
-    ldt.access = readmemb(0, 0x857);
-    ldt.limit  = readmemw(0, 0x858);
-    idt.base   = readmemw(0, 0x85A) | (readmemb(0, 0x85C) << 16);
-    idt.limit  = readmemw(0, 0x85E);
-    tr.base    = readmemw(0, 0x860) | (readmemb(0, 0x862) << 16);
-    tr.access  = readmemb(0, 0x863);
-    tr.limit   = readmemw(0, 0x864);
-    CLOCK_CYCLES(195);
-    PREFETCH_RUN(195, 1, -1, 51, 0, 0, 0, 0);
     return 0;
 }
 
@@ -962,6 +948,76 @@ set_segment_limit(x86seg *s, uint8_t segdat3)
 
 static void
 loadall_load_segment(uint32_t addr, x86seg *s)
+{
+    uint32_t segdat2 = readmemw(0, addr) |
+                       (readmemw(0, addr + 2) << 16);
+    s->base          = segdat2 & 0x00ffffff;
+    s->access        = segdat2 >> 24;
+    s->ar_high       = 0x00;
+    s->limit         = readmemw(0, addr + 4);
+
+    set_segment_limit(s, 0x00);
+
+    if (s == &cpu_state.seg_ds) {
+        if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
+            cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
+        else
+            cpu_cur_status |= CPU_STATUS_NOTFLATDS;
+    }
+    if (s == &cpu_state.seg_es) {
+        if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
+            cpu_cur_status &= ~CPU_STATUS_NOTFLATES;
+        else
+            cpu_cur_status |= CPU_STATUS_NOTFLATES;
+    }
+    if (s == &cpu_state.seg_ss) {
+        if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
+            cpu_cur_status &= ~CPU_STATUS_NOTFLATSS;
+        else
+            cpu_cur_status |= CPU_STATUS_NOTFLATSS;
+    }
+}
+
+static int
+opLOADALL(UNUSED(uint32_t fetchdat))
+{
+    if (CPL && (cr0 & 1)) {
+        x86gpf(NULL, CPL & 0x00);
+        return 1;
+    }
+    msw             = (msw & 1) | readmemw(0, 0x806);
+    cpu_state.flags = (readmemw(0, 0x818) & 0x7fd5) | 2;
+    flags_extract();
+    tr.seg                  = readmemw(0, 0x816);
+    cpu_state.pc            = readmemw(0, 0x81A);
+    ldt.seg                 = readmemw(0, 0x81C);
+    DS                      = readmemw(0, 0x81E);
+    SS                      = readmemw(0, 0x820);
+    CS                      = readmemw(0, 0x822);
+    ES                      = readmemw(0, 0x824);
+    DI                      = readmemw(0, 0x826);
+    SI                      = readmemw(0, 0x828);
+    BP                      = readmemw(0, 0x82A);
+    SP                      = readmemw(0, 0x82C);
+    BX                      = readmemw(0, 0x82E);
+    DX                      = readmemw(0, 0x830);
+    CX                      = readmemw(0, 0x832);
+    AX                      = readmemw(0, 0x834);
+    loadall_load_segment(0x836, &cpu_state.seg_es);
+    loadall_load_segment(0x83c, &cpu_state.seg_cs);
+    loadall_load_segment(0x842, &cpu_state.seg_ss);
+    loadall_load_segment(0x848, &cpu_state.seg_ds);
+    loadall_load_segment(0x84e, &gdt);
+    loadall_load_segment(0x854, &ldt);
+    loadall_load_segment(0x85a, &idt);
+    loadall_load_segment(0x860, &tr);
+    CLOCK_CYCLES(195);
+    PREFETCH_RUN(195, 1, -1, 51, 0, 0, 0, 0);
+    return 0;
+}
+
+static void
+loadall386_load_segment(uint32_t addr, x86seg *s)
 {
     uint32_t attrib  = readmeml(0, addr);
     uint32_t segdat3 = (attrib >> 16) & 0xff;
@@ -988,6 +1044,12 @@ loadall_load_segment(uint32_t addr, x86seg *s)
             cpu_cur_status &= ~CPU_STATUS_NOTFLATDS;
         else
             cpu_cur_status |= CPU_STATUS_NOTFLATDS;
+    }
+    if (s == &cpu_state.seg_es) {
+        if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
+            cpu_cur_status &= ~CPU_STATUS_NOTFLATES;
+        else
+            cpu_cur_status |= CPU_STATUS_NOTFLATES;
     }
     if (s == &cpu_state.seg_ss) {
         if (s->base == 0 && s->limit_low == 0 && s->limit_high == 0xffffffff)
@@ -1026,19 +1088,20 @@ opLOADALL386(UNUSED(uint32_t fetchdat))
     CS           = readmemw(0, la_addr + 0x4C);
     ES           = readmemw(0, la_addr + 0x50);
 
-    loadall_load_segment(la_addr + 0x54, &tr);
-    loadall_load_segment(la_addr + 0x60, &idt);
-    loadall_load_segment(la_addr + 0x6c, &gdt);
-    loadall_load_segment(la_addr + 0x78, &ldt);
-    loadall_load_segment(la_addr + 0x84, &cpu_state.seg_gs);
-    loadall_load_segment(la_addr + 0x90, &cpu_state.seg_fs);
-    loadall_load_segment(la_addr + 0x9c, &cpu_state.seg_ds);
-    loadall_load_segment(la_addr + 0xa8, &cpu_state.seg_ss);
-    loadall_load_segment(la_addr + 0xb4, &cpu_state.seg_cs);
-    loadall_load_segment(la_addr + 0xc0, &cpu_state.seg_es);
+    loadall386_load_segment(la_addr + 0x54, &tr);
+    loadall386_load_segment(la_addr + 0x60, &idt);
+    loadall386_load_segment(la_addr + 0x6c, &gdt);
+    loadall386_load_segment(la_addr + 0x78, &ldt);
+    loadall386_load_segment(la_addr + 0x84, &cpu_state.seg_gs);
+    loadall386_load_segment(la_addr + 0x90, &cpu_state.seg_fs);
+    loadall386_load_segment(la_addr + 0x9c, &cpu_state.seg_ds);
+    loadall386_load_segment(la_addr + 0xa8, &cpu_state.seg_ss);
+    loadall386_load_segment(la_addr + 0xb4, &cpu_state.seg_cs);
+    loadall386_load_segment(la_addr + 0xc0, &cpu_state.seg_es);
 
-    if (CPL == 3 && oldcpl != 3)
-        flushmmucache_nopc();
+    /* CR0 and the debug registers were loaded outright: the processor's
+       lookups go. */
+    flushmmucache();
     oldcpl = CPL;
 
     CLOCK_CYCLES(350);

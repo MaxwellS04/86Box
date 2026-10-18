@@ -74,8 +74,8 @@ ogc_recalctimings(ogc_t *ogc)
     _dispofftime = disptime - _dispontime;
     _dispontime *= CGACONST / 2;
     _dispofftime *= CGACONST / 2;
-    ogc->cga.dispontime  = (uint64_t) (_dispontime);
-    ogc->cga.dispofftime = (uint64_t) (_dispofftime);
+    ogc->cga.dispontime  = (uint64_t) (int64_t) (_dispontime);
+    ogc->cga.dispofftime = (uint64_t) (int64_t) (_dispofftime);
 }
 
 void
@@ -157,7 +157,11 @@ ogc_waitstates(UNUSED(void *priv))
     int ws;
 
     ws = ws_array[cycles & 0xf];
-    sub_cycles(ws);
+
+    if (is_nec)
+        sub_cycles_vx0(ws);
+    else
+        sub_cycles(ws);
 }
 
 void
@@ -381,6 +385,7 @@ ogc_poll(void *priv)
                 x = (ogc->cga.crtc[CGA_CRTC_HDISP] << 4) + 16;
 
             video_process_8(x, ogc->cga.displine);
+            video_lightpen_check_trigger_strobe(8, ogc->cga.displine * (ogc->cga.double_type ? 2 : 1), 0, ogc->cga.firstline + 8, 16. * (1. / (CGACONST / (cpuclock * (double) (1ULL << 32)))), ogc->cga.monitor_used);
 
             ogc->cga.scanline = scanline_old;
             if (ogc->cga.vc == ogc->cga.crtc[CGA_CRTC_VSYNC] && !ogc->cga.scanline)
@@ -390,6 +395,7 @@ ogc_poll(void *priv)
                 ogc->cga.displine = 0;
         } else {
             timer_advance_u64(&ogc->cga.timer, ogc->cga.dispontime);
+            video_lightpen_hsync();
             if (ogc->cga.cgadispon)
                 ogc->cga.cgastat &= ~1;
             ogc->cga.linepos = 0;
@@ -451,6 +457,7 @@ ogc_poll(void *priv)
                     if (ogc->cga.vc == ogc->cga.crtc[CGA_CRTC_VSYNC]) {
                         ogc->cga.cgadispon = 0;
                         ogc->cga.displine  = 0;
+                        video_lightpen_vsync();
                         /* ogc specific */
                         ogc->cga.vsynctime = (ogc->cga.crtc[CGA_CRTC_HSYNC_WIDTH] >> 4) + 1;
                         if (ogc->cga.crtc[CGA_CRTC_VSYNC]) {
@@ -587,9 +594,8 @@ ogc_init(UNUSED(const device_t *info))
 #if 0
     int display_type;
 #endif
-    ogc_t *ogc = (ogc_t *) malloc(sizeof(ogc_t));
+    ogc_t *ogc = (ogc_t *) calloc(1, sizeof(ogc_t));
 
-    memset(ogc, 0x00, sizeof(ogc_t));
     video_inform(VIDEO_FLAG_TYPE_CGA, &timing_ogc);
 
     video_load_font("roms/video/ogc/ogc graphics board go380 258 pqbq.bin", FONT_FORMAT_PC200, LOAD_FONT_NO_OFFSET);
@@ -602,7 +608,7 @@ ogc_init(UNUSED(const device_t *info))
     ogc->cga.revision     = device_get_config_int("composite_type");
     ogc->cga.snow_enabled = device_get_config_int("snow_enabled");
 
-    ogc->cga.vram = malloc(0x8000);
+    ogc->cga.vram = calloc(1, 0x8000);
 
     cga_comp_init(ogc->cga.revision);
     timer_add(&ogc->cga.timer, ogc_poll, ogc, 1);
@@ -664,7 +670,7 @@ const device_config_t ogc_m24_config[] = {
 };
 
 const device_t ogc_m24_device = {
-    .name          = "Olivetti M21/M24/M28 (GO317/318/380/709) video card",
+    .name          = "Olivetti M21/M24/M28 (GO317/318/380/709)",
     .internal_name = "ogc_m24",
     .flags         = DEVICE_ISA,
     .local         = 0,

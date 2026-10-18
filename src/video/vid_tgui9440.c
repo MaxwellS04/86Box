@@ -230,7 +230,7 @@ tgui_update_irqs(tgui_t *tgui)
 static void
 tgui_remove_io(tgui_t *tgui)
 {
-    io_removehandler(0x03c0, 0x0020, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
+    io_removehandler(0x03a0, 0x0040, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
     if (tgui->type >= TGUI_9440) {
         io_removehandler(0x43c6, 0x0004, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
         io_removehandler(0x83c6, 0x0003, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
@@ -262,6 +262,8 @@ tgui_set_io(tgui_t *tgui)
 {
     tgui_remove_io(tgui);
 
+    if (!(tgui->svga.miscout & 0x01))
+        io_sethandler(0x03a0, 0x0020, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
     io_sethandler(0x03c0, 0x0020, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
     if (tgui->type >= TGUI_9440) {
         io_sethandler(0x43c6, 0x0004, tgui_in, NULL, NULL, tgui_out, NULL, NULL, tgui);
@@ -784,7 +786,7 @@ tgui_recalctimings(svga_t *svga)
         else if (svga->gdcreg[0xf] & 0x40)
             svga->clock *= 3.0;
 
-        pclog("GDCREGF=%02x, miscout=%02x.\n", svga->gdcreg[0xf] & 0x48, svga->miscout & 0x0c);
+        // pclog("GDCREGF=%02x, miscout=%02x.\n", svga->gdcreg[0xf] & 0x48, svga->miscout & 0x0c);
     } else {
         //pclog("TGUI9400CXi: Clock double=%d.\n", (((svga->miscout >> 2) & 3) | ((tgui->newctrl2 << 2) & 4) | ((tgui->newctrl2 >> 3) & 8)));
         switch (((svga->miscout >> 2) & 3) | ((tgui->newctrl2 << 2) & 4) | ((tgui->newctrl2 >> 3) & 8)) {
@@ -1096,7 +1098,7 @@ tgui_hwcursor_draw(svga_t *svga, int displine)
 }
 
 uint8_t
-tgui_pci_read(UNUSED(int func), int addr, void *priv)
+tgui_pci_read(UNUSED(int func), int addr, UNUSED(int len), void *priv)
 {
     const tgui_t *tgui = (tgui_t *) priv;
 
@@ -1166,7 +1168,7 @@ tgui_pci_read(UNUSED(int func), int addr, void *priv)
 }
 
 void
-tgui_pci_write(UNUSED(int func), int addr, uint8_t val, void *priv)
+tgui_pci_write(UNUSED(int func), int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     tgui_t *tgui = (tgui_t *) priv;
     svga_t *svga = &tgui->svga;
@@ -4029,9 +4031,8 @@ tgui_init(const device_t *info)
 {
     const char *bios_fn;
 
-    tgui_t *tgui = malloc(sizeof(tgui_t));
+    tgui_t *tgui = calloc(1, sizeof(tgui_t));
     svga_t *svga = &tgui->svga;
-    memset(tgui, 0, sizeof(tgui_t));
 
     tgui->vram_size = device_get_config_int("memory") << 20;
     tgui->vram_mask = tgui->vram_size - 1;
@@ -4294,7 +4295,7 @@ const device_t tgui9660_onboard_pci_device = {
     .available     = NULL,
     .speed_changed = tgui_speed_changed,
     .force_redraw  = tgui_force_redraw,
-    .config        = tgui96xx_config
+    .config        = tgui9440_config
 };
 
 const device_t tgui9680_pci_device = {

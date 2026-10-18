@@ -231,7 +231,7 @@ joystick_standard_read_axis_2axis(UNUSED(void *priv), int axis)
         case 2:
         case 3:
         default:
-            return 0;
+            return AXIS_NOT_PRESENT;
     }
 }
 
@@ -251,7 +251,7 @@ joystick_standard_read_axis_2axis_t1t2wa(UNUSED(void *priv), int axis)
         case 1:
         case 3:
         default:
-            return 0;
+            return AXIS_NOT_PRESENT;
     }
 }
 
@@ -731,7 +731,7 @@ const joystick_t joystick_gravis_gamepad = {
     .pov_count     = 0,
     .max_joysticks = 1,
     .axis_names    = { "X axis", "Y axis" },
-    // TODO: Check this
+    // Checked and confirmed by creopard.
     .button_names  = { "Button 1 (Red)", "Button 2 (Blue)", "Button 3 (Yellow)", "Button 4 (Green)" },
     .pov_names     = { NULL }
 };

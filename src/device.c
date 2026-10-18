@@ -56,9 +56,15 @@
 #include <86box/sound.h>
 #include <86box/ui.h>
 
-#define DEVICE_MAX 256 /* max # of devices */
+#define DEVICE_MAX 512 /* max # of devices */
+
+typedef struct device_state_t {
+    uintptr_t local;
+    int       inst;
+} device_state_t;
 
 static device_t        *devices[DEVICE_MAX];
+static device_state_t   device_state[DEVICE_MAX];
 static void            *device_priv[DEVICE_MAX];
 static device_context_t device_current;
 static device_context_t device_prev;
@@ -90,38 +96,212 @@ device_init(void)
 }
 
 void
+device_video_config_migrate(const device_t *dev, const char *old_internal_name, int inst)
+{
+    /* Migrate the old section (new bios internal name = old gfxcard internal name) */
+    const void *sec             = config_find_section(dev->name);
+    const char *bios            = device_get_bios_name(dev, old_internal_name);
+    uint32_t    rev             = ((uint32_t) device_get_bios_local(dev, old_internal_name)) >> 24;
+    char        old_name[2048]  = { 0 };
+    char        bios_name[2048] = { 0 };
+    char        old_name2[2560] = { 0 };
+
+    if (!strcmp(bios_name, "Generic") && (strstr(dev->name, "Trio3D") || strstr(dev->name, "ViRGE"))) {
+        uint32_t chip_id = ((uint32_t) device_get_bios_local(dev, old_internal_name)) >> 16;
+        strcpy(old_name, dev->name);
+        sprintf(old_name + strlen(dev->name) - 3, "(%3i)", chip_id);
+        strcpy(old_name + strlen(old_name), dev->name + strlen(dev->name) - 4);
+    } else if (strstr(dev->name, "9000B") || strstr(dev->name, "DEC") || strstr(dev->name, "SMC"))
+        snprintf(old_name,  2047, "%s (%s)", bios, dev->name);
+    else
+        snprintf(old_name,  2047, "%s (%s)", dev->name, bios);
+    if (strlen(bios) >= 9) {
+        snprintf(bios_name, 2047, "%s", &(bios[8]));
+        /* Layout is "Rev. X (Name)" */
+        bios_name[strlen(bios_name) - 1] = 0x00;
+        if (!strcmp(bios_name, "Generic"))
+            snprintf(old_name2, 2559, "%s Rev. %c", dev->name, rev);
+        else
+            snprintf(old_name2, 2559, "%s Rev. %c (%s)", dev->name, rev, bios_name);
+    }
+
+    void *      old_sec  = config_find_section(old_name);
+    void *      old_sec2 = NULL;
+    void *      bios_sec = config_find_section(bios);
+
+    if (old_name2[0] != 0x00)
+        old_sec2 = config_find_section(old_name2);
+
+    if ((old_name2[0] != 0x00) && (rev >= 'B') && (rev <= 'D') && (sec == NULL)) {
+        /* Tseng ET4000/W32p Migration. */
+        if (old_sec2 != NULL)
+            config_rename_section(old_sec2, dev->name);
+        else
+            config_create_section(dev->name);
+        /* Do not set BIOS variable for on-board devices. */
+        if (strstr(dev->name, "oard") == NULL)
+            config_set_string(dev->name, "bios", old_internal_name);
+    } if (sec == NULL) {
+        if (bios_sec != NULL)
+            config_rename_section(bios_sec, dev->name);
+        else if (old_sec != NULL)
+            config_rename_section(old_sec, dev->name);
+        else
+            config_create_section(dev->name);
+        /* Do not set BIOS variable for on-board devices. */
+        if (strstr(dev->name, "oard") == NULL)
+            config_set_string(dev->name, "bios", old_internal_name);
+    } else {
+        /* The section was already there, just add the BIOS. */
+        if (strstr(dev->name, "oard") == NULL)
+            config_set_string(dev->name, "bios", old_internal_name);
+    }
+}
+
+void
 device_set_context(device_context_t *ctx, const device_t *dev, int inst)
 {
-    memset(ctx, 0, sizeof(device_context_t));
+    static const struct {
+        const char *old;
+        const char *new;
+    } section_migrations[] = {
+        { .old = "Standard PS/2 Mouse", .new = "PS/2 Mouse" },
+        { .old = "Microsoft RAMCard for IBM PC", .new = "Microsoft RAMCard" },
+        { .old = "Western Digital WD1007V-SE1 (ESDI)", .new = "WD1007V-SE1 (ESDI)" },
+        { .old = "WD1003 AT MFM/RLL Controller", .new = "WD1003-WAH (MFM/RLL)" },
+        { .old = "ST-11R RLL Fixed Disk Adapter", .new = "ST-11R (RLL)" },
+        { .old = "WD1002A-WX1 MFM Fixed Disk Adapter", .new = "WD1002A-WX1 (MFM)" },
+        { .old = "WD1002A-WX1 MFM Fixed Disk Adapter (No BIOS)", .new = "WD1002A-WX1 (MFM) (No BIOS)" },
+        { .old = "WD1002A-27X RLL Fixed Disk Adapter", .new = "WD1002A-27X (RLL)" },
+        { .old = "WD1004A-WX1 MFM Fixed Disk Adapter", .new = "WD1004A-WX1 (MFM)" },
+        { .old = "WD1004-27X RLL Fixed Disk Adapter", .new = "WD1004-27X (RLL)" },
+        { .old = "WD1004a-27X RLL Fixed Disk Adapter", .new = "WD1004a-27X (RLL)" },
+        { .old = "Victor V86P RLL Fixed Disk Adapter", .new = "Victor V86P Fixed Disk Adapter (RLL)" },
+        { .old = "WDXT-150 XTA Fixed Disk Controller", .new = "WDXT-150 (XTA)" },
+        { .old = "WDXT-150 XTA Fixed Disk Controller (PC3086)", .new = "WDXT-150 (XTA) (PC3086)" },
+        { .old = "ST-50X Fixed Disk Controller", .new = "ST-50X (XTA)" },
+        { .old = "ST-50X Fixed Disk Controller (PC5086)", .new = "ST-50X (XTA) (PC5086)" },
+        { .old = "Acculogic XT IDE", .new = "Acculogic sIDE-1/16 (IDE)" },
+        { .old = "Multitech PC-500 / Franklin PC 8000", .new = "Multitech PC-500" }, /* 6.0 pre-release */
+        { .old = "Multitech PC-500 plus", .new = "Multitech PC-500+" },
+        { .old = "Multitech PC-700 / Siemens SICOMP PC 16 05", .new = "Multitech PC-700" }, /* 6.0 pre-release */
+        { .old = "Vendex 888T", .new = "Vendex HeadStart Turbo 888-XT" },
+        { .old = "VTech Laser Turbo XT", .new = "VTech Laser XT3" },
+        { .old = "PS/1 2011", .new = "IBM PS/1 model 2011" },
+        { .old = "IBM XT Model 286", .new = "IBM XT model 286" },
+        { .old = "Packard Bell Legend 300SX", .new = "Packard Bell PB300" },
+        { .old = "Packard Bell PB300/PB320", .new = "Packard Bell PB300" }, /* 6.0 pre-release */
+        { .old = "IBM XT (1982) w/ Intel Inboard 386/PC", .new = "IBM XT (Inboard 386/PC)" },
+        { .old = "DataExpert SX495", .new = "DataExpert OPTI-495SX" },
+        { .old = "Packard Bell PB410/PB410A/PB420/PB420T", .new = "Packard Bell PB410A" }, /* 6.0 pre-release */
+        { .old = "Intel Premiere/PCI (Batman)", .new = "Intel Premiere/PCI" },
+        { .old = "Intel Premiere/PCI II (Plato)", .new = "Intel Premiere/PCI II" },
+        { .old = "Intel Advanced/ZP (Zappa)", .new = "Intel Advanced/ZP" },
+        { .old = "AST Bravo MS P/90", .new = "AST Bravo MS" },
+        { .old = "AST Bravo MS/MS-T/MS-L (Rattler)", .new = "AST Bravo MS" }, /* 6.0 pre-release */
+        { .old = "Intel Advanced/ATX (Thor)", .new = "Intel Advanced/ATX" },
+        { .old = "Intel Advanced/MA (Monaco)", .new = "Intel Advanced/MA" },
+        { .old = "Chaintech 5SBM/5SBM2 (M103)", .new = "Chaintech 5SBM2" },
+        { .old = "Intel CU430HX (Cumberland)", .new = "Intel CU430HX" },
+        { .old = "Intel TC430HX (Tucson)", .new = "Intel TC430HX" },
+        { .old = "LG IBM Multinet x52 (MSI MS-5136)", .new = "LG IBM Multinet x52" },
+        { .old = "Intel AN430TX (Anchorage)", .new = "Intel AN430TX" },
+        { .old = "Intel VS440FX (Venus)", .new = "Intel VS440FX" },
+        { .old = "Advanced Integration Research (AIR) P6KDI", .new = "AIR P6KDI" }, /* 6.0 pre-release */
+        { .old = "DTK PII-151B (MiniMicro) Floppy Drive Controller", .new = "DTK PII-151B (MiniMicro) FDC" },
+        { .old = "DTK PII-158B (MiniMicro4) Floppy Drive Controller", .new = "DTK PII-158B (MiniMicro4) FDC" },
+        { .old = "Monster FDC Floppy Drive Controller", .new = "Monster FDC" },
+        { .old = "Panasonic/MKE CD-ROM interface (Creative)", .new = "MKE/Panasonic interface (Creative)" },
+        { .old = "Panasonic/MKE CD-ROM interface", .new = "MKE/Panasonic interface" },
+        { .old = "S3 Trio32 VLB On-Board (Phoenix)", .new = "S3 Trio32 VLB On-Board" },
+        { .old = "S3 Trio32 PCI On-Board (Phoenix)", .new = "S3 Trio32 PCI On-Board" },
+        { .old = "S3 Trio64 PCI On-Board (Phoenix)", .new = "S3 Trio64 PCI On-Board" },
+        { .old = "S3 Trio64V+ PCI On-Board (Phoenix)", .new = "S3 Trio64V+ PCI On-Board" },
+        { .old = "Tseng Labs ET4000/w32 ISA (MachSpeed VGA GUI 2400S)", .new = "Tseng Labs ET4000/w32 ISA" },
+        { .old = "Tseng Labs ET4000/w32 VLB (MachSpeed VGA GUI 2400S)", .new = "Tseng Labs ET4000/w32 VLB" },
+        { .old = "Tseng Labs ET4000/w32i Rev. B ISA (Axis MicroDevice)", .new = "Tseng Labs ET4000/w32i ISA" },
+        { .old = "Tseng Labs ET4000/w32i Rev. B VLB (Hercules Dynamite Pro)", .new = "Tseng Labs ET4000/w32i VLB" },
+        { .old = "S3 ViRGE/GX (385) PCI", .new = "S3 ViRGE/GX PCI" },
+        { .old = "S3 ViRGE/GX2 (357) PCI", .new = "S3 ViRGE/GX2 PCI" },
+        { .old = "ATI 28800-6 (ATI VGA Wonder 1024D XL Plus)", .new = "ATI 28800-6" },
+        { .old = "DEC DE-500A Fast Ethernet (DECchip 21143 \"Tulip\")", .new = "DECchip 21143 \"Tulip\"" },
+        { .old = "DEC DE-435 EtherWorks Turbo (DECchip 21040 \"Tulip\")", .new = "DECchip 21040 \"Tulip\"" },
+        { .old = "SMC EtherPower II 9432 (SMC 83C170 \"EPIC/100\")", .new = "SMC 83C170 \"EPIC/100\"" },
+        { .old = "Aztech Sound Galaxy Pro 16 II (AZT2316R)", .new = "Aztech Sound Galaxy Pro 16 II" },
+        { .old = "Aztech Sound Galaxy Pro 16 AB (Washington)", .new = "Aztech Sound Galaxy Pro 16 AB" },
+        { .old = "Aztech Sound Galaxy Nova 16 Extra (Clinton)", .new = "Aztech Sound Galaxy Nova 16 Extra" },
+        { .old = "Aztech Sound Galaxy Pro 16 (AZTPR16)", .new = "Aztech Sound Galaxy Pro 16" },
+        { .old = "HP Multimedia Pro 16V-A (AZT2320)", .new = "HP Multimedia Pro 16V-A" },
+        { .old = "IBM PS/2 ESDI Fixed Disk Adapter (MCA)", .new = "IBM ESDI Fixed Disk Adapter" },
+        { .old = "IBM PS/2 ST506 Fixed Disk Adapter (MCA)", .new = "IBM ST506 Fixed Disk Adapter" },
+        { .old = "Cirrus Logic GD5401 (ISA) (ACUMOS AVGA1)", .new = "Cirrus Logic GD5401 (ISA)" },
+        { .old = "Cirrus Logic GD5401 (ISA) (ACUMOS AVGA1) (On-Board)", .new = "Cirrus Logic GD5401 (ISA) (On-Board)" },
+        { .old = "Cirrus Logic GD5402 (ISA) (ACUMOS AVGA2)", .new = "Cirrus Logic GD5402 (ISA)" },
+        { .old = "Cirrus Logic GD5402 (ISA) (ACUMOS AVGA2) (On-Board)", .new = "Cirrus Logic GD5402 (ISA) (On-Board)" },
+        { .old = "Cirrus Logic GD5402 (ISA) (ACUMOS AVGA2) (On-Board) (Commodore)", .new = "Cirrus Logic GD5402 (ISA) (On-Board) (Commodore)" },
+        { .old = "Cirrus Logic GD5428 (MCA) (IBM SVGA Adapter/A)", .new = "Cirrus Logic GD5428 (MCA) (US/EMEA)" },
+        { .old = "Cirrus Logic GD5426 (MCA) (Reply Video Adapter)", .new = "Cirrus Logic GD5426 (MCA)" },
+        { .old = "3dfx Voodoo3 2000 (On-Board 8MB SGRAM)", .new = "3dfx Voodoo3 2000 (On-Board)" },
+        { .old = "Gravis/Synergy Vipermax", .new = "Synergy ViperMAX" },
+        { .old = "Colorplus", .new = "Plantronics Colorplus" },
+        { .old = "Creative Sound Blaster PCI 128 (ES1373)", .new = "Sound Blaster PCI 128 (ES1373)" },
+        { .old = "Creative Sound Blaster PCI 128 (ES1373) (On-Board)", .new = "Sound Blaster PCI 128 (ES1373) (On-Board)" },
+        { .old = "Creative Sound Blaster PCI 4.1 (CT5880)", .new = "Sound Blaster PCI 4.1 (CT5880)" },
+        { .old = "Creative Sound Blaster PCI 4.1 (CT5880) (On-Board)", .new = "Sound Blaster PCI 4.1 (CT5880) (On-Board)" },
+        { .old = "Gravis UltraSound PnP (Old PnP ROM)", .new = "Gravis UltraSound PnP (Old)" },
+        { .old = "Gravis UltraSound PnP (New PnP ROM)", .new = "Gravis UltraSound PnP (New)" },
+        { .old = "Gravis UltraSound PnP (No CD-ROM)", .new = "Gravis UltraSound PnP (No CD)" },
+        { .old = "Compaq/STB UltraSound 32", .new = "Compaq UltraSound 32" },
+        { .old = "IBM PS/2 Adapter/A for Ethernet Networks (WD8013WP/A, AUI/RJ-45, EFD4/92F0046)", .new = "IBM PS/2 Adapter/A (WD8013WP/A)" },
+        { .old = "IBM PS/2 Adapter/A for Ethernet Networks (WD8013EP/A, AUI/BNC, EFD5)", .new = "IBM PS/2 Adapter/A (WD8013EP/A)" },
+        { .old = "IBM PS/2 Adapter/A for Ethernet Networks (WD8003E/A, AUI/BNC, EFE5)", .new = "IBM PS/2 Adapter/A (WD8003E/A)" },
+        { .old = "Adaptec AHA-2940", .new = "Adaptec AHA-2940 (AIC-7870)" },
+        { .old = "Adaptec AHA-2940U", .new = "Adaptec AHA-2940 Ultra (AIC-7880)" },
+        { .old = "Adaptec AHA-2940 Ultra", .new = "Adaptec AHA-2940 Ultra (AIC-7880)" },
+        { .old = "Adaptec AHA-2944 Ultra Wide (differential)", .new = "Adaptec AHA-2944UW" },
+        { .old = "Cirrus Logic GD5428 (MCA)", .new = "Cirrus Logic GD5428 (MCA) (US/EMEA)" },
+        { .old = "ATI Mach64GX ISA", .new = "ATI Graphics Pro Turbo (Mach64GX) ISA" },
+        { .old = "ATI Mach64GX VLB", .new = "ATI Graphics Pro Turbo (Mach64GX) VLB" },
+        { 0 }
+    };
+
     ctx->dev      = dev;
     ctx->instance = inst;
-    if (inst) {
+    if (inst)
         sprintf(ctx->name, "%s #%i", dev->name, inst);
+    else
+        strncpy(ctx->name, dev->name, sizeof(ctx->name) - 1);
 
-        /* If a numbered section is not present, but a non-numbered of the same name
-           is, rename the non-numbered section to numbered. */
-        const void *sec        = config_find_section(ctx->name);
-        void *      single_sec = config_find_section((char *) dev->name);
-        if ((sec == NULL) && (single_sec != NULL))
-            config_rename_section(single_sec, ctx->name);
-    } else if (!strcmp(dev->name, "PS/2 Mouse")) {
-        sprintf(ctx->name, "%s", dev->name);
+    if (!config_find_section(ctx->name)) {
+        /* Find and migrate old config sections. */
+        void *old_sec;
+        char  old_name[2048];
+        for (int i = 0; section_migrations[i].new; i++) {
+            if (!strcmp(dev->name, section_migrations[i].new)) {
+                if (inst) {
+                    sprintf(old_name, "%s #%i", section_migrations[i].old, inst);
+                    old_sec = config_find_section(old_name);
+                    if (old_sec) {
+                        config_rename_section(old_sec, ctx->name);
+                        return; /* numbering below does not apply */
+                    }
+                }
+                old_sec = config_find_section((char *) section_migrations[i].old);
+                if (old_sec) {
+                    config_rename_section(old_sec, ctx->name);
+                    return; /* if inst, numbering below was already done here */
+                }
+            }
+        }
 
-        /* Migrate the old "Standard PS/2 Mouse" section */
-        const void *sec        = config_find_section(ctx->name);
-        void *      old_sec    = config_find_section("Standard PS/2 Mouse");
-        if ((sec == NULL) && (old_sec != NULL))
-            config_rename_section(old_sec, ctx->name);
-    } else if (!strcmp(dev->name, "Microsoft RAMCard")) {
-        sprintf(ctx->name, "%s", dev->name);
-
-        /* Migrate the old "Microsoft RAMCard for IBM PC" section */
-        const void *sec        = config_find_section(ctx->name);
-        void *      old_sec    = config_find_section("Microsoft RAMCard for IBM PC");
-        if ((sec == NULL) && (old_sec != NULL))
-            config_rename_section(old_sec, ctx->name);
-    } else
-        sprintf(ctx->name, "%s", dev->name);
+        if (inst) {
+            /* If a numbered section is not present, but a non-numbered of
+               the same name is, rename the non-numbered section to numbered. */
+            old_sec = config_find_section((char *) dev->name);
+            if (old_sec)
+                config_rename_section(old_sec, ctx->name);
+        }
+    }
 }
 
 static void
@@ -160,15 +340,17 @@ device_add_common(const device_t *dev, void *p, void *params, int inst)
        IMPORTANT: This is needed to gracefully handle machine
                   device addition if the relevant device is NULL.
      */
-    if (dev == NULL)
+    if (dev == NULL) {
+        device_log("Attempting to add a NULL device\n");
         return NULL;
+    }
 
     if (!device_available(dev)) {
-        wchar_t temp[512] = { 0 };
-        swprintf(temp, sizeof_w(temp),
+        char temp[512] = { 0 };
+        snprintf(temp, sizeof(temp),
                  plat_get_string(STRING_HW_NOT_AVAILABLE_DEVICE),
                  dev->name);
-        ui_msgbox_header(MBX_INFO,
+        ui_msgbox_header(MBX_WARNING,
                          plat_get_string(STRING_HW_NOT_AVAILABLE_TITLE),
                          temp);
         return ((void *) dev->name);
@@ -176,14 +358,32 @@ device_add_common(const device_t *dev, void *p, void *params, int inst)
 
     if (params != NULL) {
         init_dev = calloc(1, sizeof(device_t));
+        if (init_dev == NULL) {
+            fatal("Unable to allocate memory for device \"%s\", instance %i", dev->name, inst);
+            return NULL;
+        }
         memcpy(init_dev, dev, sizeof(device_t));
         init_dev->local |= (uintptr_t) params;
     } else
         init_dev = (device_t *) dev;
 
+    if (inst == -1) {
+        inst = 1;
+        for (c = 0; c < DEVICE_MAX; c++) {
+            if ((devices[c] == dev) && (device_state[c].local == init_dev->local))
+                inst = device_state[c].inst + 1;
+            if (devices[c] == NULL)
+                break;
+        }
+        device_log("DEVICE: Automatically assigned instance: %i\n", inst);
+    }
+
     for (c = 0; c < DEVICE_MAX; c++) {
-        if (!inst && (devices[c] == dev)) {
-            device_log("DEVICE: device already exists!\n");
+        if ((devices[c] == dev) && (device_state[c].local == init_dev->local) &&
+            (device_state[c].inst == inst)) {
+            warning("DEVICE: Device \"%s\", local 0x%016" PRIX64 ", inst %i already exists!\n",
+                       init_dev->name, (uint64_t) init_dev->local,
+                       inst);
             return (NULL);
         }
         if (devices[c] == NULL)
@@ -195,9 +395,15 @@ device_add_common(const device_t *dev, void *p, void *params, int inst)
         return NULL;
     }
 
-    /* Do this so that a chained device_add will not identify the same ID
-       its master device is already trying to assign. */
+    /*
+       Do this so that a chained device_add will not identify the same ID
+       its master device is already trying to assign.
+     */
     devices[c] = (device_t *) dev;
+
+    device_state[c].local = init_dev->local;
+    device_state[c].inst  = inst;
+
     if (!strcmp(dev->name, "None") || !strcmp(dev->name, "Internal"))
         fatal("Attempting to add dummy device of type: %s\n", dev->name);
 
@@ -220,7 +426,9 @@ device_add_common(const device_t *dev, void *p, void *params, int inst)
                 devices[c]     = NULL;
                 device_priv[c] = NULL;
 
-                if ((init_dev != NULL) && (init_dev != (device_t *) dev))
+                memset(&(device_state[c]), 0x00, sizeof (device_state_t));
+
+                if ((init_dev != (device_t *) dev))
                     free(init_dev);
 
                 return (NULL);
@@ -239,6 +447,7 @@ device_add_common(const device_t *dev, void *p, void *params, int inst)
     } else
         device_priv[c] = p;
 
+
     if (init_dev != dev)
         free(init_dev);
 
@@ -252,6 +461,24 @@ device_get_internal_name(const device_t *dev)
         return "";
 
     return dev->internal_name;
+}
+
+const char *
+device_get_alias(const device_t *dev)
+{
+    if (dev == NULL)
+        return "";
+
+    return dev->alias;
+}
+
+const char *
+device_get_machine(const device_t *dev)
+{
+    if (dev == NULL)
+        return NULL;
+
+    return dev->machine;
 }
 
 void *
@@ -322,6 +549,47 @@ device_get_common_priv(void)
 }
 
 void
+device_close_inst_params(const device_t *device, int inst, void *params)
+{
+    int16_t c;
+
+    for (c = (DEVICE_MAX - 1); c >= 0; c--) {
+        if ((devices[c] == device) &&
+            (device_state[c].local == (device->local | (uintptr_t) params)) &&
+            (device_state[c].inst == 0)) {
+#ifdef ENABLE_DEVICE_LOG
+            if (devices[c]->name)
+                device_log("Closing device: \"%s\"...\n", devices[c]->name);
+#endif
+            if (devices[c]->close != NULL)
+                devices[c]->close(device_priv[c]);
+            devices[c]     = NULL;
+            device_priv[c] = NULL;
+            memset(&(device_state[c]), 0x00, sizeof(device_state_t));
+            break;
+        }
+    }
+
+    if (c >= 0)  for (int16_t d = c; d <= (DEVICE_MAX - 1); d++) {
+        if (d == (DEVICE_MAX - 1)) {
+            devices[d]     = NULL;
+            device_priv[d] = NULL;
+            memset(&(device_state[d]), 0x00, sizeof(device_state_t));
+        } else {
+            devices[d]     = devices[d + 1];
+            device_priv[d] = device_priv[d + 1];
+            memcpy(&(device_state[d]), &(device_state[d + 1]), sizeof(device_state_t));
+        }
+    }
+}
+
+void
+device_close(const device_t *device)
+{
+    device_close_inst_params(device, 0, NULL);
+}
+
+void
 device_close_all(void)
 {
     for (int16_t c = (DEVICE_MAX - 1); c >= 0; c--) {
@@ -334,6 +602,25 @@ device_close_all(void)
                 devices[c]->close(device_priv[c]);
             devices[c]     = NULL;
             device_priv[c] = NULL;
+            memset(&(device_state[c]), 0x00, sizeof(device_state_t));
+        }
+    }
+}
+
+void
+device_close_by_flags(uint32_t match_flags)
+{
+    for (int16_t c = (DEVICE_MAX - 1); c >= 0; c--) {
+        if ((devices[c] != NULL) && ((devices[c]->flags & match_flags) == match_flags)) {
+#ifdef ENABLE_DEVICE_LOG
+            if (devices[c]->name)
+                device_log("Closing device: \"%s\"...\n", devices[c]->name);
+#endif
+            if (devices[c]->close != NULL)
+                devices[c]->close(device_priv[c]);
+            devices[c]     = NULL;
+            device_priv[c] = NULL;
+            memset(&(device_state[c]), 0x00, sizeof(device_state_t));
         }
     }
 }
@@ -343,7 +630,8 @@ device_reset_all(uint32_t match_flags)
 {
     for (uint16_t c = 0; c < DEVICE_MAX; c++) {
         if (devices[c] != NULL) {
-            if ((devices[c]->reset != NULL) && (devices[c]->flags & match_flags))
+            if ((devices[c]->reset != NULL) &&
+                ((match_flags == DEVICE_ALL) || (devices[c]->flags & match_flags)))
                 devices[c]->reset(device_priv[c]);
         }
     }
@@ -386,7 +674,7 @@ device_available(const device_t *dev)
 
     if (ret == 0) {
         /* No CONFIG_BIOS field present, use the classic available(). */
-        if (dev->available != NULL)
+        if ((dev != NULL) && (dev->available != NULL))
             ret = (dev->available());
         else
             ret = (dev != NULL);
@@ -399,6 +687,11 @@ device_available(const device_t *dev)
 static const device_config_bios_t *
 device_get_bios(const device_t *dev, const char *internal_name)
 {
+    if (internal_name == NULL) {
+        fatal("Failed to get the default BIOS for this device, please update your ROM set and contact 86Box support if it still occurs\n");
+        return NULL;
+    }
+
     if (dev != NULL) {
         const device_config_t *config = dev->config;
         while (config && (config->type != CONFIG_END)) {
@@ -424,6 +717,13 @@ device_get_bios(const device_t *dev, const char *internal_name)
     }
 
     return NULL;
+}
+
+const char *
+device_get_bios_name(const device_t *dev, const char *internal_name)
+{
+    const device_config_bios_t *bios = device_get_bios(dev, internal_name);
+    return bios ? bios->name : 0;
 }
 
 uint8_t
@@ -452,6 +752,13 @@ device_get_bios_file_size(const device_t *dev, const char *internal_name)
 {
     const device_config_bios_t *bios = device_get_bios(dev, internal_name);
     return bios ? bios->size : 0;
+}
+
+uint64_t
+device_get_bios_flags(const device_t *dev, const char *internal_name)
+{
+    const device_config_bios_t *bios = device_get_bios(dev, internal_name);
+    return bios ? bios->flags : 0;
 }
 
 const char *
@@ -483,7 +790,7 @@ device_has_config(const device_t *dev)
     return (c > 0) ? 1 : 0;
 }
 
-static const char *
+const char *
 device_get_bus_name(const device_t *dev)
 {
     const char *sbus = NULL;
@@ -494,6 +801,8 @@ device_get_bus_name(const device_t *dev)
         sbus = "Sidecar";
     else if (dev->flags & DEVICE_XT_KBC)
         sbus = "XT KBC";
+    else if ((dev->flags & (DEVICE_ISA | DEVICE_ISA16)) == (DEVICE_ISA | DEVICE_ISA16))
+        sbus = "ISA/ISA16";
     else if (dev->flags & DEVICE_ISA16)
         sbus = "ISA16";
     else if (dev->flags & DEVICE_AT_KBC)
@@ -556,18 +865,15 @@ device_get_name(const device_t *dev, int bus, char *name)
 
         if (sbus != NULL) {
             /* First concatenate [<Bus>] before the device's name. */
-            strcat(name, "[");
-            strcat(name, sbus);
-            strcat(name, "] ");
+            if (bus > 0) {
+                strcat(name, "[");
+                strcat(name, sbus);
+                strcat(name, "] ");
+            }
 
             /* Then change string from ISA16 to ISA if applicable. */
             if (!strcmp(sbus, "ISA16"))
                 sbus = "ISA";
-            else if (!strcmp(sbus, "COM") || !strcmp(sbus, "LPT")) {
-                sbus = NULL;
-                strcat(name, dev->name);
-                return;
-            }
 
             /* Generate the bus string with parentheses. */
             strcat(pbus, "(");
@@ -576,6 +882,7 @@ device_get_name(const device_t *dev, int bus, char *name)
 
             /* Allocate the temporary device name string and set it to all zeroes. */
             tname = (char *) calloc(1, strlen(dev->name) + 1);
+
 
             /* First strip the bus string with parentheses. */
             fbus = strstr(dev->name, pbus);
@@ -588,13 +895,18 @@ device_get_name(const device_t *dev, int bus, char *name)
                 strcat(tname, fbus + strlen(pbus));
             }
 
-            /* Then also strip the bus string with parentheses. */
+            /* Special case for LPT DACs - don't strip LPT */
+            int is_dac = 0;
+            if (!strcmp(sbus, "LPT"))
+                is_dac = (strstr(dev->name, "LPT DAC") != NULL);
+
+            /* Then also strip the bus string without parentheses. */
             fbus = strstr(tname, sbus);
-            if (fbus == tname)
+            if ((fbus == tname) && !is_dac)
                 strcat(name, tname + strlen(sbus) + 1);
             /* Special case to not strip the "oPCI" from "Ensoniq AudioPCI",
                the "-ISA" from "AMD PCnet-ISA" or the " PCI" from "CMD PCI-064x". */
-            else if ((fbus == NULL) || (*(fbus - 1) == 'o') || (*(fbus - 1) == '-') || (*(fbus - 2) == 'r') || ((fbus[0] == 'P') && (fbus[1] == 'C') && (fbus[2] == 'I') && (fbus[3] == '-')))
+            else if ((fbus < &tname[2]) || (*(fbus - 1) == 'o') || (*(fbus - 1) == '-') || (*(fbus - 2) == 'r') || ((fbus[0] == 'P') && (fbus[1] == 'C') && (fbus[2] == 'I') && (fbus[3] == '-')) || is_dac)
                 strcat(name, tname);
             else {
                 strncat(name, tname, fbus - tname - 1);
@@ -637,6 +949,28 @@ device_force_redraw(void)
 }
 
 int
+device_has_power_button(void)
+{
+    for (uint16_t c = 0; c < DEVICE_MAX; c++) {
+        if ((devices[c] != NULL) && (devices[c]->power_button != NULL))
+            return 1;
+    }
+
+    return 0;
+}
+
+void
+device_power_button(void)
+{
+    for (uint16_t c = 0; c < DEVICE_MAX; c++) {
+        if (devices[c] != NULL) {
+            if (devices[c]->power_button != NULL)
+                devices[c]->power_button(device_priv[c]);
+        }
+    }
+}
+
+int
 device_get_instance(void)
 {
     return device_current.instance;
@@ -663,6 +997,74 @@ device_get_config_string(const char *str)
     }
 
     return ret;
+}
+
+const char *
+device_get_config_bios(const char *str)
+{
+    const char *ret = "";
+
+    if (device_current.dev != NULL) {
+        const device_config_t *cfg = device_current.dev->config;
+
+        while ((cfg != NULL) && (cfg->type != CONFIG_END)) {
+            if (!strcmp(str, cfg->name)) {
+                const char *s = (config_get_string(device_current.name,
+                                 (char *) str, (char *) cfg->default_string));
+                if ((s != NULL) && (strlen(s) == 1)) {
+                    switch (s[0]) {
+                        default:
+                            ret = "";
+                            fatal("Invalid config integer: %i\n", s[0]);
+                            break;
+                        case '0':
+                            ret = "voodoo";
+                            config_set_string(device_current.name, str, ret);
+                            break;
+                        case '1':
+                            ret = "obsidian_sb50";
+                            config_set_string(device_current.name, str, ret);
+                            break;
+                        case '2':
+                            ret = "voodoo_2";
+                            config_set_string(device_current.name, str, ret);
+                            break;
+                    }
+                } else
+                    ret = (s == NULL) ? "" : s;
+                break;
+            }
+
+            cfg++;
+        }
+    }
+
+    return ret;
+}
+
+void
+device_migrate_config_bios(const void *priv, const char *name)
+{
+    const device_config_t *cfg = (const device_config_t *) priv;
+
+    const char *s = config_get_string(name, cfg->name, (char *) cfg->default_string);
+
+    if ((s != NULL) && (strlen(s) == 1)) {
+        switch (s[0]) {
+            default:
+                fatal("Invalid config integer: %i\n", s[0]);
+                break;
+            case '0':
+                config_set_string(name, cfg->name, "voodoo");
+                break;
+            case '1':
+                config_set_string(name, cfg->name, "obsidian_sb50");
+                break;
+            case '2':
+                config_set_string(name, cfg->name, "voodoo_2");
+                break;
+        }
+    }
 }
 
 int
@@ -751,6 +1153,23 @@ device_get_config_mac(const char *str, int def)
 }
 
 void
+device_set_config_string(const char *str, const char *val)
+{
+    if (device_current.dev != NULL) {
+        const device_config_t *cfg = device_current.dev->config;
+
+        while ((cfg != NULL) && (cfg->type != CONFIG_END)) {
+            if (!strcmp(str, cfg->name)) {
+                config_set_string((char *) device_current.name, (char *) str, val);
+                break;
+            }
+
+            cfg++;
+        }
+    }
+}
+
+void
 device_set_config_int(const char *str, int val)
 {
     if (device_current.dev != NULL) {
@@ -824,9 +1243,12 @@ device_is_valid(const device_t *device, int mch)
     int ret = 1;
 
     if ((device != NULL) && ((device->flags & DEVICE_BUS) != 0)) {
-        /* Hide PCI devices on machines with only an internal PCI bus. */
+        /* Hide PCI or AGP devices on machines with only an internal PCI or AGP bus. */
         if ((device->flags & DEVICE_PCI) &&
             machine_has_flags(mch, MACHINE_PCI_INTERNAL))
+            ret = 0;
+        else if ((device->flags & DEVICE_AGP) &&
+                 machine_has_flags_64(mch, MACHINE_AGP_INTERNAL))
             ret = 0;
         else
             ret = machine_has_bus(mch, device->flags & DEVICE_BUS);
@@ -892,9 +1314,11 @@ machine_device_available(const device_t *dev)
                    (bios->internal_name != NULL) &&
                    (bios->files_no != 0)) {
                 int i = 0;
-                for (uint8_t bf = 0; bf < bios->files_no; bf++)
-                    i += !!rom_present(bios->files[bf]);
-                if (i == bios->files_no)
+                if (bios->files_no > 0) {
+                    for (uint8_t bf = 0; bf < bios->files_no; bf++)
+                        i += !!rom_present(bios->files[bf]);
+                }
+                if ((bios->files_no == -1) || (i == bios->files_no))
                     roms_present++;
                 bios++;
             }
@@ -930,6 +1354,20 @@ const device_t device_none = {
 const device_t device_internal = {
     .name          = "Internal",
     .internal_name = "internal",
+    .flags         = 0,
+    .local         = 0,
+    .init          = NULL,
+    .close         = NULL,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = NULL
+};
+
+const device_t device_external = {
+    .name          = "External",
+    .internal_name = "external",
     .flags         = 0,
     .local         = 0,
     .init          = NULL,

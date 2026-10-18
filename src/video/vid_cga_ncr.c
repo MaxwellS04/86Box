@@ -64,8 +64,8 @@ nga_recalctimings(nga_t *nga)
     _dispofftime = disptime - _dispontime;
     _dispontime *= CGACONST / 2;
     _dispofftime *= CGACONST / 2;
-    nga->cga.dispontime  = (uint64_t) (_dispontime);
-    nga->cga.dispofftime = (uint64_t) (_dispofftime);
+    nga->cga.dispontime  = (uint64_t) (int64_t) (_dispontime);
+    nga->cga.dispofftime = (uint64_t) (int64_t) (_dispofftime);
 }
 
 void
@@ -91,7 +91,11 @@ nga_waitstates(UNUSED(void *priv))
     int ws;
 
     ws = ws_array[cycles & 0xf];
-    sub_cycles(ws);
+
+    if (is_nec)
+        sub_cycles_vx0(ws);
+    else
+        sub_cycles(ws);
 }
 
 void
@@ -360,6 +364,7 @@ nga_poll(void *priv)
                 x = (nga->cga.crtc[CGA_CRTC_HDISP] << 4) + 16;
 
             video_process_8(x, nga->cga.displine);
+            video_lightpen_check_trigger_strobe(8, nga->cga.displine * (nga->cga.double_type ? 2 : 1), 0, nga->cga.firstline + 8, 16. * (1. / (CGACONST / (cpuclock * (double) (1ULL << 32)))), nga->cga.monitor_used);
 
             nga->cga.scanline = scanline_old;
             /* vertical sync */
@@ -370,6 +375,7 @@ nga_poll(void *priv)
                 nga->cga.displine = 0;
         } else {
             timer_advance_u64(&nga->cga.timer, nga->cga.dispontime);
+            video_lightpen_hsync();
             if (nga->cga.cgadispon)
                 nga->cga.cgastat &= ~1;
             nga->cga.linepos = 0;
@@ -447,6 +453,7 @@ nga_poll(void *priv)
                         nga->cga.displine  = 0;
                         /* nga specific */
                         nga->cga.vsynctime = 16;
+                        video_lightpen_vsync();
                         /* vsync pos */
                         if (nga->cga.crtc[CGA_CRTC_VSYNC]) {
                             if (nga->cga.cgamode & CGA_MODE_FLAG_HIGHRES)
@@ -555,9 +562,8 @@ nga_init(UNUSED(const device_t *info))
 {
     int     mem;
     uint8_t charset;
-    nga_t  *nga = (nga_t *) malloc(sizeof(nga_t));
+    nga_t  *nga = (nga_t *) calloc(1, sizeof(nga_t));
 
-    memset(nga, 0x00, sizeof(nga_t));
     video_inform(VIDEO_FLAG_TYPE_CGA, &timing_nga);
 
     charset = device_get_config_int("charset");
@@ -567,8 +573,8 @@ nga_init(UNUSED(const device_t *info))
     nga->cga.composite    = 0;
     nga->cga.snow_enabled = device_get_config_int("snow_enabled");
 
-    nga->cga.vram = malloc(0x8000);
-    nga->vram_64k = malloc(0x8000);
+    nga->cga.vram = calloc(1, 0x8000);
+    nga->vram_64k = calloc(1, 0x8000);
 
     timer_add(&nga->cga.timer, nga_poll, nga, 1);
     mem_mapping_add(&nga->cga.mapping, 0xb8000, 0x8000,
@@ -649,7 +655,7 @@ const device_config_t nga_config[] = {
         .file_filter    = NULL,
         .spinner        = { 0 },
         .selection      = {
-            { .description = "U.S. English",    .value = 0 },
+            { .description = "English (US)",    .value = 0 },
             { .description = "Scandinavian",    .value = 1 },
             { .description = "Other languages", .value = 2 },
             { .description = "E.F. Hutton",     .value = 3 },

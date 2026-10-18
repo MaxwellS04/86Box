@@ -20,6 +20,7 @@
 #include <QDesktopServices>
 #include <QMenu>
 #include <QMessageBox>
+#include <QStringBuilder>
 #include <QStringListModel>
 #include <QTimer>
 #include <QProgressDialog>
@@ -98,7 +99,7 @@ VMManagerMain::VMManagerMain(QWidget *parent)
     connect(ui->listView, &QListView::customContextMenuRequested, [this, parent](const QPoint &pos) {
         const auto indexAt = ui->listView->indexAt(pos);
         if (indexAt.isValid()) {
-            QMenu contextMenu(tr("Context Menu"), ui->listView);
+            QMenu contextMenu("", ui->listView);
 
             QAction startAction(tr("&Start"));
             contextMenu.addAction(&startAction);
@@ -288,6 +289,7 @@ illegal_chars:
                         // Get the index of the newly-created system and select it
                         const QModelIndex mapped_index = proxy_model->mapFromSource(created_object);
                         ui->listView->setCurrentIndex(mapped_index);
+                        modelDataChange();
                     } else {
                         QDir(dstPath).removeRecursively();
                         QMessageBox::critical(this, tr("Clone"), tr("Failed to clone VM."), QMessageBox::Ok);
@@ -378,7 +380,7 @@ illegal_chars:
 
             contextMenu.exec(ui->listView->viewport()->mapToGlobal(pos));
         } else {
-            QMenu contextMenu(tr("Context Menu"), ui->listView);
+            QMenu contextMenu("", ui->listView);
 
             QAction newMachineAction(tr("&New machine…"));
             contextMenu.addAction(&newMachineAction);
@@ -449,6 +451,56 @@ VMManagerMain::~VMManagerMain()
 {
     delete ui;
     delete vm_model;
+}
+
+void
+VMManagerMain::reload()
+{
+    // Disconnect and save the old selection mdoel to be deleted later
+    QItemSelectionModel *old_selection_model = ui->listView->selectionModel();
+    disconnect(old_selection_model, &QItemSelectionModel::currentChanged, this, &VMManagerMain::currentSelectionChanged);
+    // Disconnect and delete the model and proxy model 
+    disconnect(vm_model, &VMManagerModel::systemDataChanged, this, &VMManagerMain::modelDataChange);
+    disconnect(vm_model, &VMManagerModel::globalConfigurationChanged, this, nullptr);
+    delete proxy_model;
+    delete vm_model;
+
+    // Reset the details view and toolbar to initial state
+    selected_sysconfig = new VMManagerSystem();
+    vm_details->reset();
+    emit selectionOrStateChanged(nullptr);
+
+    // Create the new model and proxy model
+    vm_model = new VMManagerModel;
+    proxy_model = new StringListProxyModel(this);
+    proxy_model->setSourceModel(vm_model);
+    ui->listView->setModel(proxy_model);
+    // Delete the old selection model
+    delete old_selection_model;
+
+    // Set up the new models
+    proxy_model->setSortCaseSensitivity(Qt::CaseInsensitive);
+    ui->listView->model()->sort(0, Qt::AscendingOrder);
+    connect(vm_model, &VMManagerModel::systemDataChanged, this, &VMManagerMain::modelDataChange);
+    connect(vm_model, &VMManagerModel::globalConfigurationChanged, this, []() {
+        vmm_main_window->updateSettings();
+    });
+    const QItemSelectionModel *selection_model = ui->listView->selectionModel();
+    connect(selection_model, &QItemSelectionModel::currentChanged, this, &VMManagerMain::currentSelectionChanged);
+
+    // Update the search completer
+    auto *completerModel = new QStringListModel(getSearchCompletionList(), ui->searchBar->completer());
+    ui->searchBar->completer()->setModel(completerModel);
+
+    // If machines are found, set the selection to the first one
+    if (proxy_model->rowCount(QModelIndex()) > 0) {
+        const QModelIndex first_index = proxy_model->index(0, 0);
+        ui->listView->setCurrentIndex(first_index);
+        emit selectionOrStateChanged(selected_sysconfig);
+    }
+
+    // Notify the status bar
+    emit updateStatusRight(machineCountString());
 }
 
 void
@@ -714,32 +766,49 @@ VMManagerMain::addNewSystem(const QString &name, const QString &dir, const QStri
                 const QModelIndex mapped_index = proxy_model->mapFromSource(created_object);
                 ui->listView->setCurrentIndex(mapped_index);
                 delete new_system;
+                modelDataChange();
             });
 }
 
 void
 VMManagerMain::deleteSystem(VMManagerSystem *sysconfig)
 {
-    QMessageBox msgbox(QMessageBox::Icon::Warning, tr("Warning"), tr("Do you really want to delete the virtual machine \"%1\" and all its files? This action cannot be undone!").arg(sysconfig->displayName), QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No, qobject_cast<QWidget *>(this->parent()));
+    auto config = new VMManagerConfig(VMManagerConfig::ConfigType::General);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    int trash = config->getStringValue("delete_to_trash").toInt();
+#endif
+    QString msgboxText = tr("Do you really want to delete the virtual machine \"%1\" and all its files?").arg(sysconfig->displayName);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    if (!trash)
+#endif
+        msgboxText.append(QStringLiteral(" ") % tr("This action cannot be undone!"));
+    QMessageBox msgbox(QMessageBox::Icon::Warning, tr("Warning"), msgboxText, QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No, qobject_cast<QWidget *>(this->parent()));
     msgbox.exec();
     if (msgbox.result() == QMessageBox::Yes) {
-        auto qrmdir = new QDir(sysconfig->config_dir);
-        if (const bool rmdirResult = qrmdir->removeRecursively(); !rmdirResult) {
+        bool rmdirResult;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+        if (trash) {
+            auto qrmdir = new QFile(sysconfig->config_dir);
+            rmdirResult = qrmdir->moveToTrash();
+        } else
+#endif
+        {
+            auto qrmdir = new QDir(sysconfig->config_dir);
+            rmdirResult = qrmdir->removeRecursively();
+        }
+
+        if (!rmdirResult) {
             QMessageBox::critical(this, tr("Remove directory failed"), tr("Some files in the machine's directory were unable to be deleted. Please delete them manually."));
             return;
         }
-        auto config = new VMManagerConfig(VMManagerConfig::ConfigType::General);
         config->remove(sysconfig->uuid);
         vm_model->removeConfigFromModel(sysconfig);
         delete sysconfig;
 
         if (vm_model->rowCount(QModelIndex()) <= 0) {
-            selected_sysconfig = new VMManagerSystem();
             /* no machines left - get rid of the last machine's leftovers */
-            ui->detailsArea->layout()->removeWidget(vm_details);
-            delete vm_details;
-            vm_details = new VMManagerDetails();
-            ui->detailsArea->layout()->addWidget(vm_details);
+            selected_sysconfig = new VMManagerSystem();
+            vm_details->reset();
             /* tell the mainwindow to disable the toolbar buttons */
             emit selectionOrStateChanged(nullptr);
         }

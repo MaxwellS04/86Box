@@ -36,7 +36,7 @@
 #include <86box/serial.h>
 #include <86box/mouse.h>
 
-serial_port_t com_ports[SERIAL_MAX];
+serial_port_t com_ports[SERIAL_MAX] = { 0 };
 
 enum {
     SERIAL_INT_LSR       = 1,
@@ -95,6 +95,9 @@ serial_reset_port(serial_t *dev)
 
     serial_update_ints(dev);
     dev->irq_state = 0;
+
+    if (dev->char_port.chardev.control)
+        dev->char_port.chardev.control((dev->mctrl & 0x03) | (dev->lcr & 0x40), dev->char_port.chardev.priv);
 }
 
 void
@@ -111,6 +114,13 @@ serial_transmit_period(serial_t *dev)
     dev->transmit_period = (16000000.0 * ddlab) / dev->clock_src;
     if (dev->sd && dev->sd->transmit_period_callback)
         dev->sd->transmit_period_callback(dev, dev->sd->priv, dev->transmit_period);
+
+    dev->char_port.com.baud      = dev->clock_src / (16.0 * ddlab);
+    dev->char_port.com.data_bits = (dev->lcr & 0x03) + 5;
+    dev->char_port.com.parity    = (dev->lcr >> 3) & 0x7;
+    dev->char_port.com.stop_bits = !!(dev->lcr & 0x04) + 1;
+    if (dev->char_port.chardev.port_config)
+        dev->char_port.chardev.port_config(dev->char_port.chardev.priv);
 }
 
 void
@@ -153,6 +163,28 @@ serial_clear_timeout(serial_t *dev)
     serial_update_ints(dev);
 }
 
+/*
+   The receive timer polls the host character device, so it should run once
+   per character, not once per bit: at 115200 baud that is the difference
+   between 11520 and 115200 callbacks per second on the emulation thread.
+
+   bits is 0 until the guest programs the LCR, and arming a timer with 0 is
+   presumably why the multiplication was commented out, so assume a full
+   10-bit frame until the guest says otherwise.
+
+   Note by OBattler: I originally wrote the receive timer and the per-bit
+   polling is intentional because the NT 3.x Logitech serial mouse driver
+   likes writing the next byte at a very tight timing after the previous
+   byte - changing it to per-byte timing delays the byte movement so much
+   that it goes way out of specification, even breaking the Windows 9x
+   modem detection.
+ */
+static double
+serial_receive_period(const serial_t *dev)
+{
+    return (double) /* (dev->bits ? dev->bits : 10) * */ dev->transmit_period;
+}
+
 static void
 serial_receive_timer(void *priv)
 {
@@ -160,7 +192,34 @@ serial_receive_timer(void *priv)
 
     serial_log("serial_receive_timer()\n");
 
-    timer_on_auto(&dev->receive_timer, /* dev->bits * */ dev->transmit_period);
+    timer_on_auto(&dev->receive_timer, serial_receive_period(dev));
+
+    /* Only read when the receive shift register is free: it still holds the
+       previous byte until the code below moves it into the FIFO, so reading
+       unconditionally can overwrite input that was never delivered. */
+    if (dev->char_port.chardev.read && (dev->out_new == 0xffff)) {
+        uint8_t val;
+        if (dev->char_port.chardev.read(&val, sizeof(val), dev->char_port.chardev.priv) > 0)
+            serial_write_fifo(dev, val);
+    }
+
+    /* The modem status lines do not change thousands of times a second, and
+       querying them is not free on every host. */
+    dev->status_divider++;
+    if (dev->char_port.chardev.status && !(dev->status_divider & 0x3f)) {
+        uint8_t prev_msr = dev->msr;
+        uint32_t flags = dev->char_port.chardev.status(dev->char_port.chardev.priv);
+        uint8_t mask = CHAR_COM_CTS | CHAR_COM_DSR | CHAR_COM_RI | CHAR_COM_DCD;
+        dev->msr = (dev->msr & ~mask) | (flags & mask);
+        mask &= ~CHAR_COM_RI;
+        dev->msr |= ((prev_msr & mask) ^ (dev->msr & mask)) >> 4;
+        if ((prev_msr & CHAR_COM_RI) && !(dev->msr & CHAR_COM_RI))
+            dev->msr |= CHAR_COM_RI >> 4;
+        if (dev->msr & 0x0f) {
+            dev->int_status |= SERIAL_INT_MSR;
+            serial_update_ints(dev);
+        }
+    }
 
     if (dev->fifo_enabled) {
         /* FIFO mode. */
@@ -216,6 +275,27 @@ write_fifo(serial_t *dev, uint8_t dat)
     dev->out_new = (uint16_t) dat;
 }
 
+static void
+serial_receive_loopback_break(serial_t *dev)
+{
+    /* In diagnostic loopback the transmitter feeds the receiver internally.
+       Asserting Break therefore receives a zero character with the parity,
+       framing, and break-error indications set. */
+    if (dev->fifo_enabled)
+        fifo_write_evt(0x00, dev->rcvr_fifo);
+    else {
+        if (dev->lsr & 0x01)
+            dev->lsr |= 0x02;
+        dev->dat = 0x00;
+        dev->lsr |= 0x01;
+        dev->int_status |= SERIAL_INT_RECEIVE;
+    }
+
+    dev->lsr |= 0x1c;
+    dev->int_status |= SERIAL_INT_LSR;
+    serial_update_ints(dev);
+}
+
 void
 serial_write_fifo(serial_t *dev, uint8_t dat)
 {
@@ -233,17 +313,10 @@ serial_transmit(serial_t *dev, uint8_t val)
 {
     if (dev->mctrl & 0x10)
         write_fifo(dev, val);
-    else if (dev->sd->dev_write)
+    else if (dev->sd && dev->sd->dev_write)
         dev->sd->dev_write(dev, dev->sd->priv, val);
-
-#ifdef ENABLE_SERIAL_CONSOLE
-    if ((val >= ' ' && val <= '~') || val == '\r' || val == '\n') {
-        fputc(val, stdout);
-        if (val == '\n')
-            fflush(stdout);
-    } else
-        fprintf(stdout, "[%02X]", val);
-#endif
+    else if (dev->char_port.chardev.write)
+        dev->char_port.chardev.write(&val, sizeof(val), dev->char_port.chardev.priv);
 }
 
 static void
@@ -364,7 +437,7 @@ static void
 serial_update_speed(serial_t *dev)
 {
     serial_log("serial_update_speed(%lf)\n", dev->transmit_period);
-    timer_on_auto(&dev->receive_timer, /* dev->bits * */ dev->transmit_period);
+    timer_on_auto(&dev->receive_timer, serial_receive_period(dev));
 
     if (dev->transmit_enabled & 3)
         timer_on_auto(&dev->transmit_timer, dev->transmit_period);
@@ -480,6 +553,12 @@ serial_set_type(serial_t *dev, uint8_t type)
 }
 
 void
+serial_set_card_selected_feedback(serial_t *dev, uint8_t *reg_91)
+{
+    dev->reg_91 = reg_91;
+}
+
+void
 serial_write(uint16_t addr, uint8_t val, void *priv)
 {
     serial_t *dev = (serial_t *) priv;
@@ -487,6 +566,9 @@ serial_write(uint16_t addr, uint8_t val, void *priv)
     uint8_t   old;
 
     serial_log("UART: [%04X:%08X] Write %02X to port %02X\n", CS, cpu_state.pc, val, addr);
+
+    if (dev->reg_91 != NULL)
+        *dev->reg_91 |= 0x01;
 
     cycles -= ISA_CYCLES(8);
 
@@ -596,8 +678,13 @@ serial_write(uint16_t addr, uint8_t val, void *priv)
                 if (dev->sd && dev->sd->lcr_callback)
                     dev->sd->lcr_callback(dev, dev->sd->priv, dev->lcr);
             }
+            if (!(old & 0x40) && (val & 0x40) && (dev->mctrl & 0x10))
+                serial_receive_loopback_break(dev);
+            if (((old ^ val) & 0x40) && dev->char_port.chardev.control)
+                dev->char_port.chardev.control((dev->mctrl & 0x03) | (val & 0x40), dev->char_port.chardev.priv);
             break;
         case 4:
+            old = dev->mctrl;
             if ((val & 2) && !(dev->mctrl & 2)) {
                 if (dev->sd && dev->sd->rcr_callback) {
                     serial_log("RTS toggle callback\n");
@@ -606,15 +693,16 @@ serial_write(uint16_t addr, uint8_t val, void *priv)
             }
             if (!(val & 8) && (dev->mctrl & 8))
                 serial_do_irq(dev, 0);
-            if ((val ^ dev->mctrl) & 0x10)
-                serial_reset_fifo(dev);
             if (dev->sd && dev->sd->dtr_callback && (val ^ dev->mctrl) & 1)
                 dev->sd->dtr_callback(dev, val & 1, dev->sd->priv);
+            if (((dev->mctrl ^ val) & 0x03) && dev->char_port.chardev.control)
+                dev->char_port.chardev.control((val & 0x03) | (dev->lcr & 0x40), dev->char_port.chardev.priv);
             dev->mctrl = val & 0x1f;
             if (val & 0x10) {
                 new_msr = (val & 0x0c) << 4;
                 new_msr |= (val & 0x02) ? 0x10 : 0;
                 new_msr |= (val & 0x01) ? 0x20 : 0;
+                new_msr |= dev->msr & 0x0f;
 
                 if ((dev->msr ^ new_msr) & 0x10)
                     new_msr |= 0x01;
@@ -631,10 +719,30 @@ serial_write(uint16_t addr, uint8_t val, void *priv)
                     dev->int_status |= SERIAL_INT_MSR;
                     serial_update_ints(dev);
                 }
+            } else if (old & 0x10) {
+                /*
+                 * Leaving diagnostic loopback reconnects the MSR condition
+                 * bits to the external modem-status inputs.  The transition
+                 * also latches DCTS, DDSR, TERI, and DDCD exactly as an 8250
+                 * input transition would.
+                 */
+                new_msr = (dev->msr_set & 0xf0) | (dev->msr & 0x0f);
 
-                /* TODO: Why reset the FIFO's here?! */
-                fifo_reset(dev->xmit_fifo);
-                fifo_reset(dev->rcvr_fifo);
+                if ((dev->msr ^ new_msr) & 0x10)
+                    new_msr |= 0x01;
+                if ((dev->msr ^ new_msr) & 0x20)
+                    new_msr |= 0x02;
+                if ((dev->msr & 0x40) && !(new_msr & 0x40))
+                    new_msr |= 0x04;
+                if ((dev->msr ^ new_msr) & 0x80)
+                    new_msr |= 0x08;
+
+                dev->msr = new_msr;
+
+                if (dev->msr & 0x0f) {
+                    dev->int_status |= SERIAL_INT_MSR;
+                    serial_update_ints(dev);
+                }
             }
             break;
         case 5:
@@ -657,6 +765,8 @@ serial_write(uint16_t addr, uint8_t val, void *priv)
             dev->msr = (dev->msr & 0xf0) | (val & 0x0f);
             if (dev->msr & 0x0f)
                 dev->int_status |= SERIAL_INT_MSR;
+            else
+                dev->int_status &= ~SERIAL_INT_MSR;
             serial_update_ints(dev);
             break;
         case 7:
@@ -673,6 +783,9 @@ serial_read(uint16_t addr, void *priv)
 {
     serial_t *dev = (serial_t *) priv;
     uint8_t   ret = 0;
+
+    if (dev->reg_91 != NULL)
+        *dev->reg_91 |= 0x01;
 
     cycles -= ISA_CYCLES(8);
 
@@ -853,6 +966,13 @@ serial_attach_ex(int port,
                  void (*lcr_callback)(struct serial_s *serial, void *priv, uint8_t data_bits),
                  void *priv)
 {
+    /* Make sure this port becomes non-hotunpluggable if a hotunpluggable dropdown
+       device and a non-hotunpluggable external device are both trying to claim it. */
+    uint8_t hotunplug         = com_ports[port].hotunplug;
+    com_ports[port].hotunplug = CHAR_PORT_NOHOTUNPLUG;
+    if (hotunplug != CHAR_PORT_DETACHED)
+        return NULL;
+
     serial_device_t *sd = &serial_devices[port];
 
     sd->rcr_callback             = rcr_callback;
@@ -861,16 +981,23 @@ serial_attach_ex(int port,
     sd->lcr_callback             = lcr_callback;
     sd->priv                     = priv;
 
-    return sd->serial;
+    return com_ports[port].serial;
 }
 
 serial_t *
 serial_attach_ex_2(int port,
-                 void (*rcr_callback)(struct serial_s *serial, void *priv),
-                 void (*dev_write)(struct serial_s *serial, void *priv, uint8_t data),
-                 void (*dtr_callback)(struct serial_s *serial, int status, void *priv),
-                 void *priv)
+                   void (*rcr_callback)(struct serial_s *serial, void *priv),
+                   void (*dev_write)(struct serial_s *serial, void *priv, uint8_t data),
+                   void (*dtr_callback)(struct serial_s *serial, int status, void *priv),
+                   void *priv)
 {
+    /* Make sure this port becomes non-hotunpluggable if a hotunpluggable dropdown
+       device and a non-hotunpluggable external device are both trying to claim it. */
+    uint8_t hotunplug         = com_ports[port].hotunplug;
+    com_ports[port].hotunplug = CHAR_PORT_NOHOTUNPLUG;
+    if (hotunplug != CHAR_PORT_DETACHED)
+        return NULL;
+
     serial_device_t *sd = &serial_devices[port];
 
     sd->rcr_callback             = rcr_callback;
@@ -880,7 +1007,65 @@ serial_attach_ex_2(int port,
     sd->lcr_callback             = NULL;
     sd->priv                     = priv;
 
-    return sd->serial;
+    return com_ports[port].serial;
+}
+
+void
+serial_devices_init(void)
+{
+    for (uint8_t i = 0; i < SERIAL_MAX; i++) {
+        /* Leave non-hotunpluggable ports and their devices alone. */
+        if (com_ports[i].hotunplug >= CHAR_PORT_NOHOTUNPLUG)
+            continue;
+
+        memset(&(serial_devices[i]), 0, sizeof(serial_device_t));
+
+        com_ports[i].hotunplug = CHAR_PORT_DETACHED;
+
+        serial_t *serial = com_ports[i].serial;
+        if (!serial)
+            continue;
+
+        memset(&serial->char_port, 0, sizeof(serial->char_port));
+        if (com_ports[i].device) {
+            serial->char_port.type = CHAR_PORT_COM;
+            snprintf(serial->char_port.name, sizeof(serial->char_port.name), "COM%i", i + 1);
+            const device_t *device = char_get_device(com_ports[i].device);
+            char_init(&serial->char_port, device, i + 1);
+
+            if (serial->char_port.chardev.control)
+                serial->char_port.chardev.control((serial->mctrl & 0x03) | (serial->lcr & 0x40), serial->char_port.chardev.priv);
+
+            /* This port is hotunpluggable if the device allows it, unless further serial_attach attempts are made. */
+            com_ports[i].hotunplug = (device->flags & DEVICE_HOTPLUG_OUT) ? CHAR_PORT_HOTUNPLUG : CHAR_PORT_NOHOTUNPLUG;
+        }
+    }
+}
+
+void
+serial_devices_close(int hotplug)
+{
+    for (uint8_t i = 0; i < SERIAL_MAX; i++) {
+        /* Leave non-hotunpluggable ports and their devices alone in a hotplug operation. */
+        if (hotplug && (com_ports[i].hotunplug >= CHAR_PORT_NOHOTUNPLUG))
+            continue;
+        com_ports[i].hotunplug = CHAR_PORT_DETACHED;
+
+        memset(&(serial_devices[i]), 0, sizeof(serial_device_t));
+
+        if (com_ports[i].serial)
+            memset(&com_ports[i].serial->char_port, 0, sizeof(char_port_t));
+    }
+}
+
+void
+serial_devices_reset(void)
+{
+    device_close_by_flags(DEVICE_COM | DEVICE_HOTPLUG_OUT);
+
+    serial_devices_close(1);
+
+    serial_devices_init();
 }
 
 static void
@@ -896,10 +1081,17 @@ serial_close(void *priv)
 {
     serial_t *dev = (serial_t *) priv;
 
-    if (dev->sd) {
-        memset(dev->sd, 0, sizeof(serial_device_t));
+    if (dev->sd || dev->char_port.type) {
+        if (dev->sd)
+            memset(dev->sd, 0, sizeof(serial_device_t));
         fifo_close(dev->rcvr_fifo);
     }
+
+    /*
+       Needed to avoid a segmentation fault at serial_devices_init() for any serial port
+       that used be enabled and was then disabled.
+     */
+    com_ports[dev->inst].serial = NULL;
 
     free(dev);
 }
@@ -909,7 +1101,7 @@ serial_reset(void *priv)
 {
     serial_t *dev = (serial_t *) priv;
 
-    if (dev->sd) {
+    if (dev->sd || dev->char_port.type) {
         timer_disable(&dev->transmit_timer);
         timer_disable(&dev->timeout_timer);
         timer_disable(&dev->receive_timer);
@@ -952,9 +1144,10 @@ serial_init(const device_t *info)
     if (com_ports[next_inst].enabled || (info->local & 0xFFF00000)) {
         serial_log("Adding serial port %i...\n", next_inst);
         dev->type = info->local;
-        memset(&(serial_devices[next_inst]), 0, sizeof(serial_device_t));
         dev->sd         = &(serial_devices[next_inst]);
-        dev->sd->serial = dev;
+
+        com_ports[next_inst].serial    = dev;
+        com_ports[next_inst].hotunplug = CHAR_PORT_DETACHED;
 
         if (info->local & 0xfff00000) {
             dev->base_address = info->local >> 20;
@@ -1028,7 +1221,7 @@ serial_standalone_init(void)
 {
     while (next_inst < (SERIAL_MAX - 1))
         device_add_inst(&ns8250_device, next_inst + 1);
-};
+}
 
 const device_t ns8250_device = {
     .name          = "National Semiconductor 8250(-compatible) UART",

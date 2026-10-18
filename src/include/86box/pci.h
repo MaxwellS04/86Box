@@ -31,6 +31,43 @@
 #define PCI_REG_LATENCY_TIMER     0x0d
 #define PCI_REG_HEADER_TYPE       0x0e
 #define PCI_REG_BIST              0x0f
+#define PCI_REG_BAR0_BYTE0        0x10
+#define PCI_REG_BAR0_BYTE1        0x11
+#define PCI_REG_BAR0_BYTE2        0x12
+#define PCI_REG_BAR0_BYTE3        0x13
+#define PCI_REG_BAR1_BYTE0        0x14
+#define PCI_REG_BAR1_BYTE1        0x15
+#define PCI_REG_BAR1_BYTE2        0x16
+#define PCI_REG_BAR1_BYTE3        0x17
+#define PCI_REG_BAR2_BYTE0        0x18
+#define PCI_REG_BAR2_BYTE1        0x19
+#define PCI_REG_BAR2_BYTE2        0x1a
+#define PCI_REG_BAR2_BYTE3        0x1b
+#define PCI_REG_BAR3_BYTE0        0x1c
+#define PCI_REG_BAR3_BYTE1        0x1d
+#define PCI_REG_BAR3_BYTE2        0x1e
+#define PCI_REG_BAR3_BYTE3        0x1e
+#define PCI_REG_BAR4_BYTE0        0x20
+#define PCI_REG_BAR4_BYTE1        0x21
+#define PCI_REG_BAR4_BYTE2        0x22
+#define PCI_REG_BAR4_BYTE3        0x23
+#define PCI_REG_BAR5_BYTE0        0x24
+#define PCI_REG_BAR5_BYTE1        0x25
+#define PCI_REG_BAR5_BYTE2        0x26
+#define PCI_REG_BAR5_BYTE3        0x27
+#define PCI_REG_SUBVEN_ID_L       0x2c
+#define PCI_REG_SUBVEN_ID_H       0x2d
+#define PCI_REG_SUBSYS_ID_L       0x2e
+#define PCI_REG_SUBSYS_ID_H       0x2f
+#define PCI_REG_ROM_BAR_BYTE0     0x30
+#define PCI_REG_ROM_BAR_BYTE1     0x31
+#define PCI_REG_ROM_BAR_BYTE2     0x32
+#define PCI_REG_ROM_BAR_BYTE3     0x33
+#define PCI_REG_CAPS_PTR          0x34
+#define PCI_REG_INT_LINE          0x3c
+#define PCI_REG_INT_PIN           0x3d
+#define PCI_REG_MIN_GRANT         0x3e
+#define PCI_REG_MAX_LAT           0x3f
 
 #define PCI_COMMAND_L_IO          0x01
 #define PCI_COMMAND_L_MEM         0x02
@@ -239,6 +276,7 @@ extern void        pci_set_mirq_level(int mirq, uint8_t irq);
 extern void        pci_irq(uint8_t slot, uint8_t pci_int, int level, int set, uint8_t *irq_state);
 
 extern uint8_t     pci_get_int(uint8_t slot, uint8_t pci_int);
+extern uint8_t     pci_get_irq_line(uint8_t slot, uint8_t pci_int);
 
 /* Relocate a PCI device to a new slot, required for the configurable
    IDSEL's of ALi M1543(c). */
@@ -264,14 +302,17 @@ extern uint32_t    pci_readl(uint16_t port, void *priv);
 extern uint8_t     pci_register_bus(void);
 extern void        pci_remap_bus(uint8_t bus_index, uint8_t bus_number);
 extern void        pci_register_bus_slot(int bus, int card, int type, int inta, int intb, int intc, int intd);
+/* One more slot on the bus a slot of this type sits on, next device
+   number, INTA-D rotated (a two-IDSEL card such as the Rage Fury MAXX). */
+extern int         pci_register_sibling_slot(int type);
 
 /* Add a PCI card. */
-extern void        pci_add_card(uint8_t add_type, uint8_t (*read)(int func, int addr, void *priv),
-                                void (*write)(int func, int addr, uint8_t val, void *priv), void *priv, uint8_t *slot);
+extern void        pci_add_card(uint8_t add_type, uint8_t (*read)(int func, int addr, int len, void *priv),
+                                void (*write)(int func, int addr, int len, uint8_t val, void *priv), void *priv, uint8_t *slot);
 
 /* Add an instance of the PCI bridge. */
-extern void        pci_add_bridge(uint8_t agp, uint8_t (*read)(int func, int addr, void *priv),
-                                  void (*write)(int func, int addr, uint8_t val, void *priv), void *priv,
+extern void        pci_add_bridge(uint8_t agp, uint8_t (*read)(int func, int addr, int len, void *priv),
+                                  void (*write)(int func, int addr, int len, uint8_t val, void *priv), void *priv,
                                   uint8_t *slot);
 
 /* Register the cards that have been added into slots. */

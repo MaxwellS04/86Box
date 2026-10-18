@@ -73,12 +73,36 @@ typedef union {
     };
 } double_decompose_t;
 
+/* Precision control: a host double already matches PC=53 (and is the
+   closest we can get to PC=64); PC=24 must round the result of
+   ADD/SUB/MUL/DIV/SQRT to single. Approximations: the float cast clamps
+   to the single exponent range (the chip keeps 15 exponent bits), rounds
+   in the host mode of the moment (nearest where the op already restored
+   it), and sets no PE/OE/UE flags. */
+#define FP_ROUND_PC(r)                        \
+    do {                                      \
+        if (!(cpu_state.npxc & 0x300))        \
+            (r) = (double) (float) (r);       \
+    } while (0)
+
+/* Dynarec blocks are keyed on PC=24 and RC!=nearest, but FLDCW/FLDENV/
+   FRSTOR/FSAVE/FINIT run as helper calls inside a block: a change to either
+   must end the block so the ops after it are compiled under the new value. */
+#define x87_set_control_word(w)                                                                                                 \
+    do {                                                                                                                        \
+        uint16_t old_npxc_ = cpu_state.npxc;                                                                                    \
+        cpu_state.npxc     = (w);                                                                                               \
+        codegen_set_rounding_mode((cpu_state.npxc >> 10) & 3);                                                                  \
+        if (((!(old_npxc_ & 0x300)) != (!(cpu_state.npxc & 0x300))) || ((!(old_npxc_ & 0xc00)) != (!(cpu_state.npxc & 0xc00)))) \
+            CPU_BLOCK_END();                                                                                                    \
+    } while (0)
+
 #ifdef FPU_8087
 #    define x87_div(dst, src1, src2)                    \
         do {                                            \
             if (((double) src2) == 0.0) {               \
                 cpu_state.npxs |= FPU_SW_Zero_Div;      \
-                if (cpu_state.npxc & FPU_SW_Zero_Div)   \
+                if ((cpu_state.npxc & FPU_SW_Zero_Div) || (cpu_state.npxc & 0x80)) \
                     dst = src1 / (double) src2;         \
                 else {                                  \
                     fpu_log("FPU : divide by zero\n");  \
@@ -91,40 +115,24 @@ typedef union {
             } else                                      \
                 dst = src1 / (double) src2;             \
         } while (0)
+#    define x87_div_memory(dst, src1, src2, mem) x87_div(dst, src1, src2)
 #else
-#    define x87_div(dst, src1, src2)                    \
-        do {                                            \
-            if (((double) src2) == 0.0) {               \
-                cpu_state.npxs |= FPU_SW_Zero_Div;      \
-                if (cpu_state.npxc & FPU_SW_Zero_Div)   \
-                    dst = src1 / (double) src2;         \
-                else {                                  \
-                    fpu_log("FPU : divide by zero\n");  \
-                    if (cr0 & 0x20)                     \
-                        new_ne = 1;                     \
-                    else                                \
-                        picint(1 << 13);                \
-                    return 1;                           \
-                }                                       \
-            } else                                      \
-                dst = src1 / (double) src2;             \
+#    define x87_div_memory(dst, src1, src2, mem)                            \
+        do {                                                               \
+            int denormal_ = (mem) != 0 && fabs((double)(mem)) <             \
+                            (sizeof(mem) == 4 ? 0x1p-126 : 0x1p-1022);    \
+            if (x87_legacy_divide(&(dst), (double) (src1), (double) (src2), \
+                                  X87_ST_EMPTY(0) | (denormal_ << 1))) \
+                return 0;                                                  \
         } while (0)
 #endif
 
 static __inline void
 x87_push(double i)
 {
-#ifdef USE_NEW_DYNAREC
     cpu_state.TOP--;
-#else
-    cpu_state.TOP                    = (cpu_state.TOP - 1) & 7;
-#endif
     cpu_state.ST[cpu_state.TOP & 7] = i;
-#ifdef USE_NEW_DYNAREC
     cpu_state.tag[cpu_state.TOP & 7] = TAG_VALID;
-#else
-    cpu_state.tag[cpu_state.TOP & 7] = (i == 0.0) ? TAG_VALID : 0;
-#endif
 }
 
 static __inline void
@@ -137,17 +145,9 @@ x87_push_u64(uint64_t i)
 
     td.ll = i;
 
-#ifdef USE_NEW_DYNAREC
     cpu_state.TOP--;
-#else
-    cpu_state.TOP                    = (cpu_state.TOP - 1) & 7;
-#endif
     cpu_state.ST[cpu_state.TOP & 7] = td.d;
-#ifdef USE_NEW_DYNAREC
     cpu_state.tag[cpu_state.TOP & 7] = TAG_VALID;
-#else
-    cpu_state.tag[cpu_state.TOP & 7] = (td.d == 0.0) ? TAG_VALID : 0;
-#endif
 }
 
 static __inline double
@@ -155,143 +155,11 @@ x87_pop(void)
 {
     double t                         = cpu_state.ST[cpu_state.TOP & 7];
     cpu_state.tag[cpu_state.TOP & 7] = TAG_EMPTY;
-#ifdef USE_NEW_DYNAREC
     cpu_state.TOP++;
-#else
-    cpu_state.tag[cpu_state.TOP & 7] |= TAG_UINT64;
-    cpu_state.TOP = (cpu_state.TOP + 1) & 7;
-#endif
     return t;
 }
 
-static __inline int16_t
-x87_fround16(double b)
-{
-    double da;
-    double dc;
-    int16_t a;
-    int16_t c;
-
-    switch ((cpu_state.npxc >> 10) & 3) {
-        case 0: /*Nearest*/
-            da = floor(b);
-            dc = floor(b + 1.0);
-            a = (int16_t) da;
-            c = (int16_t) dc;
-            if ((b - a) < (c - b))
-                return a;
-            else if ((b - a) > (c - b))
-                return c;
-            else
-                return (a & 1) ? c : a;
-        case 1: /*Down*/
-            da = floor(b);
-            return (int16_t) da;
-        case 2: /*Up*/
-            da = ceil(b);
-            return (int16_t) da;
-        case 3: /*Chop*/
-            return (int16_t) b;
-    }
-
-    return 0;
-}
-
-static __inline int64_t
-x87_fround16_64(double b)
-{
-    return (int64_t) x87_fround16(b);
-}
-
-static __inline int32_t
-x87_fround32(double b)
-{
-    double da;
-    double dc;
-    int32_t a;
-    int32_t c;
-
-    switch ((cpu_state.npxc >> 10) & 3) {
-        case 0: /*Nearest*/
-            da = floor(b);
-            dc = floor(b + 1.0);
-            a = (int32_t) da;
-            c = (int32_t) dc;
-            if ((b - a) < (c - b))
-                return a;
-            else if ((b - a) > (c - b))
-                return c;
-            else
-                return (a & 1) ? c : a;
-        case 1: /*Down*/
-            da = floor(b);
-            return (int32_t) da;
-        case 2: /*Up*/
-            da = ceil(b);
-            return (int32_t) da;
-        case 3: /*Chop*/
-            return (int32_t) b;
-    }
-
-    return 0;
-}
-
-static __inline int64_t
-x87_fround32_64(double b)
-{
-    return (int64_t) x87_fround32(b);
-}
-
-static __inline int64_t
-x87_fround_nearest(double b)
-{
-    double da, dc;
-    int64_t a, c;
-    
-    da = floor(b);
-    dc = floor(b + 1.0);
-    a = (int64_t) da;
-    c = (int64_t) dc;
-    if ((b - a) < (c - b))
-        return a;
-    else if ((b - a) > (c - b))
-        return c;
-    else
-        return (a & 1) ? c : a;
-}
-
-static __inline int64_t
-x87_fround(double b)
-{
-    double da;
-    double dc;
-    int64_t a;
-    int64_t c;
-
-    switch ((cpu_state.npxc >> 10) & 3) {
-        case 0: /*Nearest*/
-            da = floor(b);
-            dc = floor(b + 1.0);
-            a = (int64_t) da;
-            c = (int64_t) dc;
-            if ((b - a) < (c - b))
-                return a;
-            else if ((b - a) > (c - b))
-                return c;
-            else
-                return (a & 1) ? c : a;
-        case 1: /*Down*/
-            da = floor(b);
-            return (int64_t) da;
-        case 2: /*Up*/
-            da = ceil(b);
-            return (int64_t) da;
-        case 3: /*Chop*/
-            return (int64_t) b;
-    }
-
-    return 0LL;
-}
+#include "x87_ops_fist.h"
 
 static __inline double
 x87_ld80(void)
@@ -334,20 +202,18 @@ x87_ld_frstor(int reg)
     cpu_state.MM[reg].q  = readmemq(easeg, cpu_state.eaaddr);
     cpu_state.MM_w4[reg] = readmemw(easeg, cpu_state.eaaddr + 8);
 
-#ifdef USE_NEW_DYNAREC
-    if ((cpu_state.MM_w4[reg] == 0x5555) && (cpu_state.tag[reg] & TAG_UINT64))
-#else
-    if ((cpu_state.MM_w4[reg] == 0x5555) && (cpu_state.tag[reg] == 2))
-#endif
-    {
-#ifndef USE_NEW_DYNAREC
-        cpu_state.tag[reg] = TAG_UINT64;
-#endif
+    /* The 0x5555 pseudo-exponent is written by x87_st_fsave ONLY for a
+       TAG_UINT64 (FILD'd int64) register, and no legitimate float or MMX save
+       produces it (x87_st80 caps finite doubles near 0x43FF, NaN/Inf use 0x7fff,
+       x87_stmmx writes 0xffff). So the sentinel alone is a reliable marker.
+       Gating on it directly makes FXRSTOR round-trip the exact integer the same
+       way FNSAVE/FRSTOR does; the previous `tag == 2` condition depended on a
+       correctly-reconstructed abridged tag, which FXRSTOR cannot guarantee. */
+    if (cpu_state.MM_w4[reg] == 0x5555) {
+        cpu_state.tag[reg] = TAG_VALID | TAG_UINT64;
         cpu_state.ST[reg] = (double) cpu_state.MM[reg].q;
     } else {
-#ifdef USE_NEW_DYNAREC
         cpu_state.tag[reg] &= ~TAG_UINT64;
-#endif
         cpu_state.ST[reg] = x87_ld80();
     }
 }
@@ -494,17 +360,10 @@ typedef union {
         } while (0)
 #endif
 
-#ifdef USE_NEW_DYNAREC
-#    define FP_TAG_VALID   cpu_state.tag[cpu_state.TOP & 7] = TAG_VALID
-#    define FP_TAG_VALID_F cpu_state.tag[(cpu_state.TOP + fetchdat) & 7] = TAG_VALID
-#    define FP_TAG_DEFAULT cpu_state.tag[cpu_state.TOP & 7] = TAG_VALID | TAG_UINT64
-#    define FP_TAG_VALID_N cpu_state.tag[(cpu_state.TOP + 1) & 7] = TAG_VALID
-#else
-#    define FP_TAG_VALID   cpu_state.tag[cpu_state.TOP] &= ~TAG_UINT64
-#    define FP_TAG_VALID_F cpu_state.tag[(cpu_state.TOP + fetchdat) & 7] &= ~TAG_UINT64
-#    define FP_TAG_DEFAULT cpu_state.tag[cpu_state.TOP] |= TAG_UINT64;
-#    define FP_TAG_VALID_N cpu_state.tag[(cpu_state.TOP + 1) & 7] &= ~TAG_UINT64
-#endif
+#define FP_TAG_VALID   cpu_state.tag[cpu_state.TOP & 7] = TAG_VALID
+#define FP_TAG_VALID_F cpu_state.tag[(cpu_state.TOP + fetchdat) & 7] = TAG_VALID
+#define FP_TAG_DEFAULT cpu_state.tag[cpu_state.TOP & 7] = TAG_VALID | TAG_UINT64
+#define FP_TAG_VALID_N cpu_state.tag[(cpu_state.TOP + 1) & 7] = TAG_VALID
 
 #include "softfloat3e/softfloat-specialize.h"
 #include "softfloat3e/fpu_trans.h"
@@ -551,14 +410,26 @@ static int
 FPU_ILLEGAL_a16(UNUSED(uint32_t fetchdat))
 {
     geteaw();
+#ifdef FPU_NEC
+    do_cycles(timing_rr);
+#else
     wait_cycs(timing_rr, 0);
+#endif
     return 0;
 }
 #else
 static int
 FPU_ILLEGAL_a16(uint32_t fetchdat)
 {
+    /* An undefined ESC opcode takes #NM like a defined one, then #UD on
+       the 486 and later; no pending-exception check, no state change
+       (Pentium Vol. 3, 23.3.5) */
+    FP_ENTER();
     fetch_ea_16(fetchdat);
+    if (is486 || isibm486) {
+        x86illegal();
+        return 1;
+    }
     CLOCK_CYCLES(timing_rr);
     PREFETCH_RUN(timing_rr, 2, rmdat, 0, 0, 0, 0, 0);
     return 0;
@@ -567,7 +438,15 @@ FPU_ILLEGAL_a16(uint32_t fetchdat)
 static int
 FPU_ILLEGAL_a32(uint32_t fetchdat)
 {
+    /* An undefined ESC opcode takes #NM like a defined one, then #UD on
+       the 486 and later; no pending-exception check, no state change
+       (Pentium Vol. 3, 23.3.5) */
+    FP_ENTER();
     fetch_ea_32(fetchdat);
+    if (is486 || isibm486) {
+        x86illegal();
+        return 1;
+    }
     CLOCK_CYCLES(timing_rr);
     PREFETCH_RUN(timing_rr, 2, rmdat, 0, 0, 0, 0, 0);
     return 0;
@@ -577,7 +456,7 @@ FPU_ILLEGAL_a32(uint32_t fetchdat)
 #define ILLEGAL_a16 FPU_ILLEGAL_a16
 
 #ifdef FPU_8087
-const OpFn OP_TABLE(sf_fpu_8087_d8)[32] = {
+static const OpFn OP_TABLE(sf_fpu_8087_d8)[32] = {
     // clang-format off
         sf_FADDs_a16, sf_FMULs_a16, sf_FCOMs_a16, sf_FCOMPs_a16, sf_FSUBs_a16, sf_FSUBRs_a16, sf_FDIVs_a16, sf_FDIVRs_a16,
         sf_FADDs_a16, sf_FMULs_a16, sf_FCOMs_a16, sf_FCOMPs_a16, sf_FSUBs_a16, sf_FSUBRs_a16, sf_FDIVs_a16, sf_FDIVRs_a16,
@@ -586,7 +465,7 @@ const OpFn OP_TABLE(sf_fpu_8087_d8)[32] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_d9)[256] = {
+static const OpFn OP_TABLE(sf_fpu_8087_d9)[256] = {
     // clang-format off
         sf_FLDs_a16,   sf_FLDs_a16,   sf_FLDs_a16,   sf_FLDs_a16,   sf_FLDs_a16,   sf_FLDs_a16,   sf_FLDs_a16,   sf_FLDs_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -626,7 +505,7 @@ const OpFn OP_TABLE(sf_fpu_8087_d9)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_da)[256] = {
+static const OpFn OP_TABLE(sf_fpu_8087_da)[256] = {
     // clang-format off
         sf_FADDil_a16,  sf_FADDil_a16,  sf_FADDil_a16,  sf_FADDil_a16,  sf_FADDil_a16,  sf_FADDil_a16,  sf_FADDil_a16,  sf_FADDil_a16,
         sf_FMULil_a16,  sf_FMULil_a16,  sf_FMULil_a16,  sf_FMULil_a16,  sf_FMULil_a16,  sf_FMULil_a16,  sf_FMULil_a16,  sf_FMULil_a16,
@@ -666,7 +545,7 @@ const OpFn OP_TABLE(sf_fpu_8087_da)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_db)[256] = {
+static const OpFn OP_TABLE(sf_fpu_8087_db)[256] = {
     // clang-format off
         sf_FILDil_a16,  sf_FILDil_a16,  sf_FILDil_a16,  sf_FILDil_a16,  sf_FILDil_a16,  sf_FILDil_a16,  sf_FILDil_a16,  sf_FILDil_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -706,7 +585,7 @@ const OpFn OP_TABLE(sf_fpu_8087_db)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_dc)[32] = {
+static const OpFn OP_TABLE(sf_fpu_8087_dc)[32] = {
     // clang-format off
         sf_FADDd_a16, sf_FMULd_a16, sf_FCOMd_a16, sf_FCOMPd_a16, sf_FSUBd_a16, sf_FSUBRd_a16, sf_FDIVd_a16, sf_FDIVRd_a16,
         sf_FADDd_a16, sf_FMULd_a16, sf_FCOMd_a16, sf_FCOMPd_a16, sf_FSUBd_a16, sf_FSUBRd_a16, sf_FDIVd_a16, sf_FDIVRd_a16,
@@ -715,7 +594,7 @@ const OpFn OP_TABLE(sf_fpu_8087_dc)[32] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_dd)[256] = {
+static const OpFn OP_TABLE(sf_fpu_8087_dd)[256] = {
     // clang-format off
         sf_FLDd_a16,    sf_FLDd_a16,    sf_FLDd_a16,    sf_FLDd_a16,    sf_FLDd_a16,    sf_FLDd_a16,    sf_FLDd_a16,    sf_FLDd_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -755,7 +634,7 @@ const OpFn OP_TABLE(sf_fpu_8087_dd)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_de)[256] = {
+static const OpFn OP_TABLE(sf_fpu_8087_de)[256] = {
     // clang-format off
         sf_FADDiw_a16,  sf_FADDiw_a16,  sf_FADDiw_a16,  sf_FADDiw_a16,  sf_FADDiw_a16,  sf_FADDiw_a16,  sf_FADDiw_a16,  sf_FADDiw_a16,
         sf_FMULiw_a16,  sf_FMULiw_a16,  sf_FMULiw_a16,  sf_FMULiw_a16,  sf_FMULiw_a16,  sf_FMULiw_a16,  sf_FMULiw_a16,  sf_FMULiw_a16,
@@ -795,7 +674,7 @@ const OpFn OP_TABLE(sf_fpu_8087_de)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(sf_fpu_8087_df)[256] = {
+static const OpFn OP_TABLE(sf_fpu_8087_df)[256] = {
     // clang-format off
         sf_FILDiw_a16,  sf_FILDiw_a16,  sf_FILDiw_a16,  sf_FILDiw_a16,  sf_FILDiw_a16,  sf_FILDiw_a16,  sf_FILDiw_a16,  sf_FILDiw_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -835,7 +714,7 @@ const OpFn OP_TABLE(sf_fpu_8087_df)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_d8)[32] = {
+static const OpFn OP_TABLE(fpu_8087_d8)[32] = {
     // clang-format off
         opFADDs_a16, opFMULs_a16, opFCOMs_a16, opFCOMPs_a16, opFSUBs_a16, opFSUBRs_a16, opFDIVs_a16, opFDIVRs_a16,
         opFADDs_a16, opFMULs_a16, opFCOMs_a16, opFCOMPs_a16, opFSUBs_a16, opFSUBRs_a16, opFDIVs_a16, opFDIVRs_a16,
@@ -844,7 +723,7 @@ const OpFn OP_TABLE(fpu_8087_d8)[32] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_d9)[256] = {
+static const OpFn OP_TABLE(fpu_8087_d9)[256] = {
     // clang-format off
         opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,   opFLDs_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -884,7 +763,7 @@ const OpFn OP_TABLE(fpu_8087_d9)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_da)[256] = {
+static const OpFn OP_TABLE(fpu_8087_da)[256] = {
     // clang-format off
         opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,  opFADDil_a16,
         opFMULil_a16,  opFMULil_a16,  opFMULil_a16,  opFMULil_a16,  opFMULil_a16,  opFMULil_a16,  opFMULil_a16,  opFMULil_a16,
@@ -924,7 +803,7 @@ const OpFn OP_TABLE(fpu_8087_da)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_db)[256] = {
+static const OpFn OP_TABLE(fpu_8087_db)[256] = {
     // clang-format off
         opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,  opFILDil_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -964,7 +843,7 @@ const OpFn OP_TABLE(fpu_8087_db)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_dc)[32] = {
+static const OpFn OP_TABLE(fpu_8087_dc)[32] = {
     // clang-format off
         opFADDd_a16, opFMULd_a16, opFCOMd_a16, opFCOMPd_a16, opFSUBd_a16, opFSUBRd_a16, opFDIVd_a16, opFDIVRd_a16,
         opFADDd_a16, opFMULd_a16, opFCOMd_a16, opFCOMPd_a16, opFSUBd_a16, opFSUBRd_a16, opFDIVd_a16, opFDIVRd_a16,
@@ -973,7 +852,7 @@ const OpFn OP_TABLE(fpu_8087_dc)[32] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_dd)[256] = {
+static const OpFn OP_TABLE(fpu_8087_dd)[256] = {
     // clang-format off
         opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,    opFLDd_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,
@@ -1013,7 +892,7 @@ const OpFn OP_TABLE(fpu_8087_dd)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_de)[256] = {
+static const OpFn OP_TABLE(fpu_8087_de)[256] = {
     // clang-format off
         opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,  opFADDiw_a16,
         opFMULiw_a16,  opFMULiw_a16,  opFMULiw_a16,  opFMULiw_a16,  opFMULiw_a16,  opFMULiw_a16,  opFMULiw_a16,  opFMULiw_a16,
@@ -1053,7 +932,7 @@ const OpFn OP_TABLE(fpu_8087_de)[256] = {
     // clang-format on
 };
 
-const OpFn OP_TABLE(fpu_8087_df)[256] = {
+static const OpFn OP_TABLE(fpu_8087_df)[256] = {
     // clang-format off
         opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,  opFILDiw_a16,
         ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,  ILLEGAL_a16,

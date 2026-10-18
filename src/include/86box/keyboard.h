@@ -145,6 +145,7 @@ typedef struct scancode {
 #define KBC_VEN_VIA              0x10
 #define KBC_VEN_UMC              0x11
 #define KBC_VEN_SIS              0x12
+#define KBC_VEN_HP_VECTRA        0x13
 #define KBC_VEN_MASK             0x1f
 
 #define KBC_FLAG_IS_ASIC   0x80000000
@@ -170,6 +171,7 @@ extern void kbd_adddata_process(uint16_t val, void (*adddata)(uint16_t val));
 extern void kbd_adddata_process_10x(uint16_t val, void (*adddata)(uint16_t val));
 
 extern const scancode scancode_xt[512];
+extern const scancode scancode_set8a[512];
 
 extern uint8_t keyboard_set3_flags[512];
 extern uint8_t keyboard_set3_all_repeat;
@@ -186,6 +188,7 @@ extern kbc_at_port_t     *kbc_at_ports[2];
 extern const device_t kbc_pc_device;
 extern const device_t kbc_pc82_device;
 extern const device_t kbc_pravetz_device;
+extern const device_t kbc_3270pc_device;
 extern const device_t kbc_xt_device;
 extern const device_t kbc_xt86_device;
 extern const device_t kbc_xt_compaq_device;
@@ -196,9 +199,12 @@ extern const device_t kbc_xt_olivetti_device;
 extern const device_t kbc_xt_zenith_device;
 extern const device_t kbc_xt_hyundai_device;
 extern const device_t kbc_xt_fe2010_device;
+extern const device_t kbc_xt_jukost_device;
 extern const device_t kbc_xtclone_device;
 
 extern const device_t kbc_at_device;
+extern const device_t kbc_at_vectra_device;
+extern const device_t kbc_ps2_m25_device;
 
 extern const device_t keyboard_pc_xt_device;
 extern const device_t keyboard_at_device;
@@ -208,9 +214,12 @@ extern const device_t keyboard_ps55_device;
 extern const device_t keyboard_at_generic_device;
 #endif /*EMU_DEVICE_H*/
 
+extern void     keyboard_toggle_override(void);
 extern void     keyboard_init(void);
 extern void     keyboard_close(void);
 extern void     keyboard_set_table(const scancode *ptr);
+extern void     keyboard_set_input_handler(void (*handler)(uint16_t scan, int down, void *priv),
+                                           void *priv);
 extern void     keyboard_poll_host(void);
 extern void     keyboard_process(void);
 extern void     keyboard_process_10x(void);
@@ -223,6 +232,7 @@ extern void     keyboard_set_in_reset(uint8_t in_reset);
 extern uint8_t  keyboard_get_in_reset(void);
 extern void     keyboard_get_states(uint8_t *cl, uint8_t *nl, uint8_t *sl, uint8_t *kl);
 extern void     keyboard_set_states(uint8_t cl, uint8_t nl, uint8_t sl);
+extern void     keyboard_at_set_scancode_set_persistent(uint8_t persistent);
 extern int      keyboard_recv(uint16_t key);
 extern int      keyboard_recv_ui(uint16_t key);
 extern int      keyboard_isfsenter(void);
@@ -238,11 +248,17 @@ extern void         kbc_at_set_fast_reset(uint8_t new_fast_reset);
 extern void         kbc_at_port_handler(int num, int set, uint16_t port, void *priv);
 extern void         kbc_at_handler(int set, uint16_t port, void *priv);
 extern void         kbc_at_set_irq(int num, uint16_t irq, void *priv);
+extern void         kbc_at_set_p2_write_hook(void *priv,
+                                             void (*p2_write_hook)(void *priv,
+                                                                   uint8_t old_p2,
+                                                                   uint8_t new_p2),
+                                             void *p2_priv);
 
 extern void         kbc_at_dev_queue_reset(atkbc_dev_t *dev, uint8_t reset_main);
 extern uint8_t      kbc_at_dev_queue_pos(atkbc_dev_t *dev, uint8_t main);
 extern void         kbc_at_dev_queue_add(atkbc_dev_t *dev, uint8_t val, uint8_t main);
 extern void         kbc_at_dev_reset(atkbc_dev_t *dev, int do_fa);
+extern void         kbc_at_dev_discard(atkbc_dev_t *dev);
 extern atkbc_dev_t *kbc_at_dev_init(uint8_t inst);
 /* This is so we can disambiguate scan codes that would otherwise conflict and get
    passed on incorrectly. */

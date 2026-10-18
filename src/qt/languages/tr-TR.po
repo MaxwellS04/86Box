@@ -1,13 +1,13 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-01-01 20:06+0000\n"
-"Last-Translator: Umut Çağan Uçanok <ucucanok@outlook.com.tr>\n"
+"PO-Revision-Date: 2026-10-02 18:11+0000\n"
+"Last-Translator: Hisuzu <185547947+sentogahara@users.noreply.github.com>\n"
 "Language-Team: Turkish <https://weblate.86box.net/projects/86box/86box/tr/>\n"
 "Language: tr-TR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Weblate 5.12.2\n"
 "X-Language: tr_TR\n"
 "X-Source-Language: en_US\n"
@@ -19,7 +19,7 @@ msgid "&Keyboard requires capture"
 msgstr "&Klavye sadece fare yakalandığında çalışsın"
 
 msgid "&Right CTRL is left ALT"
-msgstr "&Sağ CTRL tuşunu sol ALT tuşu olarak ayarla"
+msgstr "&Sağ CTRL tuşunu sol ALT tuşuna ata"
 
 msgid "&Hard reset"
 msgstr "Yeniden başlamaya &zorla"
@@ -55,10 +55,10 @@ msgid "&Resizeable window"
 msgstr "&Boyutlandırılabilir pencere"
 
 msgid "R&emember size && position"
-msgstr "&Pencere boyut ve pozisyonunu kaydet"
+msgstr "&Pencere boyut ve pozisyonunu hatırla"
 
 msgid "Remember size && position"
-msgstr "Pencere boyut ve pozisyonunu kaydet"
+msgstr "Pencere boyut ve pozisyonunu hatırla"
 
 msgid "Re&nderer"
 msgstr "Derley&ici"
@@ -66,11 +66,14 @@ msgstr "Derley&ici"
 msgid "&Qt (Software)"
 msgstr "&Qt (Yazılım bazlı)"
 
-msgid "Open&GL (3.0 Core)"
-msgstr "OpenG&L (Sürüm 3.0)"
+msgid "Open&GL"
+msgstr "Open&GL"
 
-msgid "&VNC"
-msgstr "&VNC"
+msgid "&Vulkan"
+msgstr "&Vulkan"
+
+msgid "V&NC"
+msgstr "V&NC"
 
 msgid "Specify &dimensions…"
 msgstr "Pencere &boyutunu belirle…"
@@ -78,8 +81,11 @@ msgstr "Pencere &boyutunu belirle…"
 msgid "Force &4:3 display ratio"
 msgstr "&4:3 görüntü oranına zorla"
 
+msgid "Force &%1:%2 display ratio"
+msgstr "&%1:%2 görüntü oranına zorla"
+
 msgid "&Window scale factor"
-msgstr "Pencere &boyutu ölçeği"
+msgstr "Pencere &boyut ölçeği"
 
 msgid "&0.5x"
 msgstr "&0.5x"
@@ -144,56 +150,47 @@ msgstr "Tam &sayı ölçeklemesi"
 msgid "4:&3 Integer scale"
 msgstr "Tam sayı ölçeklemesi (4:&3)"
 
-msgid "EGA/(S)&VGA settings"
-msgstr "EGA/&(S)VGA ayarları"
+msgid "Inverted VGA monitor"
+msgstr "Ters renkli VGA monitör"
 
-msgid "&Inverted VGA monitor"
-msgstr "Ters &renkli VGA monitör"
+msgid "VGA screen type:"
+msgstr "VGA ekran tipi:"
 
-msgid "VGA screen &type"
-msgstr "VGA ekran &tipi"
-
-msgid "RGB &Color"
-msgstr "RGB (&Çok renkli)"
+msgid "RGB Color"
+msgstr "RGB (Çok renkli)"
 
 msgid "RGB (no brown)"
 msgstr "RGB (kahverengi yok)"
 
-msgid "&RGB Grayscale"
-msgstr "RGB (&Gri tonlu)"
+msgid "RGB Grayscale"
+msgstr "RGB (Gri tonlu)"
 
 msgid "Generic RGBI color monitor"
 msgstr "Genel RGBI renkli monitör"
 
-msgid "&Amber monitor"
-msgstr "&Kehribar monitör"
+msgid "Amber monitor"
+msgstr "Kehribar monitör"
 
-msgid "&Green monitor"
-msgstr "&Yeşil monitör"
+msgid "Green monitor"
+msgstr "Yeşil monitör"
 
-msgid "&White monitor"
-msgstr "&Beyaz monitör"
+msgid "White monitor"
+msgstr "Beyaz monitör"
 
-msgid "Grayscale &conversion type"
-msgstr "&Gri tonlu dönüşüm türü"
+msgid "Grayscale conversion type:"
+msgstr "Gri tonlu dönüşüm türü:"
 
-msgid "BT&601 (NTSC/PAL)"
-msgstr "BT&601 (NTSC/PAL)"
+msgid "Average"
+msgstr "Ortalama"
 
-msgid "BT&709 (HDTV)"
-msgstr "BT&709 (HDTV)"
+msgid "Overscan"
+msgstr "Aşırı taraması"
 
-msgid "&Average"
-msgstr "&Ortalama"
-
-msgid "CGA/PCjr/Tandy/E&GA/(S)VGA overscan"
-msgstr "CGA/PCjr/Tandy/E&GA/(S)VGA aşırı taraması"
-
-msgid "Change contrast for &monochrome display"
-msgstr "Gri to&nlu görüntü için kontrastı değiştir"
+msgid "Change contrast for monochrome display"
+msgstr "Gri tonlu görüntü için kontrastı değiştir"
 
 msgid "&Media"
-msgstr "&Ortam"
+msgstr "&Medya"
 
 msgid "&Tools"
 msgstr "&Araçlar"
@@ -210,14 +207,26 @@ msgstr "Durum &çubuğu simgelerini güncelle"
 msgid "Take s&creenshot"
 msgstr "&Ekran görüntüsü al"
 
+msgid "Take screenshot"
+msgstr "Ekran görüntüsü al"
+
 msgid "Take &raw screenshot"
-msgstr "Ekran &ham görüntüsü al"
+msgstr "&Ham ekran görüntüsü al"
+
+msgid "Take raw screenshot"
+msgstr "Ham ekran görüntüsü al"
 
 msgid "C&opy screenshot"
-msgstr "Ekran görüntüsü k&opyala"
+msgstr "Ekran görüntüsünü k&opyala"
+
+msgid "Copy screenshot"
+msgstr "Ekran görüntüsünü kopyala"
 
 msgid "Copy r&aw screenshot"
-msgstr "Ekran h&am görüntüsü kopyala"
+msgstr "H&am ekran görüntüsünü kopyala"
+
+msgid "Copy raw screenshot"
+msgstr "Ham ekran görüntüsünü kopyala"
 
 msgid "S&ound"
 msgstr "&Ses"
@@ -271,7 +280,7 @@ msgid "E&ject"
 msgstr "&Çıkar"
 
 msgid "&Image…"
-msgstr "&Görüntü seç…"
+msgstr "&Görüntü…"
 
 msgid "E&xport to 86F…"
 msgstr "&86F olarak kaydet…"
@@ -295,7 +304,7 @@ msgid "Sound Gain"
 msgstr "Ses Artışı"
 
 msgid "New Image"
-msgstr "Yeni görüntü"
+msgstr "Yeni Görüntü"
 
 msgid "Settings"
 msgstr "Ayarlar"
@@ -339,11 +348,35 @@ msgstr "Yükseklik:"
 msgid "Lock to this size"
 msgstr "Bu boyuta kilitle"
 
+msgid "General"
+msgstr "Genel"
+
+msgid "Processor"
+msgstr "İşlemci"
+
+msgid "Performance"
+msgstr "Performans"
+
 msgid "Machine type:"
-msgstr "Anakart türü:"
+msgstr "Makine tipi:"
+
+msgid "[1989] i486 (Socket 168 and 1)"
+msgstr "[1989] i486 (Socket 168 ve 1)"
+
+msgid "[1994] i486 (Miscellaneous)"
+msgstr "[1994] i486 (Diğer)"
+
+msgid "[1995] Socket 7 (Single Voltage)"
+msgstr "[1995] Socket 7 (Tek Voltaj)"
+
+msgid "[1996] Socket 7 (Dual Voltage)"
+msgstr "[1996] Socket 7 (Çift Voltaj)"
+
+msgid "Miscellaneous"
+msgstr "Diğer"
 
 msgid "Machine:"
-msgstr "Anakart:"
+msgstr "Makine:"
 
 msgid "Configure"
 msgstr "Ayarla"
@@ -352,7 +385,7 @@ msgid "CPU:"
 msgstr "İşlemci:"
 
 msgid "CPU type:"
-msgstr "İşlemci türü:"
+msgstr "İşlemci tipi:"
 
 msgid "Speed:"
 msgstr "Hız:"
@@ -360,11 +393,17 @@ msgstr "Hız:"
 msgid "Frequency:"
 msgstr "Saat hızı:"
 
+msgid "%1 MHz"
+msgstr "%1 MHz"
+
 msgid "FPU:"
 msgstr "FPU:"
 
+msgid "Internal"
+msgstr "Dahili"
+
 msgid "Wait states:"
-msgstr "Bekleme süreleri:"
+msgstr "Bekleme durumları:"
 
 msgid "MB"
 msgstr "MB"
@@ -384,8 +423,14 @@ msgstr "Etkin (yerel zaman)"
 msgid "Enabled (UTC)"
 msgstr "Etkin (UTC)"
 
-msgid "Dynamic Recompiler"
-msgstr "Dinamik Derleyici"
+msgid "Use the 486 interpreter for 286 and 386 processors"
+msgstr "286 ve 386 işlemcilerde 486 yorumlayıcısını kullan"
+
+msgid "Dynamic recompiler"
+msgstr "Dinamik derleyici"
+
+msgid "Accurate FPU environment on the dynamic recompiler"
+msgstr "Dinamik derleyicide hassas FPU ortamı"
 
 msgid "CPU frame size"
 msgstr "İşlemci kare boyutu"
@@ -397,13 +442,16 @@ msgid "Smaller frames (smoother)"
 msgstr "Daha küçük kareler (daha akıcı)"
 
 msgid "Video:"
-msgstr "Ekran kartı:"
+msgstr "Ekran Kartı:"
 
 msgid "Video #2:"
-msgstr "İkincil ekran kartı:"
+msgstr "2. Ekran Kartı:"
+
+msgid "Monitor"
+msgstr "Monitör"
 
 msgid "Voodoo 1 or 2 Graphics"
-msgstr "Voodoo 1 veya 2 Grafikleri"
+msgstr "Voodoo 1 ya da 2 Grafikleri"
 
 msgid "IBM 8514/A Graphics"
 msgstr "IBM 8514/A Grafikleri"
@@ -413,6 +461,12 @@ msgstr "XGA Grafikleri"
 
 msgid "IBM PS/55 Display Adapter Graphics"
 msgstr "IBM PS/55 Display Adapter Grafikleri"
+
+msgid "SCSI:"
+msgstr "SCSI:"
+
+msgid "Voodoo:"
+msgstr "Voodoo:"
 
 msgid "Keyboard:"
 msgstr "Klavye:"
@@ -425,6 +479,21 @@ msgstr "Fare:"
 
 msgid "Mouse"
 msgstr "Fare"
+
+msgid "&Mouse"
+msgstr "&Fare"
+
+msgid "Tablet:"
+msgstr "Tablet:"
+
+msgid "Tablet"
+msgstr "Tablet"
+
+msgid "&Tablet"
+msgstr "&Tablet"
+
+msgid "Tablet (&Crosshair)"
+msgstr "Tablet (&Nişangah)"
 
 msgid "Joystick:"
 msgstr "Oyun Kolu:"
@@ -444,16 +513,16 @@ msgstr "3. Oyun Kolu…"
 msgid "Joystick 4…"
 msgstr "4. Oyun Kolu…"
 
-msgid "Sound card #1:"
+msgid "Sound card 1:"
 msgstr "1. Ses Kartı:"
 
-msgid "Sound card #2:"
+msgid "Sound card 2:"
 msgstr "2. Ses Kartı:"
 
-msgid "Sound card #3:"
+msgid "Sound card 3:"
 msgstr "3. Ses Kartı:"
 
-msgid "Sound card #4:"
+msgid "Sound card 4:"
 msgstr "4. Ses Kartı:"
 
 msgid "MIDI Out Device:"
@@ -469,10 +538,10 @@ msgid "Standalone MPU-401"
 msgstr "Bağımsız MPU-401"
 
 msgid "Use FLOAT32 sound"
-msgstr "FLOAT32 sesi kullan"
+msgstr "FLOAT32 ses kullan"
 
-msgid "FM synth driver"
-msgstr "FM sentez sürücüsü"
+msgid "FM synth driver:"
+msgstr "FM sentez sürücüsü:"
 
 msgid "Nuked (more accurate)"
 msgstr "Nuked (daha hassas)"
@@ -480,56 +549,8 @@ msgstr "Nuked (daha hassas)"
 msgid "YMFM (faster)"
 msgstr "YMFM (daha hızlı)"
 
-msgid "COM1 Device:"
-msgstr "COM1 Cihazı:"
-
-msgid "COM2 Device:"
-msgstr "COM2 Cihazı:"
-
-msgid "COM3 Device:"
-msgstr "COM3 Cihazı:"
-
-msgid "COM4 Device:"
-msgstr "COM4 Cihazı:"
-
-msgid "LPT1 Device:"
-msgstr "LPT1 Cihazı:"
-
-msgid "LPT2 Device:"
-msgstr "LPT2 Cihazı:"
-
-msgid "LPT3 Device:"
-msgstr "LPT3 Cihazı:"
-
-msgid "LPT4 Device:"
-msgstr "LPT4 Cihazı:"
-
 msgid "Internal LPT ECP DMA:"
 msgstr "Dahili LPT ECP DMA'sı:"
-
-msgid "Serial port 1"
-msgstr "1. Seri bağlantı noktası"
-
-msgid "Serial port 2"
-msgstr "2. Seri bağlantı noktası"
-
-msgid "Serial port 3"
-msgstr "3. Seri bağlantı noktası"
-
-msgid "Serial port 4"
-msgstr "4. Seri bağlantı noktası"
-
-msgid "Parallel port 1"
-msgstr "1. Paralel bağlantı noktası"
-
-msgid "Parallel port 2"
-msgstr "2. Paralel bağlantı noktası"
-
-msgid "Parallel port 3"
-msgstr "3. Paralel bağlantı noktası"
-
-msgid "Parallel port 4"
-msgstr "4. Paralel bağlantı noktası"
 
 msgid "Floppy disk controller:"
 msgstr "Disket denetleyicisi:"
@@ -537,11 +558,50 @@ msgstr "Disket denetleyicisi:"
 msgid "CD-ROM controller:"
 msgstr "CD-ROM denetleyicisi:"
 
-msgid "[ISA16] Tertiary IDE Controller"
-msgstr "[ISA16] Üçüncül IDE denetleyicisi"
+msgid "Mitsumi interface"
+msgstr "Mitsumi arayüzü"
 
-msgid "[ISA16] Quaternary IDE Controller"
-msgstr "[ISA16] Dördüncül IDE denetleyicisi"
+msgid "MKE/Panasonic interface"
+msgstr "MKE/Panasonic arayüzü"
+
+msgid "MKE/Panasonic interface (Creative)"
+msgstr "MKE/Panasonic arayüzü (Creative)"
+
+msgid "IDE Controller"
+msgstr "IDE Denetleyicisi"
+
+msgid "IDE Controller (Dual-Channel)"
+msgstr "IDE Denetleyicisi (Çift Kanallı)"
+
+msgid "PC/AT IDE Controller"
+msgstr "PC/AT IDE Denetleyicisi"
+
+msgid "PC/AT IDE Controller (Dual-Channel)"
+msgstr "PC/AT IDE Denetleyicisi (Çift Kanallı)"
+
+msgid "PC/AT XTIDE (Primary Only)"
+msgstr "PC/AT XTIDE (Sadece Birincil)"
+
+msgid "PS/2 AT XTIDE (1.1.5) (Primary Only)"
+msgstr "PS/2 AT XTIDE (1.1.5) (Sadece Birincil)"
+
+msgid "CMD PCI-0646 (Tertiary and Quaternary)"
+msgstr "CMD PCI-0646 (Üçüncül ve Dördüncül)"
+
+msgid "CMD PCI-0648 (Tertiary and Quaternary)"
+msgstr "CMD PCI-0648 (Üçüncül ve Dördüncül)"
+
+msgid "CMD PCI-0649 (Tertiary and Quaternary)"
+msgstr "CMD PCI-0649 (Üçüncül ve Dördüncül)"
+
+msgid "McIDE Controller"
+msgstr "McIDE Denetleyici"
+
+msgid "Tertiary IDE Controller"
+msgstr "Üçüncül IDE denetleyicisi"
+
+msgid "Quaternary IDE Controller"
+msgstr "Dördüncül IDE denetleyicisi"
 
 msgid "Hard disk controllers"
 msgstr "Sabit disk denetleyicileri"
@@ -570,8 +630,11 @@ msgstr "Sabit diskler:"
 msgid "Firmware Version"
 msgstr "Bellenim Sürümü"
 
+msgid "DSP Version"
+msgstr "DSP Sürümü"
+
 msgid "&New…"
-msgstr "&Yeni görüntü oluştur…"
+msgstr "&Yeni…"
 
 msgid "&Existing…"
 msgstr "&Görüntü dosyası seç…"
@@ -609,8 +672,44 @@ msgstr "Görüntü Biçimi:"
 msgid "Block Size:"
 msgstr "Blok boyutu:"
 
-msgid "Floppy drives:"
-msgstr "Disket sürücüleri:"
+msgid "Floppy drives"
+msgstr "Disket sürücüleri"
+
+msgid "5.25\" 180k"
+msgstr "5.25\" 180k"
+
+msgid "5.25\" 360k"
+msgstr "5.25\" 360k"
+
+msgid "5.25\" 720k"
+msgstr "5.25\" 720k"
+
+msgid "5.25\" 1.2M"
+msgstr "5.25\" 1.2M"
+
+msgid "5.25\" 1.2M 300/360 RPM"
+msgstr "5.25\" 1.2M 300/360 RPM"
+
+msgid "3.5\" 360k"
+msgstr "3.5\" 360k"
+
+msgid "3.5\" 720k"
+msgstr "3.5\" 720k"
+
+msgid "3.5\" 1.44M"
+msgstr "3.5\" 1.44M"
+
+msgid "3.5\" 1.25M PC-98"
+msgstr "3.5\" 1.25M PC-98"
+
+msgid "3.5\" 1.44M 300/360 RPM"
+msgstr "3.5\" 1.44M 300/360 RPM"
+
+msgid "3.5\" 2.88M"
+msgstr "3.5\" 2.88M"
+
+msgid "3.5\" 2.88M 300/360 RPM"
+msgstr "3.5\" 2.88M 300/360 RPM"
 
 msgid "Turbo timings"
 msgstr "Turbo zamanlaması"
@@ -618,29 +717,35 @@ msgstr "Turbo zamanlaması"
 msgid "Check BPB"
 msgstr "BPB'yi denetle"
 
-msgid "CD-ROM drives:"
-msgstr "CD-ROM sürücüleri:"
+msgid "CD-ROM drives"
+msgstr "CD-ROM sürücüleri"
 
-msgid "MO drives:"
-msgstr "MO sürücüleri:"
+msgid "CD-ROM:"
+msgstr "CD-ROM:"
+
+msgid "MO drives"
+msgstr "MO sürücüleri"
 
 msgid "MO:"
 msgstr "MO:"
 
+msgid "Removable disk drives"
+msgstr "Çıkarılabilir disk sürücüleri"
+
 msgid "Removable disks:"
 msgstr "Çıkarılabilir diskler:"
 
-msgid "Removable disk drives:"
-msgstr "Çıkarılabilir disk sürücüleri:"
+msgid "Tape drives"
+msgstr "Teyp sürücüleri"
 
-msgid "ZIP 250"
-msgstr "ZIP 250"
+msgid "Tape drives:"
+msgstr "Teyp sürücüleri:"
 
 msgid "ISA RTC:"
 msgstr "ISA RTC:"
 
 msgid "ISA Memory Expansion"
-msgstr "ISA Bellek Artırıcı"
+msgstr "ISA Bellek (RAM) Artırıcı"
 
 msgid "ISA ROM Cards"
 msgstr "ISA ROM Kartları"
@@ -693,11 +798,20 @@ msgstr "&Çıkarılabilir disk %1 (%2): %3"
 msgid "Removable disk images"
 msgstr "Çıkarılabilir disk görüntüleri"
 
-msgid "Image %1"
-msgstr "Görüntü %1"
+msgid "Tape %1 (%2): %3"
+msgstr "Teyp %1 (%2): %3"
 
-msgid "86Box could not find any usable ROM images.\n\nPlease <a href=\"https://github.com/86Box/roms/releases/latest\">download</a> a ROM set and extract it into the \"roms\" directory."
-msgstr "86Box kullanılabilir hiçbir ROM dosyası bulamadı.\n\nLütfen bir ROM seti <a href=\"https://github.com/86Box/roms/releases/latest\">indirip</a> \"roms\" klasörüne çıkarın."
+msgid "&Tape %1 (%2): %3"
+msgstr "&Teyp %1 (%2): %3"
+
+msgid "Tape images"
+msgstr "Teyp görüntüleri"
+
+msgid "Image %1"
+msgstr "%1 Görüntüsü"
+
+msgid "%1 could not find any usable ROM images.\n\nPlease <a href=\"%2\">download</a> a ROM set and extract it into the \"roms\" directory."
+msgstr "%1 kullanılabilir hiçbir ROM dosyası bulamadı.\n\nLütfen bir ROM seti <a href=\"%2\">indirip</a> \"roms\" klasörüne çıkarın."
 
 msgid "(empty)"
 msgstr "(boş)"
@@ -723,26 +837,29 @@ msgstr "Basit sektör görüntüleri"
 msgid "Surface images"
 msgstr "Yüzey görüntüleri"
 
-msgid "Machine \"%hs\" is not available due to missing ROMs in the roms/machines directory. Switching to an available machine."
-msgstr "\"%hs\" anakartı roms/machines klasöründe gerekli ROM dosyalarının mevcut olmaması nedeniyle kullanılamıyor. Kullanılabilen başka bir anakarta geçiş yapılacaktır."
+msgid "Machine \"%s\" is not available due to missing ROMs in the roms/machines directory. Switching to an available machine."
+msgstr ""
+"\"%s\" makinesi roms/machines klasöründe gerekli ROM dosyalarının mevcut "
+"olmaması nedeniyle kullanılamıyor. Kullanılabilen başka bir makineye geçiş "
+"yapılacaktır."
 
-msgid "Video card \"%hs\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
-msgstr "\"%hs\" ekran kartı roms/video klasöründe gerekli ROM dosyalarının mevcut olmaması nedeniyle kullanılamıyor. Kullanılabilen başka bir ekran kartına geçiş yapılacaktır."
+msgid "Video card \"%s\" is not available due to missing ROMs in the roms/video directory. Switching to an available video card."
+msgstr "\"%s\" ekran kartı roms/video klasöründe gerekli ROM dosyalarının mevcut olmaması nedeniyle kullanılamıyor. Kullanılabilen başka bir ekran kartına geçiş yapılacaktır."
 
-msgid "Video card #2 \"%hs\" is not available due to missing ROMs in the roms/video directory. Disabling the second video card."
-msgstr "\"%hs\" ikincil ekran kartı roms/video klasöründe gerekli ROM dosyalarının mevcut olmaması nedeniyle kullanılamıyor. Bu cihaz devre dışı bırakılacaktır."
-
-msgid "Device \"%hs\" is not available due to missing ROMs. Ignoring the device."
-msgstr "\"%hs\" cihazı gerekli ROM dosyalarının mevcut olmaması nedeniyle kullanılamıyor. Bu cihaz yok sayılacaktır."
+msgid "Device \"%s\" is not available due to missing ROMs. Ignoring the device."
+msgstr "\"%s\" cihazı gerekli ROM dosyalarının mevcut olmaması nedeniyle kullanılamıyor. Bu cihaz yok sayılacaktır."
 
 msgid "Machine"
-msgstr "Anakart"
+msgstr "Makine"
 
 msgid "Display"
 msgstr "Görüntü"
 
 msgid "Input devices"
 msgstr "Giriş cihazları"
+
+msgid "Input &device"
+msgstr "Giriş &cihazı"
 
 msgid "Sound"
 msgstr "Ses"
@@ -753,14 +870,47 @@ msgstr "Ağ"
 msgid "Ports (COM & LPT)"
 msgstr "Bağlantı noktaları (COM & LPT)"
 
+msgid "Port"
+msgstr "Bağlantı noktası"
+
 msgid "Ports"
 msgstr "Bağlantı noktaları"
+
+msgid "Serial ports"
+msgstr "Seri bağlantı noktaları"
 
 msgid "Serial ports:"
 msgstr "Seri bağlantı noktaları:"
 
+msgid "COM1:"
+msgstr "COM1:"
+
+msgid "COM2:"
+msgstr "COM2:"
+
+msgid "COM3:"
+msgstr "COM3:"
+
+msgid "COM4:"
+msgstr "COM4:"
+
+msgid "Parallel ports"
+msgstr "Paralel bağlantı noktaları"
+
 msgid "Parallel ports:"
 msgstr "Paralel bağlantı noktaları:"
+
+msgid "LPT1:"
+msgstr "LPT1:"
+
+msgid "LPT2:"
+msgstr "LPT2:"
+
+msgid "LPT3:"
+msgstr "LPT3:"
+
+msgid "LPT4:"
+msgstr "LPT4:"
 
 msgid "Storage controllers"
 msgstr "Depolama denetleyicileri"
@@ -793,10 +943,13 @@ msgid "Click to capture mouse"
 msgstr "Farenin yakalanması için tıklayın"
 
 msgid "Press %1 to release mouse"
-msgstr "Farenin bırakılması için %1 tuşlarına basın"
+msgstr "Farenin serbest bırakılması için %1 tuşuna basın"
 
 msgid "Press %1 or middle button to release mouse"
-msgstr "Farenin bırakılması için %1 veya tekerlek tuşuna basın"
+msgstr "Farenin bırakılması için %1 ya da tekerlek tuşuna basın"
+
+msgid "Press %1 or side button to release mouse"
+msgstr "Farenin serbest bırakılması için %1 veya yan tuşa basın"
 
 msgid "Bus"
 msgstr "Veri yolu"
@@ -804,14 +957,8 @@ msgstr "Veri yolu"
 msgid "File"
 msgstr "Dosya"
 
-msgid "C"
-msgstr "C"
-
-msgid "H"
-msgstr "H"
-
-msgid "S"
-msgstr "S"
+msgid "Geometry"
+msgstr "Disk yapısı"
 
 msgid "KB"
 msgstr "KB"
@@ -819,26 +966,27 @@ msgstr "KB"
 msgid "Default"
 msgstr "Varsayılan"
 
-msgid "%1 Wait state(s)"
-msgstr "%1 Bekleme durumları"
+msgid "%n wait state(s)"
+msgid_plural "%n wait states"
+msgstr[0] "%n Bekleme durumu"
 
 msgid "Type"
 msgstr "Tür"
 
-msgid "No PCap devices found"
-msgstr "Herhangi bir PCap cihazı bulunamadı"
+msgid "No PCap devices found. Make sure %1 is installed and that you are on a %1-compatible network connection."
+msgstr "Herhangi bir PCap cihazı bulunamadı. %1 kurulu olduğundan ve %1 uyumlu bir internet ağı kullandığınızdan emin olun."
 
-msgid "Invalid PCap device"
-msgstr "Geçersiz PCap cihazı"
+msgid "Invalid PCap device. Make sure %1 is installed and that you are on a %1-compatible network connection."
+msgstr "Geçersiz PCap cihazı. %1 kurulu olduğundan ve %1 uyumlu bir internet ağı kullandığınızdan emin olun."
 
 msgid "Generic paddle controller(s)"
 msgstr "Genel kürek kontrol cihazları"
 
 msgid "2-axis, 1-button joystick(s)"
-msgstr "2 eksenli, 1 düğmeli oyun kolları"
+msgstr "2 eksenli, 1 düğmeli oyun kolu"
 
 msgid "2-axis, 2-button joystick(s)"
-msgstr "2 eksenli, 2 düğmeli oyun kolları"
+msgstr "2 eksenli, 2 düğmeli oyun kolu"
 
 msgid "2-axis, 3-button joystick"
 msgstr "2 eksenli, 3 düğmeli oyun kolu"
@@ -853,7 +1001,7 @@ msgid "2-axis, 8-button joystick"
 msgstr "2 eksenli, 8 düğmeli oyun kolu"
 
 msgid "3-axis, 2-button joystick"
-msgstr "3 eksenli, 2 düğmeli oyun kollu"
+msgstr "3 eksenli, 2 düğmeli oyun kolu"
 
 msgid "3-axis, 3-button joystick"
 msgstr "3 eksenli, 3 düğmeli oyun kolu"
@@ -892,22 +1040,22 @@ msgid "4-button flight yoke"
 msgstr "4 düğmeli uçuş dümeni"
 
 msgid "2-button flight yoke with throttle"
-msgstr "2 düğmeli, gaz kollu uçuş dümeni"
+msgstr "2 düğmeli ve gaz kollu uçuş dümeni"
 
 msgid "3-button flight yoke with throttle"
-msgstr "3 düğmeli, gaz kollu uçuş dümeni"
+msgstr "3 düğmeli ve gaz kollu uçuş dümeni"
 
 msgid "4-button flight yoke with throttle"
-msgstr "4 düğmeli, gaz kollu uçuş dümeni"
+msgstr "4 düğmeli ve gaz kollu uçuş dümeni"
 
 msgid "Steering wheel (3-axis, 2-button)"
-msgstr "direksiyonu (3 eksenli, 2 düğmeli)"
+msgstr "3 eksenli ve 2 düğmeli direksiyon"
 
 msgid "Steering wheel (3-axis, 3-button)"
-msgstr "direksiyonu (3 eksenli, 3 düğmeli)"
+msgstr "3 eksenli ve 3 düğmeli direksiyon"
 
 msgid "Steering wheel (3-axis, 4-button)"
-msgstr "direksiyonu (3 eksenli, 4 düğmeli)"
+msgstr "3 eksenli ve 4 düğmeli direksiyon"
 
 msgid "Thrustmaster Formula T1/T2 with adapter"
 msgstr "Adaptörlü Thrustmaster Formula T1/T2"
@@ -939,11 +1087,11 @@ msgstr "Makineyi yeniden başlamaya zorlamak istediğinizden emin misiniz?"
 msgid "Are you sure you want to exit 86Box?"
 msgstr "86Box'tan çıkmak istediğinize emin misiniz?"
 
-msgid "Unable to initialize Ghostscript"
-msgstr "Ghostscript başlatılamadı"
+msgid "Unable to initialize Ghostscript. %1 is required for automatic conversion of PostScript files to PDF.\n\nAny documents sent to the generic PostScript printer will be saved as PostScript (.ps) files."
+msgstr "Ghostscript başlatılamadı. %1 PostScript dosyalarının otomatik olarak PDF dosyasına çevirilmesi için gereklidir.\n\nGenel PostScript yazıcısına gönderilen tüm dökümanlar PostScript (.ps) dosyası olarak kaydedilecektir."
 
-msgid "Unable to initialize GhostPCL"
-msgstr "GhostPCL başlatılamadı"
+msgid "Unable to initialize GhostPCL. %1 is required for automatic conversion of PCL files to PDF.\n\nAny documents sent to the generic PCL printer will be saved as Printer Command Language (.pcl) files."
+msgstr "GhostPCL başlatılamadı. %1 PCL dosyalarının otomatik olarak PDF dosyasına çevirilmesi için gereklidir.\n\nGenel PCL yazıcısına gönderilen tüm dökümanlar Printer Command Language (.pcl) dosyası olarak kaydedilecektir."
 
 msgid "MO %1 (%2): %3"
 msgstr "MO %1 (%2): %3"
@@ -994,40 +1142,31 @@ msgid "About %1"
 msgstr "%1 hakkında"
 
 msgid "An emulator of old computers\n\nAuthors: Miran Grča (OBattler), RichardG867, Jasmine Iwanek, TC1995, coldbrewed, Teemu Korhonen (Manaatti), Joakim L. Gilje, Adrien Moulin (elyosh), Daniel Balsom (gloriouscow), Cacodemon345, Fred N. van Kempen (waltje), Tiseno100, reenigne, and others.\n\nWith previous core contributions from Sarah Walker, leilei, JohnElliott, greatpsycho, and others.\n\nReleased under the GNU General Public License version 2 or later. See LICENSE for more information."
-msgstr "Bir eski bilgisayar emülatörü\n\nYapımcılar: Miran Grča (OBattler), RichardG867, Jasmine Iwanek, TC1995, coldbrewed, Teemu Korhonen (Manaatti), Joakim L. Gilje, Adrien Moulin (elyosh), Daniel Balsom (gloriouscow), Cacodemon345, Fred N. van Kempen (waltje), Tiseno100, reenigne ve diğerleri.\n\nSarah Walker, leilei, JohnElliott, greatpsycho, ve diğerlerinin önceki katkılarıyla birlikte.\n\nGNU Genel Kamu Lisansı versiyon 2 veya sonrası altında yayınlanmıştır. Daha fazla bilgi için LICENSE kısmını gözden geçirin."
+msgstr ""
+"Bir eski bilgisayar emülatörü\n"
+"\n"
+"Yapımcılar: Miran Grča (OBattler), RichardG867, Jasmine Iwanek, TC1995, "
+"coldbrewed, Teemu Korhonen (Manaatti), Joakim L. Gilje, Adrien Moulin "
+"(elyosh), Daniel Balsom (gloriouscow), Cacodemon345, Fred N. van Kempen "
+"(waltje), Tiseno100, reenigne ve diğerleri.\n"
+"\n"
+"Sarah Walker, leilei, JohnElliott, greatpsycho, ve diğerlerinin de önceki "
+"katkılarıyla birlikte.\n"
+"\n"
+"GNU Genel Kamu Lisansı versiyon 2 ya da sonrası altında yayınlanmıştır. Daha "
+"fazla bilgi için LICENSE kısmını gözden geçirin."
 
 msgid "Hardware not available"
 msgstr "Cihaz mevcut değil"
 
-msgid "Make sure %1 is installed and that you are on a %1-compatible network connection."
-msgstr "%1 kurulu olduğundan ve %1 uyumlu bir internet ağı kullandığınızdan emin olun."
-
-msgid "Invalid configuration"
-msgstr "Geçersiz yapılandırma"
-
-msgid "%1 is required for automatic conversion of PostScript files to PDF.\n\nAny documents sent to the generic PostScript printer will be saved as PostScript (.ps) files."
-msgstr "%1 PostScript dosyalarının otomatik olarak PDF dosyasına çevirilmesi için gereklidir.\n\nGenel PostScript yazıcısına gönderilen tüm dökümanlar PostScript (.ps) dosyası olarak kaydedilecektir."
-
-msgid "%1 is required for automatic conversion of PCL files to PDF.\n\nAny documents sent to the generic PCL printer will be saved as Printer Command Language (.pcl) files."
-msgstr "%1 PCL dosyalarının otomatik olarak PDF dosyasına çevirilmesi için gereklidir.\n\nGenel PCL yazıcısına gönderilen tüm dökümanlar Printer Command Language (.pcl) dosyası olarak kaydedilecektir."
-
 msgid "Don't show this message again"
 msgstr "Bu mesajı bir daha gösterme"
-
-msgid "Don't exit"
-msgstr "Çıkış yapma"
-
-msgid "Reset"
-msgstr "Evet"
-
-msgid "Don't reset"
-msgstr "Hayır"
 
 msgid "CD-ROM images"
 msgstr "CD-ROM görüntüleri"
 
 msgid "%1 Device Configuration"
-msgstr "%1 Cihaz Yapılandırması"
+msgstr "%1 Cihaz Seçenekleri"
 
 msgid "Monitor in sleep mode"
 msgstr "Monitör uyku modunda"
@@ -1039,7 +1178,16 @@ msgid "You are loading an unsupported configuration"
 msgstr "Desteklenmeyen bir yapılandırma kullanıyorsunuz"
 
 msgid "CPU type filtering based on selected machine is disabled for this emulated machine.\n\nThis makes it possible to choose a CPU that is otherwise incompatible with the selected machine. However, you may run into incompatibilities with the machine BIOS or other software.\n\nEnabling this setting is not officially supported and any bug reports filed may be closed as invalid."
-msgstr "Seçtiğiniz makineyle uygun işlemci filtresi bu yapılandırma için devre dışı bırakıldı.\n\nBu durum seçili makine ile uyumsuz bir işlemci kullanmanızı mümkün kılmaktadır. Ancak bundan dolayı makinenin BIOS'unda veya çalıştırılan diğer yazılımlarda uyumsuzluk sorunları meydana gelebilir.\n\nİşlemci filtresinin devre dışı bırakılması resmi olarak desteklenmemektedir ve bu esnada açtığınız hata raporları geçersiz sayılabilir."
+msgstr ""
+"Seçili makineye uyumlu işlemci tipi filtrelemesi bu yapılandırma için devre "
+"dışı bırakıldı.\n"
+"\n"
+"Bu durum seçili makine ile uyumsuz bir işlemci kullanmanızı mümkün "
+"kılmaktadır. Ancak bundan dolayı makinenin BIOS'unda ya da çalıştırılan "
+"diğer yazılımlarda uyumsuzluk sorunları oluşabilir.\n"
+"\n"
+"İşlemci filtresinin devre dışı bırakılması resmi olarak desteklenmemektedir "
+"ve bu esnada açtığınız hata raporları geçersiz sayılabilir."
 
 msgid "Continue"
 msgstr "Devam et"
@@ -1078,16 +1226,16 @@ msgid "Press Ctrl+Alt+Esc"
 msgstr "Ctrl+Alt+Esc tuşlarına bas"
 
 msgid "Hard reset"
-msgstr "Makineyi yeniden başlat"
+msgstr "Yeniden başlamaya zorla"
 
 msgid "Force shutdown"
-msgstr "Kapatmaya zorla"
+msgstr "Kapanmaya zorla"
 
 msgid "Start"
 msgstr "Başlat"
 
 msgid "&Force shutdown"
-msgstr "&Kapatmaya zorla"
+msgstr "&Kapanmaya zorla"
 
 msgid "&Start"
 msgstr "&Başlat"
@@ -1108,19 +1256,22 @@ msgid "Powered Off"
 msgstr "Kapalı"
 
 msgid "%n running"
-msgstr "Çalışan %n"
+msgid_plural "%n running"
+msgstr[0] "Çalışan %n"
 
 msgid "%n paused"
-msgstr "Duraklatılmış %n"
+msgid_plural "%n paused"
+msgstr[0] "Duraklatılmış %n"
 
 msgid "%n waiting"
-msgstr "Bekleyen %n"
+msgid_plural "%n waiting"
+msgstr[0] "Bekleyen %n"
 
 msgid "%1 total"
 msgstr "Toplam %1"
 
 msgid "VMs: %1"
-msgstr "VM sayısı: %1"
+msgstr "Sanal makine sayısı: %1"
 
 msgid "System Directory:"
 msgstr "Sistem Dizini:"
@@ -1135,7 +1286,7 @@ msgid "86Box configuration files (86box.cfg)"
 msgstr "86Box yapılandırma dosyaları (86box.cfg)"
 
 msgid "Configuration read failed"
-msgstr "Yapılandırma okuması başarısız"
+msgstr "Yapılandırma okunamadı"
 
 msgid "Unable to open the selected configuration file for reading: %1"
 msgstr "Seçili yapılandırma dosyası okunmak için açılamıyor: %1"
@@ -1143,17 +1294,21 @@ msgstr "Seçili yapılandırma dosyası okunmak için açılamıyor: %1"
 msgid "Use regular expressions in search box"
 msgstr "Arama kutusunda düzenli ifadeler kullan"
 
-msgid "%1 machine(s) are currently active. Are you sure you want to exit the VM manager anyway?"
-msgstr "%1 makine şu anda aktif. Yine de VM yöneticisinden çıkmak istediğinize emin misiniz?"
+msgid "Delete virtual machines to Recycle Bin"
+msgstr "Sanal makineleri Geri Dönüşüm Kutusu'na gönder"
+
+msgid "%n machine(s) are currently active. Are you sure you want to exit the VM manager anyway?"
+msgid_plural "%n machines are currently active. Are you sure you want to exit the VM manager anyway?"
+msgstr[0] "%n makine şu anda aktif. Yine de sanal makine yöneticisinden çıkmak istediğinize emin misiniz?"
 
 msgid "Add new system wizard"
 msgstr "Yeni sistem ekleme sihirbazı"
 
 msgid "Introduction"
-msgstr "Giriş"
+msgstr "Tanıtım"
 
 msgid "This will help you add a new system to 86Box."
-msgstr "Bu sihirbaz 86Box'a yeni bir sistem eklemenizde yardımcı olacaktır."
+msgstr "Bu sihirbaz 86Box'a yeni bir sistem eklemenize yardımcı olacaktır."
 
 msgid "New configuration"
 msgstr "Yeni yapılandırma"
@@ -1165,16 +1320,17 @@ msgid "The wizard will now launch the configuration for the new system."
 msgstr "Sihirbaz şimdi yeni sistemin yapılandırmasını başlatacak."
 
 msgid "Use existing configuration"
-msgstr "Var olan yapılandırma kullan"
+msgstr "Var olan bir yapılandırmayı kullan"
 
 msgid "Type some notes here"
 msgstr "Buraya not alın"
 
 msgid "Paste the contents of the existing configuration file into the box below."
-msgstr "Var olan yapılandırma dosyasının içeriklerini aşağıdaki kutuya yapıştırınız."
+msgstr ""
+"Var olan yapılandırma dosyasının içeriklerini aşağıdaki kutuya yapıştırın."
 
 msgid "Load configuration from file"
-msgstr "Dosyadan yapılandırma yükle"
+msgstr "Yapılandırmayı dosyadan yükle"
 
 msgid "System name"
 msgstr "Sistem adı"
@@ -1204,7 +1360,7 @@ msgid "System name and location"
 msgstr "Sistem adı ve yeri"
 
 msgid "Enter the name of the system and choose the location"
-msgstr "Sistemin adını girin ve yerini seçin"
+msgstr "Sistemin adını girin ve konumunu seçin"
 
 msgid "Enter the name of the system"
 msgstr "Sistemin adını girin"
@@ -1226,9 +1382,6 @@ msgstr "Yeni görünü adını girin (sıfırlamak için boş bırakın)"
 
 msgid "Change &display name…"
 msgstr "Görüntü adını &değiştirin…"
-
-msgid "Context Menu"
-msgstr "Bağlam Menüsü"
 
 msgid "&Open folder…"
 msgstr "Klas&örü aç…"
@@ -1258,10 +1411,10 @@ msgid "Clone"
 msgstr "Klonla"
 
 msgid "Failed to create directory for cloned VM"
-msgstr "Klonlanmış VM için dizin oluşturulamadı"
+msgstr "Klonlanan sanal makine için dizin oluşturulamadı"
 
 msgid "Failed to clone VM."
-msgstr "VM klonlanamadı."
+msgstr "Sanal makine klonlanamadı."
 
 msgid "Directory in use"
 msgstr "Dizin kullanımda"
@@ -1276,7 +1429,7 @@ msgid "Unable to create the directory for the new system"
 msgstr "Yeni sistem için dizin oluşturulamadı"
 
 msgid "Configuration write failed"
-msgstr "Yapılandırmaya yazma başarısız"
+msgstr "Yapılandırma yazılamadı"
 
 msgid "Unable to open the configuration file at %1 for writing"
 msgstr "Yapılandırma dosyası %1 yazma için açılamıyor"
@@ -1312,13 +1465,20 @@ msgid "&Kill"
 msgstr "Durmaya &zorla"
 
 msgid "Killing a virtual machine can cause data loss. Only do this if the 86Box process gets stuck.\n\nDo you really wish to kill the virtual machine \"%1\"?"
-msgstr "Bir sanal makineyi durmaya zorlamak veri kaybına yol açabilir. Bunu sadece 86Box işlemi takılı kalırsa uygulayın.\n\nGerçekten \"%1\" adlı sanal makineyi durmaya zorlamak istiyor musunuz?"
+msgstr ""
+"Bir sanal makineyi durmaya zorlamak veri kaybına yol açabilir. Bunu sadece "
+"86Box işlemi takılı kalırsa uygulayın.\n"
+"\n"
+"Gerçekten \"%1\" sanal makinesini durmaya zorlamak istiyor musunuz?"
 
 msgid "&Delete"
 msgstr "&Sil"
 
-msgid "Do you really want to delete the virtual machine \"%1\" and all its files? This action cannot be undone!"
-msgstr "Gerçekten \"%1\" adlı sanal makineyi tüm dosyalarıyla birlikte silmek istiyor musunuz? Bu eylem geri alınamaz!"
+msgid "Do you really want to delete the virtual machine \"%1\" and all its files?"
+msgstr "Gerçekten \"%1\" sanal makinesini tüm dosyalarıyla birlikte silmek istiyor musunuz?"
+
+msgid "This action cannot be undone!"
+msgstr "Bu işlem geri alınamaz!"
 
 msgid "Show &config file"
 msgstr "Yap&ılandırma dosyasını göster"
@@ -1330,7 +1490,7 @@ msgid "Search"
 msgstr "Ara"
 
 msgid "Searching for VMs…"
-msgstr "VM'ler aranıyor…"
+msgstr "Sanal makineler aranıyor…"
 
 msgid "Found %1"
 msgstr "%1 bulundu"
@@ -1354,16 +1514,27 @@ msgid "Audio:"
 msgstr "Ses:"
 
 msgid "ACPI shutdown"
-msgstr "Makineyi ACPI kullanarak kapat"
+msgstr "ACPI ile kapat"
 
 msgid "ACP&I shutdown"
-msgstr "Makineyi ACP&I kullanarak kapat"
+msgstr "ACP&I ile kapat"
+
+msgid "Power off"
+msgstr "Gücü kapat"
+
+msgid "Power &off…"
+msgstr "Gücü &kapat…"
+
+msgid "Power &off"
+msgstr "Gücü &kapat"
+
+msgid "Powering off the emulated machine may cause data loss. Are you sure you want to continue?"
+msgstr ""
+"Emüle edilen makinenin gücünü kapatmak veri kaybına neden olabilir. Devam "
+"etmek istediğinizden emin misiniz?"
 
 msgid "Hard disk (%1)"
 msgstr "Sabit disk (%1)"
-
-msgid "MFM/RLL or ESDI CD-ROM drives never existed"
-msgstr "MFM/RLL veya ESDI CD-ROM sürücüleri hiçbir zaman kullanılmamıştır"
 
 msgid "Custom…"
 msgstr "Diğer…"
@@ -1372,13 +1543,13 @@ msgid "Custom (large)…"
 msgstr "Diğer (büyük)…"
 
 msgid "Add New Hard Disk"
-msgstr "Yeni Sabit Disk Görüntüsü Oluştur"
+msgstr "Yeni Sabit Disk Ekle"
 
 msgid "Add Existing Hard Disk"
-msgstr "Var Olan Sabit Disk Görüntüsü Ekleme"
+msgstr "Var Olan Bir Sabit Diski Ekle"
 
 msgid "HDI disk images cannot be larger than 4 GB."
-msgstr "HDI görüntüleri 4 GB boyutundan daha büyük olamaz."
+msgstr "HDI disk görüntüleri 4 GB boyutundan daha büyük olamaz."
 
 msgid "Disk images cannot be larger than 127 GB."
 msgstr "Disk görüntüleri 127 GB boyutundan daha büyük olamaz."
@@ -1393,10 +1564,11 @@ msgid "Unable to write file"
 msgstr "Dosyanın üzerine yazılamıyor"
 
 msgid "HDI or HDX images with a sector size other than 512 are not supported."
-msgstr "512 dışında sektör boyutu olan HDI ve HDX görüntüleri desteklenmemektedir."
+msgstr ""
+"512 dışında sektör boyutu olan HDI veya HDX görüntüleri desteklenmemektedir."
 
 msgid "Disk image file already exists"
-msgstr "Bu görüntü dosyası zaten mevcuttur"
+msgstr "Disk görüntü dosyası zaten mevcut"
 
 msgid "Please specify a valid file name."
 msgstr "Lütfen geçerli bir dosya ismi belirleyin."
@@ -1422,11 +1594,37 @@ msgstr "Seçili dosyanın üzerine yazılacaktır. Bu dosyayı kullanmak istedi�
 msgid "Unsupported disk image"
 msgstr "Desteklenmeyen disk görüntüsü"
 
-msgid "Overwrite"
-msgstr "Üzerine yaz"
+msgid "Unable to read device"
+msgstr "Cihaz okunamıyor"
 
-msgid "Don't overwrite"
-msgstr "Üzerine yazma"
+msgid "Could not determine block device size. Make sure you have permission to access this device."
+msgstr ""
+"Blok cihaz boyutu belirlenemedi. Bu cihaz için erişim izniniz olduğundan "
+"emin olun."
+
+msgid "Device too large"
+msgstr "Cihaz fazla büyük"
+
+msgid "Block device is too large to be used as a hard disk."
+msgstr "Blok cihazı, sabit disk olarak kullanılması için fazla büyük."
+
+msgid "Block device detected"
+msgstr "Blok cihazı tespit edildi"
+
+msgid "Detected block device: %1\nSize: %2 MB\nGeometry: %3 cylinders, %4 heads, %5 sectors"
+msgstr ""
+"Tespit edilen blok cihazı: %1\n"
+"Boyut: %2 MB\n"
+"Geometri: &3 silindir, %4 kafa, %5 sektör"
+
+msgid "Failed to write the disk image."
+msgstr "Disk görüntüsüne yazma başarısız."
+
+msgid "Failed to read the disk image."
+msgstr "Disk görüntüsünü okuma başarısız."
+
+msgid "The disk image has been successfully created."
+msgstr "Disk görüntüsü başarılı bir şekilde oluşturuldu."
 
 msgid "Raw image"
 msgstr "Ham görüntü"
@@ -1479,14 +1677,23 @@ msgstr "VHD dosyaları"
 msgid "Select the parent VHD"
 msgstr "Ana VHD dosyasını seçin"
 
-msgid "This could mean that the parent image was modified after the differencing image was created.\n\nIt can also happen if the image files were moved or copied, or by a bug in the program that created this disk.\n\nDo you want to fix the timestamps?"
-msgstr "Bu, farklandırmış görüntü dosyası oluşturulduktan sonra ana görüntü dosyasında bir değişiklik yapıldığı anlamına geliyor olabilir.\n\nBu durum ayrıca görüntü dosyalarının kopyalanmasından, yerlerinin değiştirilmesinden veya dosyaları oluşturan programdaki bir hatadan dolayı da meydana gelmiş olabilir.\n\nZaman damgalarını düzeltmek ister misiniz?"
+msgid "Parent and child disk timestamps do not match. This could mean that the parent image was modified after the differencing image was created.\n\nIt can also happen if the image files were moved or copied, or by a bug in the program that created this disk.\n\nDo you want to fix the timestamps?"
+msgstr ""
+"Ana ve ek disklerin zaman damgaları uyuşmamakta. Bu, farklandırmış görüntü "
+"dosyası oluşturulduktan sonra ana görüntü dosyasında değişiklik yapıldığı "
+"anlamına geliyor olabilir.\n"
+"\n"
+"Bu durum ayrıca görüntü dosyalarının kopyalanmasından, yerlerinin "
+"değiştirilmesinden veya bu diski oluşturan programdaki bir hatadan dolayı da "
+"meydana gelmiş olabilir.\n"
+"\n"
+"Zaman damgalarını düzeltmek ister misiniz?"
 
 msgid "Parent and child disk timestamps do not match"
 msgstr "Ana ve ek disklerin zaman damgaları uyuşmuyor"
 
 msgid "Could not fix VHD timestamp."
-msgstr "VHD'nin zaman damgası düzeltilemedi."
+msgstr "VHD görüntüsünün zaman damgası düzeltilemedi."
 
 msgid "CD-ROM %1 (%2): %3"
 msgstr "CD-ROM %1 (%2): %3"
@@ -1530,9 +1737,6 @@ msgstr "DMF (2048 kümeli)"
 msgid "2.88 MB"
 msgstr "2.88 MB"
 
-msgid "ZIP 100"
-msgstr "ZIP 100"
-
 msgid "3.5\" 128 MB (ISO 10090)"
 msgstr "3.5\" 128 MB (ISO 10090)"
 
@@ -1575,20 +1779,20 @@ msgstr "Mükemmel RPM değerinin 1.5% altı"
 msgid "2% below perfect RPM"
 msgstr "Mükemmel RPM değerinin 2% altı"
 
+msgid "Creating image…"
+msgstr "Görüntü oluşturuluyor…"
+
 msgid "(System Default)"
 msgstr "(Sistem Varsayılanı)"
 
-msgid "Failed to initialize network driver"
-msgstr "Ağ sürücüsü başlatılamadı"
-
-msgid "The network configuration will be switched to the null driver"
-msgstr "Ağ yapılandırması null sürücüye geçirilecektir"
+msgid "Failed to initialize network driver:\n\n%s\n\nThe network configuration will be switched to the null driver."
+msgstr "Ağ sürücüsü başlatılamadı:\n\n%s\n\nAğ yapılandırması boş sürücüye geçirilecektir."
 
 msgid "Mouse sensitivity:"
 msgstr "Fare hassasiyeti:"
 
 msgid "Select media images from program working directory"
-msgstr "Medya görüntülerini programın çalışma dizininden seç"
+msgstr "Medya görüntülerini emülatörün çalışma dizininden seç"
 
 msgid "PIT mode:"
 msgstr "PIT modu:"
@@ -1602,14 +1806,27 @@ msgstr "Yavaş"
 msgid "Fast"
 msgstr "Hızlı"
 
-msgid "&Auto-pause on focus loss"
-msgstr "Pencereye &odaklanmıyorken duraklat"
+msgid "Auto-pause on focus loss"
+msgstr "Pencereye odaklanmıyorken duraklat"
+
+msgid "Auto-pause on dialog boxes"
+msgstr "Diyalog pencereleri açıkken emülasyonu duraklat"
 
 msgid "WinBox is no longer supported"
 msgstr "WinBox artık desteklenmemektedir"
 
 msgid "Development of the WinBox manager stopped in 2022 due to a lack of maintainers. As we direct our efforts towards making 86Box even better, we have made the decision to no longer support WinBox as a manager.\n\nNo further updates will be provided through WinBox, and you may encounter incorrect behavior should you continue using it with newer versions of 86Box. Any bug reports related to WinBox behavior will be closed as invalid.\n\nGo to 86box.net for a list of other managers you can use."
-msgstr "WinBox yöneticisinin geliştirilmesi geliştirici eksikliği nedeniyle 2022 yılında durduruldu. 86Box'ı daha iyi hale getirmeye odaklanmak amacıyla bu yöneticiyi artık desteklememe kararı aldık.\n\nArtık WinBox aracılığıyla güncellemeler yayınlanmayacaktır ve bu yöneticiyi 86Box'ın yeni sürümleriyle kullanmanız halinde hatalarla karşılaşabilirsiniz. WinBox'ın kullanımıyla ilgili tüm hata raporları geçersiz sayılacaktır.\n\nKullanabileceğiniz diğer yöneticilerin bir listesi için lütfen 86box.net adresini ziyaret edin."
+msgstr ""
+"WinBox yöneticisinin geliştirilmesi geliştirici eksikliği nedeniyle 2022 "
+"yılında durduruldu. 86Box'u daha iyi hale getirmeye odaklanmak amacıyla bu "
+"yöneticiyi artık desteklememe kararı aldık.\n"
+"\n"
+"Artık WinBox aracılığıyla güncellemeler yayınlanmayacaktır ve onu 86Box'un "
+"yeni sürümleriyle kullanmanız halinde hatalarla karşılaşabilirsiniz. "
+"WinBox'un kullanımıyla ilgili tüm hata raporları geçersiz sayılacaktır.\n"
+"\n"
+"Kullanabileceğiniz diğer yöneticilerin bir listesi için 86box.net adresini "
+"ziyaret edin."
 
 msgid "Generate"
 msgstr "Oluştur"
@@ -1648,7 +1865,7 @@ msgid "Open screenshots &folder…"
 msgstr "Ekran görüntüsü klasörünü aç…"
 
 msgid "Appl&y fullscreen stretch mode when maximized"
-msgstr "Büyütüldüğünde tam ekran germe modunu uygula"
+msgstr "Pencere büyütüldüğünde tam ekran germe modunu uygula"
 
 msgid "&Cursor/Puck"
 msgstr "&İmleç/Puck"
@@ -1656,8 +1873,8 @@ msgstr "&İmleç/Puck"
 msgid "&Pen"
 msgstr "&Kalem"
 
-msgid "&Host CD/DVD Drive (%1:)"
-msgstr "&Ana Sistemin CD/DVD Sürücüsü (%1:)"
+msgid "&Host CD/DVD Drive (%1)"
+msgstr "&Ana Sistemin CD/DVD Sürücüsü (%1)"
 
 msgid "&Connected"
 msgstr "&Bağlı"
@@ -1675,7 +1892,7 @@ msgid "Unknown Bus"
 msgstr "Bilinmeyen veri yolu"
 
 msgid "Null Driver"
-msgstr "Null sürücü"
+msgstr "Boş sürücü"
 
 msgid "NIC:"
 msgstr "NIC:"
@@ -1690,7 +1907,7 @@ msgid "Render behavior"
 msgstr "İşleyiş davranışı"
 
 msgid "Use target framerate:"
-msgstr "Şu hedef kare hızı oranını kullan:"
+msgstr "Şu hedef kare hızını kullan:"
 
 msgid " fps"
 msgstr " fps"
@@ -1717,22 +1934,31 @@ msgid "Couldn't switch to OpenGL context."
 msgstr "OpenGL bağlamına geçilemedi."
 
 msgid "OpenGL version 3.0 or greater is required. Current version is %1.%2"
-msgstr "OpenGL sürüm 3.0 veya üstü gereklidir. Geçerli sürüm %1.%2"
+msgstr "OpenGL sürüm 3.0 ya da üstü gereklidir. Geçerli sürüm %1.%2"
 
-msgid "Error initializing OpenGL"
-msgstr "OpenGL başlatılırken hata oluştu"
+msgid "Error initializing OpenGL."
+msgstr "OpenGL başlatılırken hata oluştu."
 
-msgid "\nFalling back to software rendering."
-msgstr "\nYazılım derleyicisine geri dönülüyor."
+msgid "Falling back to software rendering."
+msgstr "Yazılım derleyicisine geri dönülüyor."
 
 msgid "<html><head/><body><p>When selecting media images (CD-ROM, floppy, etc.) the open dialog will start in the same directory as the 86Box configuration file. This setting will likely only make a difference on macOS.</p></body></html>"
-msgstr "<html><head/><body><p>Medya görüntüsü (CD-ROM, disket, vb.) seçme diyaloğu 86Box yapılandırma dosyasının bulunduğu dizinde başlayacaktır. Bu ayar muhtemelen sadece macOS üzerinde bir değişiklik meydana getirecektir.</p></body></html>"
+msgstr ""
+"<html><head/><body><p>Medya görüntüsü (CD-ROM, disket, vb.) seçme diyaloğu "
+"86Box yapılandırma dosyasının bulunduğu dizinde başlayacaktır. Bu ayar "
+"muhtemelen sadece macOS üzerinde bir değişiklik meydana "
+"getirecektir.</p></body></html>"
 
 msgid "This machine might have been moved or copied."
 msgstr "Bu makine taşınmış veya kopyalanmış olabilir."
 
 msgid "In order to ensure proper networking functionality, 86Box needs to know if this machine was moved or copied.\n\nSelect \"I Copied It\" if you are not sure."
-msgstr "Ağ bağlantısı özelliğinin doğru bir şekilde çalışması için 86Box'ın bu makinenin başka bir konuma taşındığını mı yoksa kopyalandığını mı belirlemesi gerekmektedir.\n\nBundan emin değilseniz \"Kopyalandı\" seçeneğini seçin."
+msgstr ""
+"Ağ bağlantısı özelliğinin doğru bir şekilde çalışması için 86Box'un bu "
+"makinenin kopyalandığını mı yoksa sadece başka bir konuma taşındığını mı "
+"bilmesi gerekmektedir.\n"
+"\n"
+"Eğer bundan emin değilseniz \"Kopyalandı\" seçeneğini seçin."
 
 msgid "I Moved It"
 msgstr "Taşındı"
@@ -1752,17 +1978,17 @@ msgstr "MiB"
 msgid "GiB"
 msgstr "GiB"
 
-msgid "Network Card #1"
-msgstr "1. Ağ Kartı"
+msgid "Adapter 1"
+msgstr "1. Adaptör"
 
-msgid "Network Card #2"
-msgstr "2. Ağ Kartı"
+msgid "Adapter 2"
+msgstr "2. Adaptör"
 
-msgid "Network Card #3"
-msgstr "3. Ağ Kartı"
+msgid "Adapter 3"
+msgstr "3. Adaptör"
 
-msgid "Network Card #4"
-msgstr "4. Ağ Kartı"
+msgid "Adapter 4"
+msgstr "4. Adaptör"
 
 msgid "Mode:"
 msgstr "Mod:"
@@ -1785,65 +2011,53 @@ msgstr "86Box Test Cihazı"
 msgid "Novell NetWare 2.x Key Card"
 msgstr "Novell NetWare 2.x Anahtar Kartı"
 
-msgid "Serial port passthrough 1"
-msgstr "1. Seri bağlantı noktası geçişi"
-
-msgid "Serial port passthrough 2"
-msgstr "2. Seri bağlantı noktası geçişi"
-
-msgid "Serial port passthrough 3"
-msgstr "3. Seri bağlantı noktası geçişi"
-
-msgid "Serial port passthrough 4"
-msgstr "4. Seri bağlantı noktası geçişi"
-
 msgid "Renderer &options…"
 msgstr "Derleyici seçenekleri…"
 
 msgid "PC/XT Keyboard"
-msgstr "PC/XT Klavyesi"
+msgstr "PC/XT Klavye"
 
 msgid "AT Keyboard"
-msgstr "AT Klavyesi"
+msgstr "AT Klavye"
 
 msgid "AX Keyboard"
-msgstr "AX Klavyesi"
+msgstr "AX Klavye"
 
 msgid "PS/2 Keyboard"
-msgstr "PS/2 Klavyesi"
+msgstr "PS/2 Klavye"
 
 msgid "PS/55 Keyboard"
-msgstr "PS/55 Klavyesi"
+msgstr "PS/55 Klavye"
 
 msgid "Keys"
 msgstr "Tuşlar"
 
 msgid "Logitech/Microsoft Bus Mouse"
-msgstr "Logitech/Microsoft Bus Faresi"
+msgstr "Logitech/Microsoft Bus Fare"
 
 msgid "Microsoft Bus Mouse (InPort)"
-msgstr "Microsoft Bus Faresi (InPort)"
+msgstr "Microsoft Bus Fare (InPort)"
 
 msgid "Mouse Systems Serial Mouse"
-msgstr "Mouse Systems Seri Faresi"
+msgstr "Mouse Systems Seri Fare"
 
 msgid "Mouse Systems Bus Mouse"
-msgstr "Mouse Systems Bus Faresi"
+msgstr "Mouse Systems Bus Fare"
 
 msgid "Microsoft Serial Mouse"
-msgstr "Microsoft Seri Faresi"
+msgstr "Microsoft Seri Fare"
 
 msgid "Microsoft Serial BallPoint"
 msgstr "Microsoft Seri BallPoint"
 
 msgid "Logitech Serial Mouse"
-msgstr "Logitech Seri Faresi"
+msgstr "Logitech Seri Fare"
 
 msgid "PS/2 Mouse"
-msgstr "PS/2 Faresi"
+msgstr "PS/2 Fare"
 
 msgid "PS/2 QuickPort Mouse"
-msgstr "PS/2 QuickPort Faresi"
+msgstr "PS/2 QuickPort Fare"
 
 msgid "3M MicroTouch (Serial)"
 msgstr "3M MicroTouch (seri)"
@@ -1851,8 +2065,8 @@ msgstr "3M MicroTouch (seri)"
 msgid "Default Baud rate"
 msgstr "Varsayılan Baud hızı"
 
-msgid "[COM] Standard Hayes-compliant Modem"
-msgstr "[COM] Standart Hayes Uyumlu Modem"
+msgid "Standard Hayes-compliant Modem"
+msgstr "Standart Hayes Uyumlu Modem"
 
 msgid "Roland MT-32 Emulation"
 msgstr "Roland MT-32 Emülasyonu"
@@ -1946,6 +2160,9 @@ msgstr "BIOS Sürümü"
 
 msgid "BIOS Language"
 msgstr "BIOS Dili"
+
+msgid "Variant"
+msgstr "Tür"
 
 msgid "IBM 5161 Expansion Unit"
 msgstr "IBM 5161 Genişletme Ünitesi"
@@ -2113,16 +2330,19 @@ msgid "RAM Address"
 msgstr "Bellek (RAM) Adresi"
 
 msgid "RAM size"
-msgstr "Bellek (RAM) Boyutu"
+msgstr "Bellek (RAM) boyutu"
 
 msgid "Initial RAM size"
-msgstr "İlk Bellek (RAM) boyutu"
+msgstr "Baştaki bellek (RAM) boyutu"
 
 msgid "Serial Number"
 msgstr "Seri Numarası"
 
 msgid "Host ID"
-msgstr "Ana sistemin kimliği"
+msgstr "Ana sistem kimliği"
+
+msgid "Host"
+msgstr "Ana Sistem"
 
 msgid "FDC Address"
 msgstr "FDC Adresi"
@@ -2205,14 +2425,14 @@ msgstr "Yüksek DMA"
 msgid "Control PC speaker"
 msgstr "PC hoparlörünü kontrol et"
 
+msgid "Control MIDI volume"
+msgstr "MIDI ses düzeyini kontrol et"
+
 msgid "Memory size"
-msgstr "Bellek boyutu"
+msgstr "Bellek (RAM) boyutu"
 
 msgid "EMU8000 Address"
 msgstr "EMU8000 adresi"
-
-msgid "IDE Controller"
-msgstr "IDE Denetleyicisi"
 
 msgid "Codec"
 msgstr "Codec"
@@ -2281,7 +2501,7 @@ msgid "Framebuffer memory size"
 msgstr "Çerçeve arabelleği bellek boyutu"
 
 msgid "Texture memory size"
-msgstr "Doku bellek boyutu"
+msgstr "Doku belleği boyutu"
 
 msgid "Dither subtraction"
 msgstr "Dither çıkarışı"
@@ -2320,22 +2540,16 @@ msgid "EMS 2 Address"
 msgstr "EMS 2 adresi"
 
 msgid "EMS Memory Size"
-msgstr "EMS bellek büyüklüğü"
+msgstr "EMS Bellek (RAM) Boyutu"
 
 msgid "EMS 1 Memory Size"
-msgstr "EMS 1 bellek büyüklüğü"
+msgstr "EMS 1 Bellek (RAM) Boyutu"
 
 msgid "EMS 2 Memory Size"
-msgstr "EMS 2 bellek büyüklüğü"
+msgstr "EMS 2 Bellek (RAM) Boyutu"
 
 msgid "Enable EMS"
 msgstr "EMS'yi etkinleştir"
-
-msgid "Enable EMS 1"
-msgstr "EMS 1'i etkinleştir"
-
-msgid "Enable EMS 2"
-msgstr "EMS 2'yi etkinleştir"
 
 msgid "Address for > 2 MB"
 msgstr "> 2 MB için adres"
@@ -2343,8 +2557,41 @@ msgstr "> 2 MB için adres"
 msgid "Frame Address"
 msgstr "Çerçeve adresi"
 
-msgid "USA"
-msgstr "ABD"
+msgid "English"
+msgstr "İngilizce"
+
+msgid "English (US)"
+msgstr "İngilizce (ABD)"
+
+msgid "English (UK)"
+msgstr "İngilizce (Birleşik Krallık)"
+
+msgid "English (Canada)"
+msgstr "İngilizce (Kanada)"
+
+msgid "German"
+msgstr "Almanca"
+
+msgid "French"
+msgstr "Fransızca"
+
+msgid "Spanish"
+msgstr "İspanyolca"
+
+msgid "Swedish"
+msgstr "İsveççe"
+
+msgid "Italian"
+msgstr "İtalyanca"
+
+msgid "Portuguese"
+msgstr "Portekizce"
+
+msgid "Norwegian"
+msgstr "Norveççe"
+
+msgid "Greek"
+msgstr "Yunanca"
 
 msgid "Danish"
 msgstr "Danca"
@@ -2526,6 +2773,18 @@ msgstr "Gelişmiş Renkli - Normal Mod (5154/ECD)"
 msgid "Enhanced Color - Enhanced Mode (5154/ECD)"
 msgstr "Gelişmiş Renkli - Gelişmiş Mod (5154/ECD)"
 
+msgid "IBM 8507 (1024x768, Monochrome)"
+msgstr "IBM 8507 (1024x768, Tek Renkli)"
+
+msgid "IBM 8514 (1024x768, Color)"
+msgstr "IBM 8514 (1024x768, Çok Renkli)"
+
+msgid "IBM 8503 (640x480, Monochrome)"
+msgstr "IBM 8503 (640x480, Tek Renkli)"
+
+msgid "IBM 8512/13 (640x480, Color)"
+msgstr "IBM 8512/13 (640x480, Çok Renkli)"
+
 msgid "Green"
 msgstr "Yeşil"
 
@@ -2540,9 +2799,6 @@ msgstr "Gri tonlu"
 
 msgid "Color"
 msgstr "Renk"
-
-msgid "U.S. English"
-msgstr "ABD İngilizcesi"
 
 msgid "Scandinavian"
 msgstr "İskandinav"
@@ -2598,6 +2854,9 @@ msgstr "Standart"
 msgid "High-Speed"
 msgstr "Yüksek Hızlı"
 
+msgid "LPT DAC / Covox Speech Thing"
+msgstr "LPT DAC / Covox Speech Thing"
+
 msgid "Stereo LPT DAC"
 msgstr "Stereo LPT DAC"
 
@@ -2610,8 +2869,8 @@ msgstr "Genel ESC/P 2 Dot-Matrix Yazıcı"
 msgid "Generic PostScript Printer"
 msgstr "Genel PostScript Yazıcı"
 
-msgid "Generic PCL5e Printer"
-msgstr "Genel PCL5e Yazıcı"
+msgid "Generic PCL Printer"
+msgstr "Genel PCL Yazıcı"
 
 msgid "Parallel Line Internet Protocol"
 msgstr "Paralel Hat İnternet Protokolü"
@@ -2619,35 +2878,83 @@ msgstr "Paralel Hat İnternet Protokolü"
 msgid "Protection Dongle for Savage Quest"
 msgstr "Savage Quest için Koruma Kilidi"
 
-msgid "Serial Passthrough Device"
+msgid "Loopback Plug"
+msgstr "Geri Döngü Adaptörü"
+
+msgid "Serial Passthrough"
 msgstr "Seri Geçiş Cihazı"
 
-msgid "Passthrough Mode"
-msgstr "Geçiş Modu"
+msgid "Host serial device"
+msgstr "Ana sistemdeki seri cihaz"
 
-msgid "Host Serial Device"
-msgstr "Ana Sistemdeki Seri Cihaz"
+msgid "Named Pipe"
+msgstr "Adlandırılmış Boru"
 
-msgid "Name of pipe"
-msgstr "Boru adı"
+msgid "Output file"
+msgstr "Çıkış dosyası"
 
-msgid "Data bits"
-msgstr "Veri bitleri"
+msgid "Append to file if it exists"
+msgstr "Varsa dosyaya iliştir"
 
-msgid "Stop bits"
-msgstr "Dur bitleri"
+msgid "Input file"
+msgstr "Giriş dosyası"
 
-msgid "Baud Rate of Passthrough"
-msgstr "Geçişin Baud Hızı"
+msgid "Loop input file"
+msgstr "Döngü giriş dosyası"
 
-msgid "Named Pipe (Server)"
-msgstr "Adlandırılmış Boru (Sunucu)"
+msgid "Require STROBE signal"
+msgstr "STROBE sinyali gereksin"
 
-msgid "Named Pipe (Client)"
-msgstr "Adlandırılmış Boru (İstemci)"
+msgid "Loopback Type"
+msgstr "Geri Döngü Tipi"
 
-msgid "Host Serial Passthrough"
-msgstr "Ana Sistem Seri Geçişi"
+msgid "Parallel cable"
+msgstr "Paralel kablo"
+
+msgid "Unidirectional (8-bit) / LapLink (4-bit)"
+msgstr "Tek yönlü (8-bit) / LapLink (4-bit)"
+
+msgid "Bidirectional (8-bit)"
+msgstr "Çift yönlü (8-bit)"
+
+msgid "Pipe path"
+msgstr "Boru yolu"
+
+msgid "FIFO / terminal"
+msgstr "FIFO / terminal"
+
+msgid "Mode"
+msgstr "Mod"
+
+msgid "Server"
+msgstr "Sunucu"
+
+msgid "Client"
+msgstr "İstemci"
+
+msgid "Reconnect automatically"
+msgstr "Otomatik olarak yeniden bağlan"
+
+msgid "Use standard input/output"
+msgstr "Standart giriş/çıkışı kullan"
+
+msgid "Create pseudoterminal"
+msgstr "Pseudoterminal oluştur"
+
+msgid "Start terminal emulator"
+msgstr "Terminal öykünücüsünü çalıştır"
+
+msgid "Run custom command"
+msgstr "Özel komut çalıştır"
+
+msgid "Custom command"
+msgstr "Özel komut"
+
+msgid "Run custom command in terminal"
+msgstr "Terminalde özel komut çalıştır"
+
+msgid "Virtual Console"
+msgstr "Sanal Konsol"
 
 msgid "E&ject %1"
 msgstr "%1 görüntüsünü &çıkar"
@@ -2659,10 +2966,16 @@ msgid "Softfloat FPU"
 msgstr "Softfloat FPU"
 
 msgid "High performance impact"
-msgstr "Ciddi performans azalışına neden olabilir"
+msgstr "Ciddi performans etkisi"
 
 msgid "[Generic] RAM Disk (max. speed)"
 msgstr "[Genel] RAM Disk (maks. hız)"
+
+msgid "[Generic] 1983 MFM (3600 RPM)"
+msgstr "[Genel] 1983 MFM (3600 RPM)"
+
+msgid "[Generic] 1983 RLL (3600 RPM)"
+msgstr "[Genel] 1983 RLL (3600 RPM)"
 
 msgid "[Generic] 1989 (3500 RPM)"
 msgstr "[Genel] 1989 (3500 RPM)"
@@ -2670,8 +2983,14 @@ msgstr "[Genel] 1989 (3500 RPM)"
 msgid "[Generic] 1992 (3600 RPM)"
 msgstr "[Genel] 1992 (3600 RPM)"
 
+msgid "[Generic] 1993 (4000 RPM)"
+msgstr "[Genel] 1993 (4000 RPM)"
+
 msgid "[Generic] 1994 (4500 RPM)"
 msgstr "[Genel] 1994 (4500 RPM)"
+
+msgid "[Generic] 1995 (5200 RPM)"
+msgstr "[Genel] 1995 (5200 RPM)"
 
 msgid "[Generic] 1996 (5400 RPM)"
 msgstr "[Genel] 1996 (5400 RPM)"
@@ -2685,8 +3004,11 @@ msgstr "[Genel] 1998 (5400 RPM)"
 msgid "[Generic] 2000 (7200 RPM)"
 msgstr "[Genel] 2000 (7200 RPM)"
 
-msgid "IBM 8514/A clone (ISA)"
-msgstr "IBM 8514/A klonu (ISA)"
+msgid "[Generic] 2004 (10000 RPM)"
+msgstr "[Genel] 2004 (10000 RPM)"
+
+msgid "IBM 8514/A clone"
+msgstr "IBM 8514/A klonu"
 
 msgid "Vendor"
 msgstr "Üretici"
@@ -2698,16 +3020,19 @@ msgid "60 Hz (JMP2 = 2)"
 msgstr "60 Hz (JMP2 = 2)"
 
 msgid "Generic PC/XT Memory Expansion"
-msgstr "Genel PC/XT Bellek Artırıcı"
+msgstr "Genel PC/XT Bellek (RAM) Artırıcı"
 
 msgid "Generic PC/AT Memory Expansion"
-msgstr "Genel PC/AT Bellek Artırıcı"
+msgstr "Genel PC/AT Bellek (RAM) Artırıcı"
 
-msgid "Unable to find Dot-Matrix fonts"
-msgstr "Dot-Matrix yazı tipleri bulunamıyor"
+msgid "Generic MM58167 RTC"
+msgstr "Jenerik MM58167 RTC"
 
-msgid "TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P 2 Dot-Matrix Printer."
-msgstr "Genel ESC/P 2 Dot-Matrix yazıcısının emülasyonu için \"roms/printer/fonts\" dizininde TrueType yazı tiplerinin bulunması gereklidir."
+msgid "OPL2Board (External Device)"
+msgstr "OPL2Board (Harici Cihaz)"
+
+msgid "Unable to find Dot-Matrix fonts. TrueType fonts in the \"roms/printer/fonts\" directory are required for the emulation of the Generic ESC/P 2 Dot-Matrix Printer."
+msgstr "Dot-Matrix yazı tipleri bulunamıyor. Genel ESC/P 2 Dot-Matrix yazıcısının emülasyonu için \"roms/printer/fonts\" dizininde TrueType yazı tiplerinin bulunması gereklidir."
 
 msgid "Inhibit multimedia keys"
 msgstr "Multimedya tuşlarını engelle"
@@ -2721,6 +3046,9 @@ msgstr "Yeniden başlamaya zorlamadan önce onay için sor"
 msgid "Ask for confirmation before quitting"
 msgstr "Çıkış yapmadan once onay için sor"
 
+msgid "Precache CHD files into memory"
+msgstr "CHD dosyalarını önbellekte sakla"
+
 msgid "Options"
 msgstr "Seçenekler"
 
@@ -2730,8 +3058,35 @@ msgstr "Model"
 msgid "Model:"
 msgstr "Model:"
 
+msgid "Brand:"
+msgstr "Marka:"
+
+msgid "Revision:"
+msgstr "Revizyon:"
+
+msgid "[Generic HDD] Device Configuration"
+msgstr "[Genel Hard Disk] Cihaz Seçenekleri"
+
 msgid "Failed to initialize Vulkan renderer."
 msgstr "Vulkan derleyicisi başlatılamadı."
+
+msgid "Failed to create Vulkan 1.3 instance."
+msgstr "Vulkan 1.3 örneği oluşturulamadı."
+
+msgid "No usable Vulkan physical devices found."
+msgstr "Kullanılabilir bir fiziksel Vulkan cihazı bulunamadı."
+
+msgid "No Vulkan-capable physical devices found."
+msgstr "Vulkan uyumlu fiziksel cihaz bulunamadı."
+
+msgid "librashader not found. Shaders will not be available."
+msgstr "librashader bulunamadı. Gölgelendiriciler kullanılamayacak."
+
+msgid "Vulkan device lost."
+msgstr "Vulkan cihazı kayboldu."
+
+msgid "Vulkan surface lost."
+msgstr "Vulkan yüzeyi kayboldu."
 
 msgid "GLSL Error"
 msgstr "GLSL Hatası"
@@ -2746,13 +3101,19 @@ msgid "Could not compile shader:\n\n%1"
 msgstr "Gölgelendirici derlenemedi:\n\n%1"
 
 msgid "Program not linked:\n\n%1"
-msgstr "Program bağlanamadı:\n\n%1"
+msgstr ""
+"Program bağlanmadı:\n"
+"\n"
+"%1"
 
 msgid "Shader Manager"
 msgstr "Gölgelendirici Yöneticisi"
 
 msgid "Shader Configuration"
 msgstr "Gölgelendirici Seçenekleri"
+
+msgid "GPU:"
+msgstr "GPU:"
 
 msgid "Add"
 msgstr "Ekle"
@@ -2766,8 +3127,14 @@ msgstr "Aşağı taşı"
 msgid "Could not load file %1"
 msgstr "%1 dosyası yüklenemedi"
 
-msgid "Key Bindings:"
-msgstr "Tuş Bağlamaları:"
+msgid "Emulator"
+msgstr "Emülatör"
+
+msgid "Input"
+msgstr "Giriş"
+
+msgid "Key bindings"
+msgstr "Tuş atamaları"
 
 msgid "Action"
 msgstr "Eylem"
@@ -2776,7 +3143,7 @@ msgid "Keybind"
 msgstr "Tuş bağlaması"
 
 msgid "Clear binding"
-msgstr "Bağlamayı sil"
+msgstr "Atamayı sil"
 
 msgid "Bind"
 msgstr "Bağla"
@@ -2803,10 +3170,7 @@ msgid "Toggle fullscreen"
 msgstr "Tam ekran modunu ayarla"
 
 msgid "Toggle UI in fullscreen"
-msgstr "Arayüzü tam ekranda ayarla"
-
-msgid "Screenshot"
-msgstr "Ekran görüntüsü"
+msgstr "Tam ekranda arayüz gösterimini ayarla"
 
 msgid "Release mouse pointer"
 msgstr "Fare imlecini serbest bırak"
@@ -2816,6 +3180,12 @@ msgstr "Duraklamayı ayarla"
 
 msgid "Toggle mute"
 msgstr "Sessize almayı ayarla"
+
+msgid "Toggle on-screen display"
+msgstr "Ekran üstü göstergeyi ayarla"
+
+msgid "Toggle &on-screen display"
+msgstr "Ekran üstü &göstergeyi ayarla"
 
 msgid "Text files"
 msgstr "Metin dosyaları"
@@ -2832,8 +3202,8 @@ msgstr "Yerel Switch"
 msgid "Remote Switch"
 msgstr "Uzak Switch"
 
-msgid "Switch:"
-msgstr "Switch:"
+msgid "Shared secret:"
+msgstr "Paylaşılan sır:"
 
 msgid "Hub Mode"
 msgstr "Hub Modu"
@@ -2851,7 +3221,13 @@ msgid "&Wipe NVRAM"
 msgstr "NVRAM'i te&mizle"
 
 msgid "This will delete all NVRAM (and related) files of the virtual machine located in the \"nvr\" subdirectory. You'll have to reconfigure the BIOS (and possibly other devices inside the VM) settings again if applicable.\n\nAre you sure you want to wipe all NVRAM contents of the virtual machine \"%1\"?"
-msgstr "Bu işlem, sanal makinenin \"nvr\" altdizininde bulunan tüm NVRAM (ve ilişkili) dosyalarını silecektir. Eğer uygulanabilir ise, Anakartın BIOS'unu (ve muhtemelen VM içindeki diğer cihazları) yeniden yapılandırmanız gerekecektir.\n\nSanal makinenin tüm NVRAM içeriğini silmek istediğinizden emin misiniz?"
+msgstr ""
+"Bu işlem, sanal makinenin \"nvr\" klasöründe bulunan tüm NVRAM (ve ilişkili) "
+"dosyalarını silecektir. Eğer uygulanabilir ise, makinenin BIOS'unu (ve "
+"muhtemelen sanal makine içindeki diğer cihazları) yeniden yapılandırmanız "
+"gerekecektir.\n"
+"\n"
+"Sanal makinenin tüm NVRAM içeriğini silmek istediğinizden emin misiniz?"
 
 msgid "Success"
 msgstr "İşlem başarılı"
@@ -2863,10 +3239,11 @@ msgid "An error occurred trying to wipe the NVRAM contents of the virtual machin
 msgstr "\"%1\" adlı sanal makinenin NVRAM içeriği silinmeye çalışırken hata oluştu"
 
 msgid "%1 VM Manager"
-msgstr "%1 VM Yöneticisi"
+msgstr "%1 Sanal Makine Yöneticisi"
 
 msgid "%n disk(s)"
-msgstr "%n disk"
+msgid_plural "%n disks"
+msgstr[0] "%n disk"
 
 msgid "Unknown Status"
 msgstr "Bilinmeyen Durum"
@@ -2893,7 +3270,7 @@ msgid "beta"
 msgstr "beta"
 
 msgid "You are running the latest %1 version of 86Box: %2"
-msgstr "Şu anda 86Box'ın en yeni %1 sürümünü kullanıyorsunuz: %2"
+msgstr "Şu anda 86Box'un en yeni %1 sürümünü kullanıyorsunuz: %2"
 
 msgid "version"
 msgstr "sürüm"
@@ -2944,7 +3321,7 @@ msgid "The system will not be added."
 msgstr "Sistem eklenmeyecek."
 
 msgid "&Update mouse every CPU frame"
-msgstr "Her CPU karesi ile fareyi güncelle"
+msgstr "Fareyi her işlemci karesinde güncelle"
 
 msgid "Hue"
 msgstr "Renk tonu"
@@ -2976,38 +3353,313 @@ msgstr "Dışa aktar…"
 msgid "Export EDID"
 msgstr "EDID'i dışa aktar"
 
-msgid "EDID file \"%ls\" is too large."
-msgstr "EDID dosyası \"%ls\" çok büyük."
+msgid "EDID file \"%s\" is invalid."
+msgstr "EDID dosyası \"%s\" geçersiz."
+
+msgid "EDID file \"%s\" is too large."
+msgstr "EDID dosyası \"%s\" çok büyük."
 
 msgid "OpenGL input scale"
-msgstr "OpenGL'nin giriş ölçeği"
+msgstr "OpenGL giriş ölçeği"
 
 msgid "OpenGL input stretch mode"
-msgstr "OpenGL'nin giriş germe modu"
+msgstr "OpenGL giriş germe modu"
 
 msgid "Color scheme"
 msgstr "Renk şeması"
 
 msgid "Light"
-msgstr "Işık"
+msgstr "Açık"
 
 msgid "Dark"
-msgstr "Karanlık"
-
-msgid "Search:"
-msgstr "Ara:"
+msgstr "Koyu"
 
 msgid "Force interpretation"
-msgstr "Yorumlanmasını zorla"
+msgstr "Yorumlamaya zorla"
 
 msgid "Allow recompilation"
-msgstr "Derlenmesine izin ver"
+msgstr "Derlemeye izin ver"
 
 msgid "&Force interpretation"
-msgstr "&Yorumlanmasını zorla"
+msgstr "&Yorumlamaya zorla"
 
 msgid "&Allow recompilation"
-msgstr "&Derlenmesine izin ver"
+msgstr "&Derlemeye izin ver"
 
 msgid "&Fast forward"
+msgstr "&İleri sar"
+
+msgid "Fast forward"
+msgstr "İleri sar"
+
+msgid "&Non-maskable interrupt"
+msgstr "&Maskelendirilemeyen kesinti"
+
+msgid "Non-maskable interrupt"
+msgstr "Maskelendirilemeyen kesinti"
+
+msgid "To change the system directory, stop all running machines."
+msgstr "Sistem dizinini değiştirmek için çalışan tüm makineleri durdurun."
+
+msgid "Raw"
+msgstr "Ham"
+
+msgid "Use EDC/ECC emulation"
+msgstr "EDC/ECC emülasyonunu kullan"
+
+msgid "Audio output device:"
+msgstr "Ses çıkış aygıtı:"
+
+msgid "System Default"
+msgstr "Sistem Varsayılanı"
+
+msgid "Unable to open image or folder \"%s\"."
+msgstr "\"%s\" görüntü ya da klasörü açılamıyor."
+
+msgid "Unable to open cue sheet \"%s\"."
+msgstr "\"%s\" cue dosyası açılamıyor."
+
+msgid "Unable to open MDS file \"%s\"."
+msgstr "\"%s\" MDS dosyası açılamıyor."
+
+msgid "Unable to load CD-ROM image \"%s\"."
+msgstr "\"%s\" CD-ROM görüntüsü yüklenemedi."
+
+msgid "Unable to load image \"%s\": %1 is missing, which is required for Daemon Tools MDS v2 and MDX image support."
+msgstr ""
+"\"%s\" görüntüsü yüklenemiyor: Daemon Tools MDS v2 ve MDX görüntü desteği "
+"için gerekli olan %1 mevcut değil."
+
+msgid "Unable to load image \"%s\": %1 is missing, which is required for Aaru format image support."
+msgstr ""
+"Görüntü \"%s\" yüklenemiyor: Aaru biçimi görüntüsü desteği için gerekli olan "
+"%1 bulunamıyor."
+
+msgid "The DVD image \"%s\" has been inserted into a drive that does not support DVD media and will be ignored."
+msgstr ""
+"\"%s\" DVD görüntüsü DVD ortamını desteklemeyen bir sürücüde açıldığı için "
+"göz ardı edilecektir."
+
+msgid "%s: Could not connect to %s: %s"
+msgstr "%s: %s bağlanamadı: %s"
+
+msgid "%s: Could not create %s: %s"
+msgstr "%s: %s oluşturulamadı: %s"
+
+msgid "%s: Attached to %s"
+msgstr "%s: %s bağlandı"
+
+msgid "%s: Virtual console already in use by %s"
+msgstr "%s: Sanal konsol %s tarafından kullanılmakta"
+
+msgid "%s: Could not create terminal: %s"
+msgstr "%s: Terminal oluşturulamadı: %s"
+
+msgid "Auto-detect"
+msgstr "Otomatik algılama"
+
+msgid "Channel"
+msgstr "Kanal"
+
+msgid "Both Channels"
+msgstr "Her İki Kanal"
+
+msgid "Left Channel"
+msgstr "Sol Kanal"
+
+msgid "Right Channel"
+msgstr "Sağ Kanal"
+
+msgid "Allow Flash BIOS Updates"
+msgstr "Flash BIOS güncellemelerine izin ver"
+
+msgid "Slot #"
+msgstr "Slot #"
+
+msgid "Parallel Port"
+msgstr "Paralel Bağlantı Noktası"
+
+msgid "Paper Size"
+msgstr "Kağıt Boyutu"
+
+msgid "Letter"
+msgstr "Letter"
+
+msgid "Legal (sideways)"
+msgstr "Legal (yanlamasına)"
+
+msgid "B4 (sideways)"
+msgstr "B4 (yanlamasına)"
+
+msgid "Quality"
+msgstr "Kalite"
+
+msgid "Draft"
+msgstr "Taslak"
+
+msgid "(Near) Letter"
+msgstr "(Yakın) Letter"
+
+msgid "Auto LF"
+msgstr "Auto LF"
+
+msgid "Tandy PSSJ Clone"
+msgstr "Tandy PSSJ Klonu"
+
+msgid "PC-CM (Color)"
+msgstr "PC-CM (Çok Renkli)"
+
+msgid "PC-MM (Monochrome)"
+msgstr "PC-MM (Tek Renkli)"
+
+msgid "White Monochrome"
+msgstr "Beyaz Renkli"
+
+msgid "Hardware font"
+msgstr "Donanım yazı tipi"
+
+msgid "Diagnostic mode"
+msgstr "Teşhis modu"
+
+msgid "CGA monitor"
+msgstr "CGA monitör"
+
+msgid "MDA monitor"
+msgstr "MDA monitör"
+
+msgid "Television"
+msgstr "Televizyon"
+
+msgid "Invert LCD colors"
+msgstr "LCD renklerini tersine çevir"
+
+msgid "LCD (CGA mode)"
+msgstr "LCD (CGA modu)"
+
+msgid "LCD (MDA mode)"
+msgstr "LCD (MDA modu)"
+
+msgid "Disabled (250h)"
+msgstr "Devre dışı (250h)"
+
+msgid "Enabled (350h)"
+msgstr "Etkin (350h)"
+
+msgid "Test mode"
+msgstr "Test modu"
+
+msgid "32 MB"
+msgstr "32 MB"
+
+msgid "64 MB"
+msgstr "64 MB"
+
+msgid "2048 MB"
+msgstr "2048 MB"
+
+msgid "Refresh rate"
+msgstr "Yenileme hızı"
+
+msgid "US (CP 437)"
+msgstr "ABD (CP 437)"
+
+msgid "IBM Nordic (CP 437-Nordic)"
+msgstr "IBM İskandinav (CP 437-Nordic)"
+
+msgid "Czech Kamenicky (CP 895) #1"
+msgstr "Çekçe Kamenicky (CP 895) #1"
+
+msgid "Czech Kamenicky (CP 895) #2"
+msgstr "Çekçe Kamenicky (CP 895) #2"
+
+msgid "932 (Japanese)"
+msgstr "932 (Japonca)"
+
+msgid "938 (Traditional Chinese)"
+msgstr "938 (Geleneksel Çince)"
+
+msgid "Sample rate:"
+msgstr "Örnekleme hızı:"
+
+msgid "Enable audio input (mic/line-in)"
+msgstr "Ses girişini etkinleştir (mikrofon/hat girişi)"
+
+msgid "Audio input device:"
+msgstr "Ses giriş cihazı:"
+
+msgid "Audio input sample rate:"
+msgstr "Ses girişi örnekleme hızı:"
+
+msgid "Rate the emulator mixes to the host output device."
+msgstr ""
+"Emülatörün ses örnekleme hızını ana sistemin çıkış cihazına göre ayarlar."
+
+msgid "Rate the host input capture device is opened at.\n\n44100 divides evenly by SB16/AWE32 rates of 44.1/22/11 kHz."
+msgstr ""
+"Ana sistemin ses giriş cihazının kaydedildiği örnekleme hızını belirler.\n"
+"\n"
+"44100 Hz, SB16/AWE32 tarafından kullanılan 44.1/22/11 kHz hızları ile tam "
+"bölünür."
+
+msgid "CGA lightpen"
+msgstr "CGA lightpen"
+
+msgid "Luminance threshold (%)"
+msgstr "Parıltı eşiği (%)"
+
+msgid "VFIO: Could not open /dev/vfio/vfio: %s. Make sure the vfio-pci module is loaded."
+msgstr ""
+
+msgid "VFIO %s: Invalid device location."
+msgstr ""
+
+msgid "VFIO %s: Device not found."
+msgstr ""
+
+msgid "VFIO %s: Device has no IOMMU group. Make sure VT-d or IOMMU is enabled on your system."
+msgstr ""
+
+msgid "VFIO %s: Device is not bound to vfio-pci."
+msgstr ""
+
+msgid "VFIO %s: Could not open IOMMU group %d: %s"
+msgstr ""
+
+msgid "VFIO %s: IOMMU group %d is not viable. All devices in the group must be bound to vfio-pci."
+msgstr ""
+
+msgid "VFIO: Could not map guest memory for DMA: %s. The locked memory limit (ulimit -l) may be too low."
+msgstr ""
+
+msgid "VFIO %s: Could not read ROM file \"%s\"; using the device's own ROM."
+msgstr ""
+
+msgid "VFIO %s: Could not read ROM file \"%s\"; the ROM is disabled."
+msgstr ""
+
+msgid "VFIO %s: The ROM looks invalid. A custom ROM can be loaded through the VFIO settings."
+msgstr ""
+
+msgid "VFIO: These devices must be bound to vfio-pci, which requires administrator rights:\n\n%s\nBind them now?"
+msgstr ""
+
+msgid "VFIO: Administrator rights are required to give 86Box access to the passed-through devices. Continue?"
+msgstr ""
+
+msgid "These devices were not selected, but share an IOMMU group with a selected device, so they will be bound as well:"
+msgstr ""
+
+msgid "VFIO %s: IOMMU group %d also contains %s, which the host needs. The group will not be bound to vfio-pci."
+msgstr ""
+
+msgid "VFIO: Could not prepare the devices for passthrough:\n%s"
+msgstr ""
+
+msgid "VFIO: Administrator rights could not be requested. To prepare the devices for passthrough, run this command, then hard reset:\n\n%s"
+msgstr ""
+
+msgid "Prepare PCI devices for VFIO passthrough"
+msgstr ""
+
+msgid "Authentication is required to prepare PCI devices for passthrough to 86Box."
 msgstr ""

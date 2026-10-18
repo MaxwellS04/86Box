@@ -74,11 +74,13 @@ public:
     static void iterateCDROM(const std::function<void(int i)> &cb);
     static void iterateRDisk(const std::function<void(int i)> &cb);
     static void iterateMO(const std::function<void(int i)> &cb);
+    static void iterateTape(const std::function<void(int i)> &cb);
     static void iterateNIC(const std::function<void(int i)> &cb);
 
     QString getMessage();
     void    clearActivity();
     void    setSoundMenu(QMenu *menu);
+    void    setDynarecMenu(QMenu *menu);
 public slots:
     void refresh(QStatusBar *sbar);
     void message(const QString &msg);
@@ -92,6 +94,7 @@ private:
     std::unique_ptr<States> d;
     QTimer                 *refreshTimer;
     QMenu                  *soundMenu;
+    QMenu                  *dynarecMenu;
 };
 
 #endif // QT_MACHINESTATUS_HPP

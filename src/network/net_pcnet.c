@@ -1314,8 +1314,8 @@ pcnetReceiveNoSync(void *priv, uint8_t *buf, int size)
                 while (p != &src[size])
                     CRC(fcs, *p++);
 
-                /* FCS at the end of the packet */
-                ((uint32_t *) &src[size])[0] = htonl(fcs);
+                /* FCS at the end of the packet, one's complement in little endian */
+                ((uint32_t *) &src[size])[0] = cpu_to_le32(~fcs);
                 size += 4;
             }
 
@@ -2588,7 +2588,7 @@ pcnet_ioset(nic_t *dev, uint16_t addr, int len)
 }
 
 static void
-pcnet_pci_write(UNUSED(int func), int addr, uint8_t val, void *priv)
+pcnet_pci_write(UNUSED(int func), int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     nic_t  *dev = (nic_t *) priv;
     uint8_t valxor;
@@ -2671,7 +2671,7 @@ pcnet_pci_write(UNUSED(int func), int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-pcnet_pci_read(UNUSED(int func), int addr, void *priv)
+pcnet_pci_read(UNUSED(int func), int addr, UNUSED(int len), void *priv)
 {
     const nic_t *dev = (nic_t *) priv;
 
@@ -3302,6 +3302,20 @@ const device_t pcnet_am79c970a_device = {
     .config        = pcnet_pci_config
 };
 
+const device_t pcnet_am79c970a_onboard_device = {
+    .name          = "AMD PCnet-PCI II (On-Board)",
+    .internal_name = "pcnetpci_onboard",
+    .flags         = DEVICE_PCI,
+    .local         = DEV_AM79C970A | 0x0100,
+    .init          = pcnet_init,
+    .close         = pcnet_close,
+    .reset         = NULL,
+    .available     = NULL,
+    .speed_changed = NULL,
+    .force_redraw  = NULL,
+    .config        = pcnet_pci_config
+};
+
 const device_t pcnet_am79c973_device = {
     .name          = "AMD PCnet-FAST III",
     .internal_name = "pcnetfast",
@@ -3317,7 +3331,7 @@ const device_t pcnet_am79c973_device = {
 };
 
 const device_t pcnet_am79c973_onboard_device = {
-    .name          = "AMD PCnet-FAST III",
+    .name          = "AMD PCnet-FAST III (On-Board)",
     .internal_name = "pcnetfast_onboard",
     .flags         = DEVICE_PCI,
     .local         = DEV_AM79C973 | 0x0100,

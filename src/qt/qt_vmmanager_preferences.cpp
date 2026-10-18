@@ -16,7 +16,7 @@
 #include <QStyle>
 #include <cstring>
 
-#include "qt_progsettings.hpp"
+#include "qt_preferences.hpp"
 #include "qt_vmmanager_preferences.hpp"
 #include "qt_vmmanager_config.hpp"
 #include "ui_qt_vmmanager_preferences.h"
@@ -29,11 +29,12 @@ extern WindowsDarkModeFilter *vmm_dark_mode_filter;
 extern "C" {
 #include <86box/86box.h>
 #include <86box/config.h>
+#include <86box/plat.h>
 #include <86box/version.h>
 }
 
 VMManagerPreferences::
-    VMManagerPreferences(QWidget *parent)
+    VMManagerPreferences(QWidget *parent, bool machinesRunning)
     : ui(new Ui::VMManagerPreferences)
 {
     ui->setupUi(this);
@@ -50,9 +51,16 @@ VMManagerPreferences::
         ui->systemDirectory->setText(QDir::toNativeSeparators(QDir(vmm_path).path()));
     }
 
+    if (machinesRunning) {
+        ui->systemDirectory->setEnabled(false);
+        ui->dirSelectButton->setEnabled(false);
+        ui->pushButtonDefaultSystemDir->setEnabled(false);
+        ui->dirSelectButton->setToolTip(tr("To change the system directory, stop all running machines."));
+    }
+
     ui->comboBoxLanguage->setItemData(0, 0);
-    for (int i = 1; i < ProgSettings::languages.length(); i++) {
-        ui->comboBoxLanguage->addItem(ProgSettings::languages[i].second, i);
+    for (int i = 1; i < Preferences::languages.length(); i++) {
+        ui->comboBoxLanguage->addItem(Preferences::languages[i].second, i);
         if (i == lang_id) {
             ui->comboBoxLanguage->setCurrentIndex(ui->comboBoxLanguage->findData(i));
         }
@@ -69,6 +77,12 @@ VMManagerPreferences::
     ui->regexSearchCheckBox->setChecked(useRegexSearch);
     const auto rememberSizePosition = config->getStringValue("window_remember").toInt();
     ui->rememberSizePositionCheckBox->setChecked(rememberSizePosition);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    const auto deleteToTrash = config->getStringValue("delete_to_trash").toInt();
+    ui->deleteToTrashCheckBox->setChecked(deleteToTrash);
+#else
+    ui->deleteToTrashCheckBox->setVisible(false);
+#endif
 
     ui->radioButtonSystem->setChecked(color_scheme == 0);
     ui->radioButtonLight->setChecked(color_scheme == 1);
@@ -86,9 +100,21 @@ VMManagerPreferences::~VMManagerPreferences()
 void
 VMManagerPreferences::chooseDirectoryLocation()
 {
-    const auto directory = QFileDialog::getExistingDirectory(this, tr("Choose directory"), ui->systemDirectory->text());
+    QFileDialog::Options options = QFileDialog::ShowDirsOnly;
+#ifdef Q_OS_LINUX
+    options |= QFileDialog::DontUseNativeDialog;
+#endif
+    const auto directory = QFileDialog::getExistingDirectory(this, tr("Choose directory"), ui->systemDirectory->text(), options);
     if (!directory.isEmpty())
         ui->systemDirectory->setText(QDir::toNativeSeparators(directory));
+}
+
+void
+VMManagerPreferences::on_pushButtonDefaultSystemDir_released()
+{
+    char temp[1024];
+    plat_get_vmm_dir(temp, sizeof(temp));
+    ui->systemDirectory->setText(QDir::toNativeSeparators(QDir(temp).path()));
 }
 
 void
@@ -112,6 +138,9 @@ VMManagerPreferences::accept()
 #endif
     config->setStringValue("window_remember", ui->rememberSizePositionCheckBox->isChecked() ? "1" : "0");
     config->setStringValue("regex_search", ui->regexSearchCheckBox->isChecked() ? "1" : "0");
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    config->setStringValue("delete_to_trash", ui->deleteToTrashCheckBox->isChecked() ? "1" : "0");
+#endif
     QDialog::accept();
 }
 

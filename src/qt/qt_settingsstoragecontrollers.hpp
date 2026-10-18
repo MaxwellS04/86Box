@@ -14,7 +14,14 @@ public:
     explicit SettingsStorageControllers(QWidget *parent = nullptr);
     ~SettingsStorageControllers();
 
-    void save();
+    int  changed();
+    /* The SCSI card chosen in row i of the page, as the settings stand
+       now: what the EISA slot picker greys out against. */
+    int scsiCard(int i) const;
+    int hdcCard(int i) const;
+
+    void restore();
+    void save(int soft);
 
 public slots:
     void onCurrentMachineChanged(int machineId);
@@ -47,6 +54,23 @@ private slots:
 private:
     Ui::SettingsStorageControllers *ui;
     int                             machineId = 0;
+
+    int                             hdc_cfg_changed[4]          = { 0, 0, 0, 0 };
+    int                             scsi_card_cfg_changed[4]    = { 0, 0, 0, 0 };
+    int                             fdc_cfg_changed             = 0;
+    int                             cdrom_interface_cfg_changed = 0;
+
+    SettingsCompleter *scFD;
+    SettingsCompleter *scHD[4];
+    SettingsCompleter *scCDInterface;
+    SettingsCompleter *scSCSI[4];
+
+    int hdcCurrent[4];
+    int scsiCardCurrent[4];
+    int fdcCurrent[2];
+    int cdromInterfaceCurrent;
+
+    bool inMachineChange;
 };
 
 #endif // QT_SETTINGSSTORAGECONTROLLERS_HPP

@@ -28,6 +28,7 @@
 #include <86box/nvr.h>
 #include <86box/plat.h>
 #include <86box/plat_fallthrough.h>
+#include <86box/flash.h>
 
 #define FLAG_WORD    4
 #define FLAG_BXB     2
@@ -57,8 +58,8 @@ enum {
 typedef struct flash_t {
     uint8_t command;
     uint8_t is_amd;
+    uint8_t dirty;
     uint8_t pad;
-    uint8_t pad0;
     uint8_t *array;
 
     mem_mapping_t mapping;
@@ -72,6 +73,9 @@ flash_read(uint32_t addr, void *priv)
 {
     const flash_t *dev = (flash_t *) priv;
     uint8_t        ret = 0xff;
+
+    if (!flash_bios_read_selected(addr))
+        return 0xff;
 
     addr &= biosmask;
 
@@ -114,6 +118,9 @@ flash_readw(uint32_t addr, void *priv)
     flash_t        *dev = (flash_t *) priv;
     const uint16_t *q;
 
+    if (!flash_bios_read_selected(addr))
+        return 0xffff;
+
     addr &= biosmask;
 
     q = (uint16_t *) &(dev->array[addr]);
@@ -127,6 +134,9 @@ flash_readl(uint32_t addr, void *priv)
     flash_t        *dev = (flash_t *) priv;
     const uint32_t *q;
 
+    if (!flash_bios_read_selected(addr))
+        return 0xffffffff;
+
     addr &= biosmask;
 
     q = (uint32_t *) &(dev->array[addr]);
@@ -139,16 +149,22 @@ flash_write(uint32_t addr, uint8_t val, void *priv)
 {
     flash_t *dev = (flash_t *) priv;
 
+    if (!flash_bios_write_selected(addr))
+        return;
+
     addr &= biosmask;
 
     switch (dev->command) {
         case CMD_ERASE:
-            if (val == CMD_ERASE_CONFIRM)
+            if (val == CMD_ERASE_CONFIRM) {
                 memset(dev->array, 0xff, biosmask + 1);
+                dev->dirty = 1;
+            }
             break;
 
         case CMD_PROGRAM:
             dev->array[addr] = val;
+            dev->dirty = 1;
             break;
 
         default:
@@ -177,16 +193,16 @@ catalyst_flash_add_mappings(flash_t *dev)
     mem_mapping_add(&dev->mapping, 0xe0000, 0x20000,
                     flash_read, flash_readw, flash_readl,
                     flash_write, flash_writew, flash_writel,
-                    dev->array, MEM_MAPPING_EXTERNAL | MEM_MAPPING_ROM | MEM_MAPPING_ROMCS, (void *) dev);
+                    dev->array, MEM_MAPPING_EXTERNAL | MEM_MAPPING_ROM | MEM_MAPPING_ROMCS | MEM_MAPPING_ROM_WS, (void *) dev);
 
     mem_mapping_add(&(dev->mapping_h[0]), 0xfffc0000, 0x20000,
                     flash_read, flash_readw, flash_readl,
                     flash_write, flash_writew, flash_writel,
-                    dev->array, MEM_MAPPING_EXTERNAL | MEM_MAPPING_ROM | MEM_MAPPING_ROMCS, (void *) dev);
+                    dev->array, MEM_MAPPING_EXTERNAL | MEM_MAPPING_ROM | MEM_MAPPING_ROMCS | MEM_MAPPING_ROM_WS, (void *) dev);
     mem_mapping_add(&(dev->mapping_h[1]), 0xfffe0000, 0x20000,
                     flash_read, flash_readw, flash_readl,
                     flash_write, flash_writew, flash_writel,
-                    dev->array, MEM_MAPPING_EXTERNAL | MEM_MAPPING_ROM | MEM_MAPPING_ROMCS, (void *) dev);
+                    dev->array, MEM_MAPPING_EXTERNAL | MEM_MAPPING_ROM | MEM_MAPPING_ROMCS | MEM_MAPPING_ROM_WS, (void *) dev);
 }
 
 static void
@@ -210,7 +226,7 @@ catalyst_flash_init(UNUSED(const device_t *info))
     mem_mapping_disable(&bios_mapping);
     mem_mapping_disable(&bios_high_mapping);
 
-    dev->array = (uint8_t *) malloc(0x20000);
+    dev->array = (uint8_t *) calloc(1, 0x20000);
     memset(dev->array, 0xff, 0x20000);
 
     catalyst_flash_add_mappings(dev);
@@ -218,11 +234,16 @@ catalyst_flash_init(UNUSED(const device_t *info))
     dev->command = CMD_RESET;
     dev->is_amd  = info->local;
 
-    fp = nvr_fopen(flash_path, "rb");
-    if (fp) {
-        (void) !fread(dev->array, 0x20000, 1, fp);
-        fclose(fp);
-    }
+    if (strlen(flash_path) > 0) {
+        fp = nvr_fopen(flash_path, "rb");
+        if (fp != NULL) {
+            if (!dump_missing)
+                (void) !fread(dev->array, 0x20000, 1, fp);
+            fclose(fp);
+        } else if (!dump_missing)
+            dev->dirty = 1;
+    } else
+        fatal("Attempting to open the Flash file for reading with an empty invalid name\n");
 
     return dev;
 }
@@ -233,9 +254,18 @@ catalyst_flash_close(void *priv)
     FILE    *fp;
     flash_t *dev = (flash_t *) priv;
 
-    fp = nvr_fopen(flash_path, "wb");
-    fwrite(dev->array, 0x20000, 1, fp);
-    fclose(fp);
+    if (dev->dirty) {
+        if (strlen(flash_path) > 0) {
+            fp = nvr_fopen(flash_path, "wb");
+            if (fp != NULL) {
+                if (!dump_missing)
+                    fwrite(dev->array, 0x20000, 1, fp);
+                fclose(fp);
+            } else if (!dump_missing)
+                warning("Unable to open %s for writing, please make sure your NVR folder is writable\n", flash_path);
+        } else
+            fatal("Attempting to open the Flash file for writing with an empty invalid name\n");
+    }
 
     free(dev->array);
     dev->array = NULL;

@@ -37,6 +37,7 @@ extern uint8_t opcode;
 extern uint8_t flags_p;
 extern uint8_t znptable8[256];
 
+extern uint16_t  last_addr;
 extern uint16_t  zero;
 extern uint16_t  oldcs;
 extern uint16_t  lastcs;
@@ -44,10 +45,12 @@ extern uint16_t  lastpc;
 extern uint16_t *mod1add[2][8];
 extern uint16_t  znptable16[65536];
 
+extern int pfq_pos;
 extern int x86_was_reset;
 extern int trap;
 extern int codegen_flat_ss;
 extern int codegen_flat_ds;
+extern int codegen_flat_es;
 extern int timetolive;
 extern int keyboardtimer;
 extern int trap;

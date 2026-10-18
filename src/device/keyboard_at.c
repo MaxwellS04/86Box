@@ -33,7 +33,9 @@
 
 #define FLAG_ENABLED 0x10  /* dev is enabled for use */
 #define FLAG_CTRLDAT 0x08  /* ctrl or data mode */
+#define FLAG_PRESERVE_SET 0x0100
 
+/* The ABNT2 keyboard ID's and scan codes have been confirmed by RichardG. */
 const uint8_t id_bytes[24][4] = { { 0x00, 0x00, 0x00, 0x00 },    /* XT 83-key */
                                   { 0x00, 0x00, 0x00, 0x00 },    /* AT 84-key */
                                   { 0xab, 0x83, 0x00, 0x00 },    /* XT/AT 101-key */
@@ -305,7 +307,7 @@ const scancode scancode_set1_at[512] = {
     { .mk = {            0 }, .brk = {                   0 } }, /* 0de */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0df */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e0 */
-    { .mk = {            0 }, .brk = {                   0 } }, /* 0e1 */
+    { .mk = {      0xE1, 0 }, .brk = {                   0 } }, /* 0e1 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e2 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e3 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e4 */
@@ -822,7 +824,7 @@ const scancode scancode_set2_at[512] = {
     { .mk = {            0 }, .brk = {                   0 } }, /* 0de */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0df */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e0 */
-    { .mk = {            0 }, .brk = {                   0 } }, /* 0e1 */
+    { .mk = {      0xE1, 0 }, .brk = {                   0 } }, /* 0e1 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e2 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e3 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e4 */
@@ -1339,7 +1341,7 @@ const scancode scancode_set1_ax[512] = {
     { .mk = {            0 }, .brk = {                   0 } }, /* 0de */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0df */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e0 */
-    { .mk = {            0 }, .brk = {                   0 } }, /* 0e1 */
+    { .mk = {      0xE1, 0 }, .brk = {                   0 } }, /* 0e1 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e2 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e3 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e4 */
@@ -1856,7 +1858,7 @@ const scancode scancode_set2_ax[512] = {
     { .mk = {            0 }, .brk = {                   0 } }, /* 0de */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0df */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e0 */
-    { .mk = {            0 }, .brk = {                   0 } }, /* 0e1 */
+    { .mk = {      0xE1, 0 }, .brk = {                   0 } }, /* 0e1 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e2 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e3 */
     { .mk = {            0 }, .brk = {                   0 } }, /* 0e4 */
@@ -3308,7 +3310,7 @@ static const scancode scancode_set3[512] = {
     { .mk = {0x8c, 0x7b, 0 }, .brk = { 0xf0, 0x8c, 0x7b, 0 } }, /* 07b */
     { .mk = {      0x68, 0 }, .brk = {       0xf0, 0x68, 0 } }, /* 07c */
     { .mk = {0x8c, 0x7d, 0 }, .brk = { 0xf0, 0x8c, 0x7d, 0 } }, /* 07d */
-    { .mk = {            0 }, .brk = {                   0 } }, /* 07e */
+    { .mk = {0x8c, 0x7e, 0 }, .brk = { 0xf0, 0x8c, 0x7e, 0 } }, /* 07e */
     { .mk = {            0 }, .brk = {                   0 } }, /* 07f */
     { .mk = {      0x80, 0 }, .brk = {       0xf0, 0x80, 0 } }, /* 080 */
     { .mk = {      0x81, 0 }, .brk = {       0xf0, 0x81, 0 } }, /* 081 */
@@ -4758,7 +4760,7 @@ static const scancode scancode_set82[512] = {
   // clang-format on
 };
 /* Scancode set 8Ah : IBM 5556 keyboard compatible scancode set used by J-DOS */
-static scancode scancode_set8a[512] =
+const scancode scancode_set8a[512] =
 {
     // clang-format off                     
       {.mk = {       0 }, .brk = {       0 } }, /* 000 */
@@ -4817,7 +4819,7 @@ static scancode scancode_set8a[512] =
       {.mk = { 0x0a, 0 }, .brk = {       0 } }, /* 035 */
       {.mk = { 0x39, 0 }, .brk = { 0xb9, 0 } }, /* 036 RSHIFT */
       {.mk = { 0x64, 0 }, .brk = {       0 } }, /* 037 * (asterisk) */
-      {.mk = { 0x3A, 0 }, .brk = { 0xba, 0 } }, /* 038 0x3A LALT = Kanji */
+      {.mk = { 0x3a, 0 }, .brk = { 0xba, 0 } }, /* 038 0x3A LALT = Kanji */
       {.mk = { 0x34, 0 }, .brk = {       0 } }, /* 039 */
       {.mk = { 0x32, 0 }, .brk = { 0xb2, 0 } }, /* 03a CAPSLOCK */
       {.mk = { 0x68, 0 }, .brk = {       0 } }, /* 03b F1 */
@@ -5433,8 +5435,11 @@ add_data_kbd(uint16_t val)
                     default:
                         val = 0x59;
                         break;
-                    case KBD_JIS: case KBD_ABNT2:
+                    case KBD_JIS:
                         val = 0x5c;
+                        break;
+                    case KBD_ABNT2:
+                        val = 0x51;
                         break;
                 }
                 break;
@@ -5465,6 +5470,16 @@ add_data_kbd(uint16_t val)
                         break;
                     case KBD_JIS:
                         val = 0x13;
+                        break;
+                }
+                break;
+            case 0x7e:
+                switch (keys) {
+                    default:
+                        val = 0x49;
+                        break;
+                    case KBD_ABNT2:
+                        val = 0x7b;
                         break;
                 }
                 break;
@@ -5650,6 +5665,18 @@ keyboard_at_clear_data(void *priv)
     atkbc_dev_t *dev = (atkbc_dev_t *) priv;
 
     dev->flags &= ~FLAG_CTRLDAT;
+}
+
+void
+keyboard_at_set_scancode_set_persistent(uint8_t persistent)
+{
+    if (SavedKbd == NULL)
+        return;
+
+    if (persistent)
+        SavedKbd->flags |= FLAG_PRESERVE_SET;
+    else
+        SavedKbd->flags &= ~FLAG_PRESERVE_SET;
 }
 
 static void
@@ -5860,8 +5887,10 @@ keyboard_at_write(void *priv)
                 keyboard_set3_all_repeat = 0;
                 memset(keyboard_set3_flags, 0, 512);
 
-                keyboard_mode = 0x02;
-                keyboard_at_set_scancode_set(dev);
+                if (!(dev->flags & FLAG_PRESERVE_SET)) {
+                    keyboard_mode = 0x02;
+                    keyboard_at_set_scancode_set(dev);
+                }
                 break;
 
             case 0xf7: /* set all keys to repeat */

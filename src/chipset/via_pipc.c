@@ -170,11 +170,11 @@ pipc_log(const char *fmt, ...)
 static void    pipc_sgd_handlers(pipc_t *dev, uint8_t modem);
 static void    pipc_codec_handlers(pipc_t *dev, uint8_t modem);
 static void    pipc_sb_handlers(pipc_t *dev, uint8_t modem);
-static uint8_t pipc_read(int func, int addr, void *priv);
-static void    pipc_write(int func, int addr, uint8_t val, void *priv);
+static uint8_t pipc_read(int func, int addr, int len, void *priv);
+static void    pipc_write(int func, int addr, int len, uint8_t val, void *priv);
 
 static void
-pipc_io_trap_pact(UNUSED(int size), UNUSED(uint16_t addr), UNUSED(uint8_t write), UNUSED(uint8_t val), void *priv)
+pipc_io_trap_pact(UNUSED(const uint16_t size), UNUSED(const uint16_t port), UNUSED(const uint8_t write), UNUSED(const uint8_t val), void *priv)
 {
     pipc_io_trap_t *trap = (pipc_io_trap_t *) priv;
 
@@ -187,7 +187,7 @@ pipc_io_trap_pact(UNUSED(int size), UNUSED(uint16_t addr), UNUSED(uint8_t write)
 }
 
 static void
-pipc_io_trap_glb(UNUSED(int size), UNUSED(uint16_t addr), uint8_t write, UNUSED(uint8_t val), void *priv)
+pipc_io_trap_glb(UNUSED(const uint16_t size), UNUSED(const uint16_t port), const uint8_t write, UNUSED(const uint8_t val), void *priv)
 {
     pipc_io_trap_t *trap = (pipc_io_trap_t *) priv;
 
@@ -201,6 +201,76 @@ pipc_io_trap_glb(UNUSED(int size), UNUSED(uint16_t addr), uint8_t write, UNUSED(
         }
         acpi_raise_smi(trap->dev->acpi, 1);
     }
+}
+
+/*
+   Function 0 Rx48 bit 2 disables USB function 2 and Rx85 bit 4 function 3;
+   a disabled function decodes no I/O, masters nothing and drives no IRQ.
+ */
+static int
+pipc_usb_disabled(const pipc_t *dev, int n)
+{
+    return n ? !!(dev->pci_isa_regs[0x85] & 0x10) : !!(dev->pci_isa_regs[0x48] & 0x04);
+}
+
+/*
+   One UHCI function's configuration space at its defaults, as at power-on
+   and on PCIRST#; LEGSUP back at 2000h disarms the keyboard traps.
+ */
+static void
+pipc_usb_reset_regs(pipc_t *dev, int i)
+{
+    memset(dev->usb_regs[i], 0, 256);
+
+    dev->usb_regs[i][0x00] = 0x06;
+    dev->usb_regs[i][0x01] = 0x11;
+    dev->usb_regs[i][0x02] = 0x38;
+    dev->usb_regs[i][0x03] = 0x30;
+    dev->usb_regs[i][0x04] = 0x00;
+    dev->usb_regs[i][0x05] = 0x00;
+    dev->usb_regs[i][0x06] = 0x00;
+    dev->usb_regs[i][0x07] = 0x02;
+    switch (dev->local) {
+        case VIA_PIPC_586A:
+        case VIA_PIPC_586B:
+        case VIA_PIPC_596A:
+            dev->usb_regs[i][0x08] = 0x02;
+            break;
+
+        case VIA_PIPC_596B:
+            dev->usb_regs[i][0x08] = 0x08;
+            break;
+
+        case VIA_PIPC_686A:
+            dev->usb_regs[i][0x08] = 0x06;
+            break;
+
+        case VIA_PIPC_686B:
+            dev->usb_regs[i][0x08] = 0x1a;
+            break;
+
+        case VIA_PIPC_8231:
+            dev->usb_regs[i][0x08] = 0x1e;
+            break;
+        default:
+            break;
+    }
+
+    dev->usb_regs[i][0x0a] = 0x03;
+    dev->usb_regs[i][0x0b] = 0x0c;
+    dev->usb_regs[i][0x0d] = 0x16;
+    dev->usb_regs[i][0x20] = 0x01;
+    dev->usb_regs[i][0x21] = 0x03;
+    if (dev->local == VIA_PIPC_686B)
+        dev->usb_regs[i][0x34] = 0x80;
+    dev->usb_regs[i][0x3d] = 0x04;
+
+    dev->usb_regs[i][0x60] = 0x10;
+    if (dev->local >= VIA_PIPC_686A) {
+        dev->usb_regs[i][0x80] = 0x01;
+        dev->usb_regs[i][0x82] = 0x02;
+    }
+    dev->usb_regs[i][0xc1] = 0x20;
 }
 
 static void
@@ -314,55 +384,7 @@ pipc_reset_hard(void *priv)
     /* USB registers. */
     for (i = 0; i <= (dev->local >= VIA_PIPC_686A); i++) {
         dev->max_func++;
-        dev->usb_regs[i][0x00] = 0x06;
-        dev->usb_regs[i][0x01] = 0x11;
-        dev->usb_regs[i][0x02] = 0x38;
-        dev->usb_regs[i][0x03] = 0x30;
-        dev->usb_regs[i][0x04] = 0x00;
-        dev->usb_regs[i][0x05] = 0x00;
-        dev->usb_regs[i][0x06] = 0x00;
-        dev->usb_regs[i][0x07] = 0x02;
-        switch (dev->local) {
-            case VIA_PIPC_586A:
-            case VIA_PIPC_586B:
-            case VIA_PIPC_596A:
-                dev->usb_regs[i][0x08] = 0x02;
-                break;
-
-            case VIA_PIPC_596B:
-                dev->usb_regs[i][0x08] = 0x08;
-                break;
-
-            case VIA_PIPC_686A:
-                dev->usb_regs[i][0x08] = 0x06;
-                break;
-
-            case VIA_PIPC_686B:
-                dev->usb_regs[i][0x08] = 0x1a;
-                break;
-
-            case VIA_PIPC_8231:
-                dev->usb_regs[i][0x08] = 0x1e;
-                break;
-            default:
-                break;
-        }
-
-        dev->usb_regs[i][0x0a] = 0x03;
-        dev->usb_regs[i][0x0b] = 0x0c;
-        dev->usb_regs[i][0x0d] = 0x16;
-        dev->usb_regs[i][0x20] = 0x01;
-        dev->usb_regs[i][0x21] = 0x03;
-        if (dev->local == VIA_PIPC_686B)
-            dev->usb_regs[i][0x34] = 0x80;
-        dev->usb_regs[i][0x3d] = 0x04;
-
-        dev->usb_regs[i][0x60] = 0x10;
-        if (dev->local >= VIA_PIPC_686A) {
-            dev->usb_regs[i][0x80] = 0x01;
-            dev->usb_regs[i][0x82] = 0x02;
-        }
-        dev->usb_regs[i][0xc1] = 0x20;
+        pipc_usb_reset_regs(dev, i);
     }
 
     /* Power management registers. */
@@ -916,7 +938,7 @@ pipc_sb_handlers(pipc_t *dev, uint8_t modem)
 }
 
 static void
-pipc_sb_get_buffer(int32_t *buffer, int len, void *priv)
+pipc_sb_get_buffer(int32_t *buffer, uint16_t len, void *priv)
 {
     pipc_t *dev = (pipc_t *) priv;
 
@@ -930,7 +952,7 @@ pipc_sb_get_buffer(int32_t *buffer, int len, void *priv)
 }
 
 static uint8_t
-pipc_read(int func, int addr, void *priv)
+pipc_read(int func, int addr, UNUSED(int len), void *priv)
 {
     pipc_t *dev = (pipc_t *) priv;
     uint8_t ret = 0xff;
@@ -969,12 +991,12 @@ pipc_read(int func, int addr, void *priv)
             else
                 ret &= ~0x20;
         }
-    } else if ((func < pm_func) && !((func == 2) ? (dev->pci_isa_regs[0x48] & 0x04) : (dev->pci_isa_regs[0x85] & 0x10))) /* USB */
+    } else if ((func >= 2) && (func < pm_func) && !((func == 2) ? (dev->pci_isa_regs[0x48] & 0x04) : (dev->pci_isa_regs[0x85] & 0x10))) /* USB */
         ret = dev->usb_regs[func - 2][addr];
     else if (func == pm_func) { /* Power */
         ret = dev->power_regs[addr];
         if (addr == 0x42) {
-            if (dev->nvr->regs[0x0d] & 0x80)
+            if (dev->nvr->regs[0x0d] & 0x40)
                 ret |= 0x10;
             else
                 ret &= ~0x10;
@@ -985,10 +1007,13 @@ pipc_read(int func, int addr, void *priv)
             else
                 ret |= 0x10;
         }
-    } else if ((func <= (pm_func + 2)) && !(dev->pci_isa_regs[0x85] & ((func == (pm_func + 1)) ? 0x04 : 0x08))) { /* AC97 / MC97 */
-        if (addr == 0x40)
-            ret = ac97_via_read_status(dev->ac97);
-        else
+    } else if ((func > pm_func) && (func <= (pm_func + 2)) && !(dev->pci_isa_regs[0x85] & ((func == (pm_func + 1)) ? 0x04 : 0x08))) { /* AC97 / MC97 */
+        if (addr == 0x40) {
+            if (dev->local >= VIA_PIPC_686A)
+                ret = ac97_via_read_status(dev->ac97);
+            else
+                ret = 0x00;
+        } else
             ret = dev->ac97_regs[func - pm_func - 1][addr];
     }
 
@@ -1010,7 +1035,18 @@ nvr_update_io_mapping(pipc_t *dev)
 static void
 usb_update_io_mapping(pipc_t *dev, int func)
 {
-    uhci_update_io_mapping(dev->usb[func - 2], dev->usb_regs[func - 2][0x20] & ~0x1f, dev->usb_regs[func - 2][0x21], dev->usb_regs[func - 2][PCI_REG_COMMAND] & PCI_COMMAND_IO);
+    int on = !pipc_usb_disabled(dev, func - 2);
+
+    uhci_update_io_mapping(dev->usb[func - 2], dev->usb_regs[func - 2][0x20] & ~0x1f, dev->usb_regs[func - 2][0x21], on && (dev->usb_regs[func - 2][PCI_REG_COMMAND] & PCI_COMMAND_IO));
+}
+
+/* A USB function disable bit changed in function 0. */
+static void
+pipc_usb_update_enable(pipc_t *dev, int n)
+{
+    if (dev->usb[n] == NULL)
+        return;
+    usb_update_io_mapping(dev, n + 2);
 }
 
 static void
@@ -1026,7 +1062,7 @@ pipc_ddma_update(pipc_t *dev, int addr)
 }
 
 static void
-pipc_write(int func, int addr, uint8_t val, void *priv)
+pipc_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     pipc_t *dev = (pipc_t *) priv;
     int     c;
@@ -1115,18 +1151,24 @@ pipc_write(int func, int addr, uint8_t val, void *priv)
                 dev->pci_isa_regs[0x47] = val & 0xfe;
                 break;
             case 0x48:
+                c                       = (dev->pci_isa_regs[0x48] ^ val) & 0x04;
                 dev->pci_isa_regs[0x48] = val;
                 nvr_update_io_mapping(dev);
+                if (c)
+                    pipc_usb_update_enable(dev, 0);
                 break;
 
             case 0x50:
             case 0x51:
             case 0x52:
             case 0x85:
+                c                       = (addr == 0x85) && ((dev->pci_isa_regs[0x85] ^ val) & 0x10);
                 dev->pci_isa_regs[addr] = val;
                 /* Forward Super I/O-related registers to sio_vt82c686.c */
                 if (dev->sio)
                     vt82c686_sio_write(addr, val, dev->sio);
+                if (c)
+                    pipc_usb_update_enable(dev, 1);
                 break;
 
             case 0x54:
@@ -1416,6 +1458,10 @@ pipc_write(int func, int addr, uint8_t val, void *priv)
                 usb_update_io_mapping(dev, func);
                 break;
 
+            case 0x3c:
+                dev->usb_regs[func - 2][0x3c] = val & 0x0f;
+                break;
+
             default:
                 dev->usb_regs[func - 2][addr] = val;
                 break;
@@ -1429,6 +1475,10 @@ pipc_write(int func, int addr, uint8_t val, void *priv)
             return;
 
         if ((dev->local <= VIA_PIPC_596B) && ((addr >= 0x64) && (addr < (dev->local == VIA_PIPC_596A ? 0x80 : 0x85))))
+            return;
+
+        /* 596A has the SMBus I/O base and host configuration at 80h-84h instead. */
+        if ((dev->local == VIA_PIPC_596A) && ((addr == 0x90) || (addr == 0x91) || (addr == 0xd2)))
             return;
 
         switch (addr) {
@@ -1446,9 +1496,6 @@ pipc_write(int func, int addr, uint8_t val, void *priv)
                 c                     = (dev->power_regs[0x49] << 8);
                 if (dev->local >= VIA_PIPC_596A)
                     c |= (dev->power_regs[0x48] & 0x80);
-                /* Workaround for P3V133 BIOS in 596B mode mapping ACPI to E800 (same as SMBus) instead of E400. */
-                if ((dev->local == VIA_PIPC_596B) && (c == ((dev->power_regs[0x91] << 8) | (dev->power_regs[0x90] & 0xf0))) && (dev->power_regs[0xd2] & 0x01))
-                    c -= 0x400;
                 acpi_set_timer32(dev->acpi, dev->power_regs[0x41] & 0x08);
                 acpi_update_io_mapping(dev->acpi, c, dev->power_regs[0x41] & 0x80);
                 break;
@@ -1483,6 +1530,8 @@ pipc_write(int func, int addr, uint8_t val, void *priv)
             case 0x80:
             case 0x81:
             case 0x84: /* 596A has the SMBus I/O base and enable bit here instead. */
+                if ((addr == 0x80) && (dev->local == VIA_PIPC_596A))
+                    val = (val & 0xf0) | 0x01;
                 dev->power_regs[addr] = val;
                 smbus_piix4_remap(dev->smbus, (dev->power_regs[0x81] << 8) | (dev->power_regs[0x80] & 0xf0), dev->power_regs[0x84] & 0x01);
                 break;
@@ -1494,6 +1543,8 @@ pipc_write(int func, int addr, uint8_t val, void *priv)
 
             case 0x90:
             case 0x91:
+                if (addr == 0x90)
+                    val = (val & 0xf0) | 0x01;
                 dev->power_regs[addr] = val;
                 smbus_piix4_remap(dev->smbus, (dev->power_regs[0x91] << 8) | (dev->power_regs[0x90] & 0xf0), dev->power_regs[0xd2] & 0x01);
                 break;
@@ -1661,34 +1712,39 @@ pipc_reset(void *priv)
     pipc_t *dev     = (pipc_t *) priv;
     uint8_t pm_func = dev->usb[1] ? 4 : 3;
 
-    pipc_write(pm_func, 0x41, 0x00, priv);
-    pipc_write(pm_func, 0x48, 0x01, priv);
-    pipc_write(pm_func, 0x49, 0x00, priv);
+    pipc_write(pm_func, 0x41, 1, 0x00, priv);
+    pipc_write(pm_func, 0x48, 1, 0x01, priv);
+    pipc_write(pm_func, 0x49, 1, 0x00, priv);
 
     dev->power_regs[0x42] = ((dev->local >> 16) == VIA_PIPC_586) ? 0x00 : 0x50;
     acpi_set_irq_line(dev->acpi, 0x00);
 
-    pipc_write(1, 0x04, 0x80, priv);
-    pipc_write(1, 0x09, 0x85, priv);
-    pipc_write(1, 0x10, 0xf1, priv);
-    pipc_write(1, 0x11, 0x01, priv);
-    pipc_write(1, 0x14, 0xf5, priv);
-    pipc_write(1, 0x15, 0x03, priv);
-    pipc_write(1, 0x18, 0x71, priv);
-    pipc_write(1, 0x19, 0x01, priv);
-    pipc_write(1, 0x1c, 0x75, priv);
-    pipc_write(1, 0x1d, 0x03, priv);
-    pipc_write(1, 0x20, 0x01, priv);
-    pipc_write(1, 0x21, 0xcc, priv);
+    pipc_write(1, 0x04, 1, 0x80, priv);
+    pipc_write(1, 0x09, 1, 0x85, priv);
+    pipc_write(1, 0x10, 1, 0xf1, priv);
+    pipc_write(1, 0x11, 1, 0x01, priv);
+    pipc_write(1, 0x14, 1, 0xf5, priv);
+    pipc_write(1, 0x15, 1, 0x03, priv);
+    pipc_write(1, 0x18, 1, 0x71, priv);
+    pipc_write(1, 0x19, 1, 0x01, priv);
+    pipc_write(1, 0x1c, 1, 0x75, priv);
+    pipc_write(1, 0x1d, 1, 0x03, priv);
+    pipc_write(1, 0x20, 1, 0x01, priv);
+    pipc_write(1, 0x21, 1, 0xcc, priv);
     if (dev->local <= VIA_PIPC_586B)
-        pipc_write(1, 0x40, 0x04, priv);
+        pipc_write(1, 0x40, 1, 0x04, priv);
     else
-        pipc_write(1, 0x40, 0x00, priv);
+        pipc_write(1, 0x40, 1, 0x00, priv);
 
     if (dev->local < VIA_PIPC_586B)
-        pipc_write(0, 0x44, 0x00, priv);
+        pipc_write(0, 0x44, 1, 0x00, priv);
 
-    pipc_write(0, 0x77, 0x00, priv);
+    pipc_write(0, 0x77, 1, 0x00, priv);
+
+    for (int i = 0; i <= (dev->local >= VIA_PIPC_686A); i++) {
+        pipc_usb_reset_regs(dev, i);
+        usb_update_io_mapping(dev, i + 2);
+    }
 
     sff_set_slot(dev->bm[0], dev->pci_slot);
     sff_set_slot(dev->bm[1], dev->pci_slot);
@@ -1722,7 +1778,7 @@ pipc_init(const device_t *info)
     else if (dev->local >= VIA_PIPC_596A)
         dev->smbus = device_add(&piix4_smbus_device);
 
-    dev->nvr = device_add(&via_nvr_device);
+    dev->nvr = device_add_params(&nvr_at_device, (void *) (uintptr_t) NVR_VIA);
 
     if (dev->local >= VIA_PIPC_596A) {
         dev->acpi = device_add(&acpi_via_596b_device);
@@ -1800,9 +1856,9 @@ pipc_init(const device_t *info)
             break;
     }
 
-    kbc_params |= KBC_VEN_VIA;
+    kbc_params |= (KBC_VEN_VIA | KBC_FLAG_IS_ASIC);
 
-    if (machine_get_kbc_device(machine) == NULL)
+    if ((machine_get_kbc_device(machine) == NULL) && !(info->local & VIA_PIPC_NO_KBC))
         device_add_params(&kbc_at_device, (void *) (uintptr_t) kbc_params);
 
     return dev;

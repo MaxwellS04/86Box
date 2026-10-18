@@ -20,7 +20,7 @@ extern "C" {
 #include <86box/86box.h>
 }
 
-#include "qt_progsettings.hpp"
+#include "qt_preferences.hpp"
 #include "qt_util.hpp"
 #include "qt_vmmanager_details.hpp"
 #include "ui_qt_vmmanager_details.h"
@@ -32,8 +32,8 @@ extern "C" {
 #else
 #    define TOOLBUTTON_STYLESHEET_DARK "QToolButton {background: transparent; border: none; padding: 5px} QToolButton:hover {background: palette(dark)} QToolButton:pressed {background: palette(mid)}"
 #endif
-#define SCROLLAREA_STYLESHEET_LIGHT  "QWidget {background-color: palette(light)} QScrollBar{ background-color: none }"
-#define SYSTEMLABEL_STYLESHEET_LIGHT "background-color: palette(midlight);"
+#define SCROLLAREA_STYLESHEET_LIGHT  ""
+#define SYSTEMLABEL_STYLESHEET_LIGHT ""
 
 using namespace VMManager;
 
@@ -93,21 +93,12 @@ VMManagerDetails::VMManagerDetails(QWidget *parent)
     // Set the icons for the screenshot navigation buttons
     ui->screenshotNext->setIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowRight));
     ui->screenshotPrevious->setIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowLeft));
-    ui->screenshotNextTB->setIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowRight));
-    ui->screenshotPreviousTB->setIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowLeft));
     // Disabled by default
     ui->screenshotNext->setEnabled(false);
     ui->screenshotPrevious->setEnabled(false);
-    ui->screenshotNextTB->setEnabled(false);
-    ui->screenshotPreviousTB->setEnabled(false);
     // Connect their signals
-    connect(ui->screenshotNext, &QPushButton::clicked, this, &VMManagerDetails::nextScreenshot);
-    connect(ui->screenshotNextTB, &QToolButton::clicked, this, &VMManagerDetails::nextScreenshot);
-    connect(ui->screenshotPreviousTB, &QToolButton::clicked, this, &VMManagerDetails::previousScreenshot);
-    connect(ui->screenshotPrevious, &QPushButton::clicked, this, &VMManagerDetails::previousScreenshot);
-    // These push buttons can be taken out if the tool buttons stay
-    ui->screenshotNext->setVisible(false);
-    ui->screenshotPrevious->setVisible(false);
+    connect(ui->screenshotNext, &QToolButton::clicked, this, &VMManagerDetails::nextScreenshot);
+    connect(ui->screenshotPrevious, &QToolButton::clicked, this, &VMManagerDetails::previousScreenshot);
     QString toolButtonStyleSheet;
     // Simple method to try and determine if light mode is enabled
 #ifdef Q_OS_WINDOWS
@@ -121,6 +112,13 @@ VMManagerDetails::VMManagerDetails(QWidget *parent)
         toolButtonStyleSheet = TOOLBUTTON_STYLESHEET_DARK;
     }
     ui->ssNavTBHolder->setStyleSheet(toolButtonStyleSheet);
+
+    // Margins are a little different on macos
+#ifdef Q_OS_MACOS
+    ui->systemLabel->setMargin(15);
+#else
+    ui->systemLabel->setMargin(10);
+#endif
 
     pauseIcon = QIcon(":/menuicons/qt/icons/pause.ico");
     runIcon   = QIcon(":/menuicons/qt/icons/run.ico");
@@ -167,7 +165,7 @@ VMManagerDetails::VMManagerDetails(QWidget *parent)
     connect(this, &VMManagerDetails::styleUpdated, portsSection, &VMManagerDetailSection::updateStyle);
     connect(this, &VMManagerDetails::styleUpdated, otherSection, &VMManagerDetailSection::updateStyle);
 
-    QApplication::setFont(QFont(ProgSettings::getFontName(lang_id), 9));
+    QApplication::setFont(Preferences::getUIFont());
 #endif
 
     sysconfig = new VMManagerSystem();
@@ -176,6 +174,59 @@ VMManagerDetails::VMManagerDetails(QWidget *parent)
 VMManagerDetails::~VMManagerDetails()
 {
     delete ui;
+}
+
+void
+VMManagerDetails::reset()
+{
+    systemSection->clear();
+    videoSection->clear();
+    storageSection->clear();
+    audioSection->clear();
+    networkSection->clear();
+    inputSection->clear();
+    portsSection->clear();
+    otherSection->clear();
+    systemSection->setSections();
+    videoSection->setSections();
+    storageSection->setSections();
+    audioSection->setSections();
+    networkSection->setSections();
+    inputSection->setSections();
+    portsSection->setSections();
+    otherSection->setSections();
+
+    ui->screenshotNext->setEnabled(false);
+    ui->screenshotPrevious->setEnabled(false);
+    ui->screenshot->setPixmap(QString());
+    ui->screenshot->setFixedSize(240, 160);
+    ui->screenshot->setFrameStyle(QFrame::Box | QFrame::Sunken);
+    ui->screenshot->setText(tr("No screenshot"));
+    ui->screenshot->setEnabled(false);
+    ui->screenshot->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+#ifdef Q_OS_WINDOWS
+    if (!util::isWindowsLightTheme()) {
+        ui->screenshot->setStyleSheet(SCREENSHOTBORDER_STYLESHEET_DARK);
+    } else {
+        ui->screenshot->setStyleSheet("");
+    }
+#endif
+
+    startPauseButton->setEnabled(false);
+    resetButton->setEnabled(false);
+    stopButton->setEnabled(false);
+    configureButton->setEnabled(false);
+    cadButton->setEnabled(false);
+
+    ui->systemLabel->setText(tr("No Machines Found!"));
+    ui->systemLabel->setStyleSheet("");
+    ui->statusLabel->setText("");
+    ui->scrollArea->setStyleSheet("");
+
+    ui->notesTextEdit->setPlainText("");
+    ui->notesTextEdit->setEnabled(false);
+
+    sysconfig = new VMManagerSystem();
 }
 
 void
@@ -191,12 +242,6 @@ VMManagerDetails::updateData(VMManagerSystem *passed_sysconfig)
         ui->scrollArea->setStyleSheet(SCROLLAREA_STYLESHEET_LIGHT);
         ui->systemLabel->setStyleSheet(SYSTEMLABEL_STYLESHEET_LIGHT);
     }
-    // Margins are a little different on macos
-#ifdef Q_OS_MACOS
-    ui->systemLabel->setMargin(15);
-#else
-    ui->systemLabel->setMargin(10);
-#endif
 
     // disconnect old signals before assigning the passed systemconfig object
     disconnect(startPauseButton, &QToolButton::clicked, sysconfig, &VMManagerSystem::startButtonPressed);
@@ -230,7 +275,7 @@ VMManagerDetails::updateData(VMManagerSystem *passed_sysconfig)
     updateScreenshots(passed_sysconfig);
 
     ui->systemLabel->setText(passed_sysconfig->displayName);
-    ui->statusLabel->setText(sysconfig->process->processId() == 0 ? tr("Not running") : QString("%1: PID %2").arg(tr("Running"), QString::number(sysconfig->process->processId())));
+    ui->statusLabel->setText(sysconfig->process->processId() == 0 ? tr("Not running") : QString(Preferences::languageIdToCode(lang_id).startsWith("fr-") ? "%1 : PID %2" : "%1: PID %2").arg(tr("Running"), QString::number(sysconfig->process->processId())));
     ui->notesTextEdit->setPlainText(passed_sysconfig->notes);
     ui->notesTextEdit->setEnabled(true);
 
@@ -283,6 +328,7 @@ VMManagerDetails::updateConfig(VMManagerSystem *passed_sysconfig)
     storageSection->addSection("CD-ROM", passed_sysconfig->getDisplayValue(VMManager::Display::Name::CD));
     storageSection->addSection("Removable disks", passed_sysconfig->getDisplayValue(VMManager::Display::Name::RDisk));
     storageSection->addSection("MO", passed_sysconfig->getDisplayValue(VMManager::Display::Name::MO));
+    storageSection->addSection("Tape drives", passed_sysconfig->getDisplayValue(VMManager::Display::Name::Tape));
     storageSection->addSection("SCSI", passed_sysconfig->getDisplayValue(VMManager::Display::Name::SCSIController));
     storageSection->addSection("Controllers", passed_sysconfig->getDisplayValue(VMManager::Display::Name::StorageController));
 
@@ -299,6 +345,7 @@ VMManagerDetails::updateConfig(VMManagerSystem *passed_sysconfig)
     inputSection->clear();
     inputSection->addSection("Keyboard", passed_sysconfig->getDisplayValue(VMManager::Display::Name::Keyboard));
     inputSection->addSection("Mouse", passed_sysconfig->getDisplayValue(VMManager::Display::Name::Mouse));
+    inputSection->addSection("Tablet", passed_sysconfig->getDisplayValue(VMManager::Display::Name::Tablet));
     inputSection->addSection("Joystick", passed_sysconfig->getDisplayValue(VMManager::Display::Name::Joystick));
 
     // Ports
@@ -328,8 +375,6 @@ VMManagerDetails::updateScreenshots(VMManagerSystem *passed_sysconfig)
     // Disable screenshot navigation buttons by default
     ui->screenshotNext->setEnabled(false);
     ui->screenshotPrevious->setEnabled(false);
-    ui->screenshotNextTB->setEnabled(false);
-    ui->screenshotPreviousTB->setEnabled(false);
 
     // Different actions are taken depending on the existence and number of screenshots
     screenshots = passed_sysconfig->getScreenshots();
@@ -339,8 +384,6 @@ VMManagerDetails::updateScreenshots(VMManagerSystem *passed_sysconfig)
         if (screenshots.size() > 1) {
             ui->screenshotNext->setEnabled(true);
             ui->screenshotPrevious->setEnabled(true);
-            ui->screenshotNextTB->setEnabled(true);
-            ui->screenshotPreviousTB->setEnabled(true);
         }
 #ifdef Q_OS_WINDOWS
         ui->screenshot->setStyleSheet("");
@@ -353,8 +396,6 @@ VMManagerDetails::updateScreenshots(VMManagerSystem *passed_sysconfig)
     } else {
         ui->screenshotNext->setEnabled(false);
         ui->screenshotPrevious->setEnabled(false);
-        ui->screenshotNextTB->setEnabled(false);
-        ui->screenshotPreviousTB->setEnabled(false);
         ui->screenshot->setPixmap(QString());
         ui->screenshot->setFixedSize(240, 160);
         ui->screenshot->setFrameStyle(QFrame::Box | QFrame::Sunken);
@@ -375,7 +416,7 @@ void
 VMManagerDetails::updateProcessStatus()
 {
     const bool running     = sysconfig->process->state() == QProcess::ProcessState::Running;
-    QString    status_text = running ? QString("%1: PID %2").arg(tr("Running"), QString::number(sysconfig->process->processId())) : tr("Not running");
+    QString    status_text = running ? QString(Preferences::languageIdToCode(lang_id).startsWith("fr-") ? "%1 : PID %2" : "%1: PID %2").arg(tr("Running"), QString::number(sysconfig->process->processId())) : tr("Not running");
     status_text.append(sysconfig->window_obscured ? QString(" (%1)").arg(tr("Waiting")) : "");
     ui->statusLabel->setText(status_text);
     resetButton->setEnabled(running);

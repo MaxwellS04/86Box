@@ -30,6 +30,7 @@
 #include <86box/mem.h>
 #include <86box/pci.h>
 #include <86box/pic.h>
+#include <86box/plat_unused.h>
 #include <86box/timer.h>
 #include <86box/hdc.h>
 #include <86box/hdc_ide.h>
@@ -233,7 +234,7 @@ w83769f_vlb_readl(uint16_t addr, void *priv)
 }
 
 static void
-w83769f_pci_write(int func, int addr, uint8_t val, void *priv)
+w83769f_pci_write(int func, int addr, UNUSED(int len), uint8_t val, void *priv)
 {
     w83769f_t *dev = (w83769f_t *) priv;
 
@@ -252,7 +253,7 @@ w83769f_pci_write(int func, int addr, uint8_t val, void *priv)
 }
 
 static uint8_t
-w83769f_pci_read(int func, int addr, void *priv)
+w83769f_pci_read(int func, int addr, UNUSED(int len), void *priv)
 {
     w83769f_t *dev = (w83769f_t *) priv;
     uint8_t    ret = 0xff;
@@ -412,7 +413,9 @@ const device_t ide_w83769f_vlb_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "Winbond W83769F",
+    .ide_boards    = ide_boards_pri_sec
 };
 
 const device_t ide_w83769f_vlb_34_device = {
@@ -426,7 +429,9 @@ const device_t ide_w83769f_vlb_34_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "Winbond W83769F",
+    .ide_boards    = ide_boards_pri_sec
 };
 
 const device_t ide_w83769f_pci_device = {
@@ -440,7 +445,9 @@ const device_t ide_w83769f_pci_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "Winbond W83769F",
+    .ide_boards    = ide_boards_pri_sec
 };
 
 const device_t ide_w83769f_pci_34_device = {
@@ -454,7 +461,9 @@ const device_t ide_w83769f_pci_34_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "Winbond W83769F",
+    .ide_boards    = ide_boards_pri_sec
 };
 
 const device_t ide_w83769f_pci_single_channel_device = {
@@ -468,5 +477,7 @@ const device_t ide_w83769f_pci_single_channel_device = {
     .available     = NULL,
     .speed_changed = NULL,
     .force_redraw  = NULL,
-    .config        = NULL
+    .config        = NULL,
+    .short_name    = "Winbond W83769F",
+    .ide_boards    = ide_boards_pri_sec
 };

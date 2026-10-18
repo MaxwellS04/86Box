@@ -37,6 +37,12 @@ enum {
     VOODOO_3
 };
 
+enum {
+    VOODOO_GENERIC = 0,
+    VOODOO_DIAMOND_MONSTER_3D,
+    VOODOO_DIAMOND_MONSTER_3D_2
+};
+
 typedef union int_float {
     uint32_t i;
     float    f;
@@ -74,6 +80,16 @@ typedef union rgba_u {
 #define FIFO_FULL       ((voodoo->fifo_write_idx - voodoo->fifo_read_idx) >= FIFO_SIZE - 4)
 #define FIFO_EMPTY      (voodoo->fifo_read_idx == voodoo->fifo_write_idx)
 
+#define VOODOO_BUF_FRONT   0
+#define VOODOO_BUF_BACK    1
+#define VOODOO_BUF_AUX     2
+#define VOODOO_BUF_UNKNOWN 3
+#define VOODOO_BUF_COUNT   4
+#define VOODOO_BUF_NONE    0xff
+
+#define VOODOO_PENDING_FB_WRITES(v, b) ((int) ((v)->queued_fb_writes_buf[b] - (v)->done_fb_writes_buf[b]))
+#define VOODOO_PENDING_DRAW_CMDS(v, b) ((int) ((v)->queued_draw_cmds_buf[b] - (v)->done_draw_cmds_buf[b]))
+
 #define FIFO_TYPE       0xff000000
 #define FIFO_ADDR       0x00ffffff
 
@@ -90,14 +106,28 @@ enum {
 #define PARAM_MASK       (PARAM_SIZE - 1)
 #define PARAM_ENTRY_SIZE (1 << 31)
 
-#define PARAM_ENTRIES(x) (voodoo->params_write_idx - voodoo->params_read_idx[x])
-#define PARAM_FULL(x)    ((voodoo->params_write_idx - voodoo->params_read_idx[x]) >= PARAM_SIZE)
-#define PARAM_EMPTY(x)   (voodoo->params_read_idx[x] == voodoo->params_write_idx)
+/* On ARM64, params/busy fields are cache-line padded to prevent false sharing
+   between render threads. These accessors hide the .value indirection. */
+#if (defined __aarch64__ || defined _M_ARM64)
+#define PARAMS_READ_IDX(v, x)       ((v)->params_read_idx[x].value)
+#define PARAMS_WRITE_IDX(v)         ((v)->params_write_idx.value)
+#define RENDER_VOODOO_BUSY(v, x)    ((v)->render_voodoo_busy[x].value)
+#else
+#define PARAMS_READ_IDX(v, x)       ((v)->params_read_idx[x])
+#define PARAMS_WRITE_IDX(v)         ((v)->params_write_idx)
+#define RENDER_VOODOO_BUSY(v, x)    ((v)->render_voodoo_busy[x])
+#endif
+
+#define PARAM_ENTRIES(x) (PARAMS_WRITE_IDX(voodoo) - PARAMS_READ_IDX(voodoo, x))
+#define PARAM_FULL(x)    ((PARAMS_WRITE_IDX(voodoo) - PARAMS_READ_IDX(voodoo, x)) >= PARAM_SIZE)
+#define PARAM_EMPTY(x)   (PARAMS_READ_IDX(voodoo, x) == PARAMS_WRITE_IDX(voodoo))
 
 typedef struct
 {
     uint32_t addr_type;
     uint32_t val;
+    uint8_t  target_buf;
+    uint8_t  pad[3];
 } fifo_entry_t;
 
 typedef struct voodoo_params_t {
@@ -282,6 +312,12 @@ typedef struct voodoo_t {
     uint32_t fbiInit5;
     uint32_t fbiInit6;
     uint32_t fbiInit7; /*Voodoo 2*/
+    uint32_t intrCtrl;
+
+    /*Voodoo 2 board ID straps, read back through fbiInit5 bits 8:5 and
+      fbiInit7 bit 0; read-only, independent of fbiInit writes. OEM drivers
+      (Diamond Monster 3D II = 8) gate on this.*/
+    uint32_t board_id;
 
     uint32_t initEnable;
 
@@ -315,6 +351,7 @@ typedef struct voodoo_t {
 
     int rgb_sel;
 
+    uint32_t trexInit0[2];
     uint32_t trexInit1[2];
 
     uint32_t tmuConfig;
@@ -356,11 +393,24 @@ typedef struct voodoo_t {
     event_t  *wake_fifo_thread;
     event_t  *wake_main_thread;
     event_t  *fifo_not_full_event;
+    /* Held by whichever thread runs FIFO entries, so they run one thread at
+       a time and in order; the CPU thread takes it to drain the FIFO itself
+       when an access must see every queued write. */
+    mutex_t  *fifo_mutex;
     event_t  *render_not_full_event[4];
     event_t  *wake_render_thread[4];
 
     int voodoo_busy;
+#if (defined __aarch64__ || defined _M_ARM64)
+    /* Each render_voodoo_busy entry is on its own 128-byte cache line to
+       prevent false sharing between render threads on Apple Silicon. */
+    struct {
+        int value;
+        char pad[128 - sizeof(int)];
+    } render_voodoo_busy[4];
+#else
     int render_voodoo_busy[4];
+#endif
 
     int render_threads;
     int odd_even_mask;
@@ -399,10 +449,31 @@ typedef struct voodoo_t {
     ATOMIC_INT   cmd_written;
     ATOMIC_INT   cmd_written_fifo;
     ATOMIC_INT   cmd_written_fifo_2;
+    /* LFB writes and draw commands queued for each buffer, and how many of
+       them have run. The CPU thread alone counts them in and whoever holds
+       fifo_mutex counts them out, so no update is lost; queued - done is
+       what is still pending. */
+    ATOMIC_UINT  queued_fb_writes_buf[VOODOO_BUF_COUNT];
+    ATOMIC_UINT  done_fb_writes_buf[VOODOO_BUF_COUNT];
+    ATOMIC_UINT  queued_draw_cmds_buf[VOODOO_BUF_COUNT];
+    ATOMIC_UINT  done_draw_cmds_buf[VOODOO_BUF_COUNT];
 
     voodoo_params_t params_buffer[PARAM_SIZE];
+#if (defined __aarch64__ || defined _M_ARM64)
+    /* Each params index is on its own 128-byte cache line to prevent false
+       sharing between render threads and the FIFO/CPU thread. */
+    struct {
+        ATOMIC_INT value;
+        char       pad[128 - sizeof(ATOMIC_INT)];
+    } params_read_idx[4];
+    struct {
+        ATOMIC_INT value;
+        char       pad[128 - sizeof(ATOMIC_INT)];
+    } params_write_idx;
+#else
     ATOMIC_INT      params_read_idx[4];
     ATOMIC_INT      params_write_idx;
+#endif
 
     uint32_t   cmdfifo_base;
     uint32_t   cmdfifo_end;
@@ -627,6 +698,12 @@ typedef struct voodoo_t {
     int fb_write_buffer;
     int fb_draw_buffer;
     int buffer_cutoff;
+    int queued_disp_buffer;
+    int queued_draw_buffer;
+    int queued_fb_write_buffer;
+    int queued_fb_draw_buffer;
+    uint32_t queued_lfbMode;
+    uint32_t queued_fbzMode;
 
     uint32_t tile_base;
     uint32_t tile_stride;
@@ -657,6 +734,32 @@ typedef struct voodoo_t {
 
     uint64_t time;
     int      render_time[4];
+    uint64_t fifo_full_waits;
+    uint64_t fifo_full_wait_ticks;
+    uint64_t fifo_full_spin_checks;
+    uint64_t fifo_empty_waits;
+    uint64_t fifo_empty_wait_ticks;
+    uint64_t fifo_empty_spin_checks;
+    uint64_t render_waits;
+    uint64_t render_wait_ticks;
+    uint64_t render_wait_spin_checks;
+    uint64_t readl_fb_count;
+    uint64_t readl_fb_sync_count;
+    uint64_t readl_fb_nosync_count;
+    uint64_t readl_fb_relaxed_count;
+    uint64_t readl_fb_sync_buf[3];
+    uint64_t readl_fb_nosync_buf[3];
+    uint64_t readl_fb_relaxed_buf[3];
+    uint64_t readl_reg_count;
+    uint64_t readl_tex_count;
+    int      wait_stats_enabled;
+    int      wait_stats_explicit;
+    int      lfb_relax_enabled;
+    int      lfb_relax_full;
+    int      lfb_relax_ignore_cmdfifo;
+    int      lfb_relax_ignore_draw;
+    int      lfb_relax_ignore_fb_writes;
+    int      lfb_relax_front_sync;
 
     int      force_blit_count;
     int      can_blit;
@@ -665,6 +768,9 @@ typedef struct voodoo_t {
     int   use_recompiler;
     void *codegen_data;
 
+    /* JIT cache state -- per-instance to avoid races between render threads */
+    int jit_last_block[4];
+    uint64_t jit_generation[4];
     struct voodoo_set_t *set;
 
     uint32_t launch_pending;
@@ -672,12 +778,21 @@ typedef struct voodoo_t {
     uint8_t fifo_thread_run;
     uint8_t render_thread_run[4];
 
+    uint32_t vram_max;
+
     uint8_t *vram;
     uint8_t *changedvram;
 
     void   *priv;
     uint8_t monitor_index;
 } voodoo_t;
+
+enum {
+    VOODOO_INTRCTRL_ENABLE_MASK            = 0x0030003f,
+    VOODOO_INTRCTRL_PENDING_MASK           = 0x800ff800,
+    VOODOO_INTRCTRL_READ_MASK              = 0x803ff83f,
+    VOODOO_INTRCTRL_INTERRUPT_ACTIVE       = 0x80000000
+};
 
 typedef struct voodoo_set_t {
     voodoo_t *voodoos[2];
@@ -691,6 +806,10 @@ extern rgba8_t rgb332[0x100];
 extern rgba8_t ai44[0x100];
 extern rgba8_t rgb565[0x10000];
 extern rgba8_t argb1555[0x10000];
+extern rgba8_t bgr565[0x10000];
+extern rgba8_t abgr1555[0x10000];
+extern rgba8_t rgba1555[0x10000];
+extern rgba8_t bgra1555[0x10000];
 extern rgba8_t argb4444[0x10000];
 extern rgba8_t ai88[0x10000];
 
